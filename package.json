@@ -1,10 +1,14 @@
 {
   "name": "hookified",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Event and Middleware Hooks",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "test": "xo --fix && vitest run --coverage",
     "test:ci": "xo && vitest run --coverage",
@@ -57,5 +61,9 @@
     "typescript": "^5.5.4",
     "vitest": "^2.0.5",
     "xo": "^0.59.3"
-  }
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ]
 }
