@@ -1,8 +1,8 @@
 import Emittery from 'emittery';
 
-type HookHandler = (...arguments_: any[]) => void;
+type HookHandler = (...arguments_: any[]) => Promise<void> | void;
 
-class Hookified extends Emittery {
+export class Hookified extends Emittery {
 	_hookHandlers: Map<string, HookHandler[]>;
 
 	constructor() {
@@ -11,7 +11,7 @@ class Hookified extends Emittery {
 	}
 
 	// Adds a handler function for a specific event
-	addHandler(event: string, handler: HookHandler) {
+	async onHook(event: string, handler: HookHandler) {
 		const eventHandlers = this._hookHandlers.get(event);
 		if (eventHandlers) {
 			eventHandlers.push(handler);
@@ -21,7 +21,7 @@ class Hookified extends Emittery {
 	}
 
 	// Removes a specific handler function for a specific event
-	removeHandler(event: string, handler: HookHandler) {
+	async removeHook(event: string, handler: HookHandler) {
 		const eventHandlers = this._hookHandlers.get(event);
 		if (eventHandlers) {
 			const index = eventHandlers.indexOf(handler);
@@ -32,24 +32,24 @@ class Hookified extends Emittery {
 	}
 
 	// Triggers all handlers for a specific event with provided data
-	trigger(event: string, data: any) {
+	async hook(event: string, data: any) {
 		const eventHandlers = this._hookHandlers.get(event);
 		if (eventHandlers) {
 			for (const handler of eventHandlers) {
 				try {
-					handler(data);
+					// eslint-disable-next-line no-await-in-loop
+					await handler(data);
 				} catch (error) {
-					this.emit('error', new Error(`Error in hook handler for event "${event}": ${(<Error>error).message}`));
+					// eslint-disable-next-line no-await-in-loop
+					await this.emit('error', new Error(`Error in hook handler for event "${event}": ${(error as Error).message}`));
 				}
 			}
 		}
 	}
 
 	// Provides read-only access to the current handlers
-	get handlers() {
+	get hookHandlers() {
 		// Creating a new map to prevent external modifications to the original map
 		return new Map(this._hookHandlers);
 	}
 }
-
-export default Hookified;

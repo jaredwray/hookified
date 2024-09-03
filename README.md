@@ -1,12 +1,18 @@
-![Hookified](site/logo.svg)
+<img src="site/logo.svg" alt="Hookified" height="400" align="center">
 
-# Hookified
-Event and Middleware Hooks
+# Event and Middleware Hooks for Your Libraries
+
+[![tests](https://github.com/jaredwray/hookified/actions/workflows/tests.yaml/badge.svg)](https://github.com/jaredwray/hookified/actions/workflows/tests.yaml)
+[![GitHub license](https://img.shields.io/github/license/jaredwray/hookified)](https://github.com/jaredwray/hookified/blob/master/LICENSE)
+[![codecov](https://codecov.io/gh/jaredwray/hookified/graph/badge.svg?token=nKkVklTFdA)](https://codecov.io/gh/jaredwray/hookified)
+[![npm](https://img.shields.io/npm/dm/hookified)](https://npmjs.com/package/hookified)
+[![npm](https://img.shields.io/npm/v/hookified)](https://npmjs.com/package/hookified)
 
 ## Features
 - Emit Events via [Emittery](https://npmjs.com/package/emittery)
-- Middleware Hooks - Easily add middleware to your library for additional functionality
-- TypeScript, ESM, and Nodejs 20+
+- Middleware Hooks with data passing
+- ESM and Nodejs 20+
+- Maintained on a regular basis!
 
 ## Installation
 ```bash
@@ -33,9 +39,9 @@ class MyClass extends Hookified {
   async myMethod2() Promise<any> {
     let data = { some: 'data' };
     // do something
-    await this.exec('before:myMethod2', data);
+    await this.hook('before:myMethod2', data);
     // do something
-    await this.exec('after:myMethod2', data);
+    await this.hook('after:myMethod2', data);
     return data;
   }
 }
