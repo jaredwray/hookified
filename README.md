@@ -20,7 +20,7 @@ npm install hookified --save
 ```
 
 ## Usage
-this is primarily a library for creating hooks and middleware for your own libraries.  Here is an example of a class that is extended using hookified.
+This was built because we constantly wanted hooks and events extended on libraires we are building such as [Keyv](https://keyv.org). This is a simple way to add hooks and events (via [emittery](https://npmjs.com/package/emittery)) to your libraries.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -30,18 +30,16 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethod() {
-    await this.emit('before:myMethod');
-    // do something
-    await this.emit('after:myMethod');
+  async myMethodEmittingEvent() {
+    await this.emit('message', 'Hello World');
   }
 
-  async myMethod2() Promise<any> {
+  //with hooks you can pass data in and if they are subscribed via onHook they can modify the data
+  async myMethodWithHooks() Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
-    // do something
-    await this.hook('after:myMethod2', data);
+
     return data;
   }
 }
