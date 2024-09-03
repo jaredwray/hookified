@@ -1,28 +1,28 @@
 import Emittery from 'emittery';
 
-type HookHandler = (...arguments_: any[]) => Promise<void> | void;
+export type Hook = (...arguments_: any[]) => Promise<void> | void;
 
 export class Hookified extends Emittery {
-	_hookHandlers: Map<string, HookHandler[]>;
+	_hooks: Map<string, Hook[]>;
 
 	constructor() {
 		super();
-		this._hookHandlers = new Map();
+		this._hooks = new Map();
 	}
 
 	// Adds a handler function for a specific event
-	async onHook(event: string, handler: HookHandler) {
-		const eventHandlers = this._hookHandlers.get(event);
+	async onHook(event: string, handler: Hook) {
+		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			eventHandlers.push(handler);
 		} else {
-			this._hookHandlers.set(event, [handler]);
+			this._hooks.set(event, [handler]);
 		}
 	}
 
 	// Removes a specific handler function for a specific event
-	async removeHook(event: string, handler: HookHandler) {
-		const eventHandlers = this._hookHandlers.get(event);
+	async removeHook(event: string, handler: Hook) {
+		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			const index = eventHandlers.indexOf(handler);
 			if (index !== -1) {
@@ -33,7 +33,7 @@ export class Hookified extends Emittery {
 
 	// Triggers all handlers for a specific event with provided data
 	async hook(event: string, data: any) {
-		const eventHandlers = this._hookHandlers.get(event);
+		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			for (const handler of eventHandlers) {
 				try {
@@ -48,8 +48,8 @@ export class Hookified extends Emittery {
 	}
 
 	// Provides read-only access to the current handlers
-	get hookHandlers() {
+	get hooks() {
 		// Creating a new map to prevent external modifications to the original map
-		return new Map(this._hookHandlers);
+		return this._hooks;
 	}
 }

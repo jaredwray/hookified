@@ -132,3 +132,6 @@ dist
 # site
 site/README.md
 site/.DS_Store
+
+# npm
+package-lock.json
