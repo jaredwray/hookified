@@ -4,7 +4,7 @@ import {Hookified} from '../src/index.js';
 describe('Hookified', () => {
 	test('initialization', () => {
 		const hookified = new Hookified();
-		expect(hookified.hookHandlers).toEqual(new Map());
+		expect(hookified.hooks).toEqual(new Map());
 	});
 
 	test('onHook', async () => {
@@ -15,9 +15,9 @@ describe('Hookified', () => {
 		const handler2 = () => {};
 		await hookified.onHook('event', handler);
 		await hookified.onHook('event2', handler2);
-		expect(hookified.hookHandlers.get('event')).toEqual([handler]);
-		expect(hookified.hookHandlers.get('event2')).toEqual([handler2]);
-		expect(hookified.hookHandlers.size).toBe(2);
+		expect(hookified.hooks.get('event')).toEqual([handler]);
+		expect(hookified.hooks.get('event2')).toEqual([handler2]);
+		expect(hookified.hooks.size).toBe(2);
 	});
 
 	test('onHook multiple handlers', async () => {
@@ -28,8 +28,8 @@ describe('Hookified', () => {
 		const handler2 = () => {};
 		await hookified.onHook('event', handler);
 		await hookified.onHook('event', handler2);
-		expect(hookified.hookHandlers.get('event')).toEqual([handler, handler2]);
-		expect(hookified.hookHandlers.size).toBe(1);
+		expect(hookified.hooks.get('event')).toEqual([handler, handler2]);
+		expect(hookified.hooks.size).toBe(1);
 	});
 
 	test('removeHook', async () => {
@@ -41,8 +41,8 @@ describe('Hookified', () => {
 		await hookified.onHook('event', handler);
 		await hookified.onHook('event', handler2);
 		await hookified.removeHook('event', handler);
-		expect(hookified.hookHandlers.get('event')).toEqual([handler2]);
-		expect(hookified.hookHandlers.size).toBe(1);
+		expect(hookified.hooks.get('event')).toEqual([handler2]);
+		expect(hookified.hooks.size).toBe(1);
 	});
 
 	test('execute hook and manipulate data', async () => {
