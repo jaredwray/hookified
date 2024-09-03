@@ -4,8 +4,12 @@ export default defineConfig({
 	test: {
 		include: ['test/*.ts'],
 		coverage: {
-			reporter: ['json', 'lcov', 'text'],
-			reportOnFailure: true,
-		}
+			exclude: [
+				'site/**',
+				'vitest.config.ts',
+				'dist/**',
+				'test/**',
+			],
+		},
 	},
 });

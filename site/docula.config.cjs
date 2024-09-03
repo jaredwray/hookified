@@ -10,11 +10,11 @@ module.exports.options = {
 	siteUrl: 'https://hookified.org',
 };
 
-module.exports.onPrepare = async (config) => {
+module.exports.onPrepare = async config => {
 	const readmePath = path.join(process.cwd(), './README.md');
 	const readmeSitePath = path.join(config.sitePath, 'README.md');
 	const readme = await fs.promises.readFile(readmePath, 'utf8');
-	const updatedReadme = readme.replace('![Hookified](site/logo.svg)\n\n', '');
-	console.log('writing updated readme to ', readmeSitePath);
+	const updatedReadme = readme.replace('<img src="site/logo.svg" alt="Hookified" height="400" align="center">\n\n', '');
+	console.log('writing updated readme to', readmeSitePath);
 	await fs.promises.writeFile(readmeSitePath, updatedReadme);
-}
+};
