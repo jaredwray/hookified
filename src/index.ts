@@ -32,13 +32,13 @@ export class Hookified extends Emittery {
 	}
 
 	// Triggers all handlers for a specific event with provided data
-	async hook(event: string, ...data: any[]) {
+	async hook<T>(event: string, ...arguments_: T[]) {
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			for (const handler of eventHandlers) {
 				try {
-					// eslint-disable-next-line no-await-in-loop, @typescript-eslint/no-unsafe-argument
-					await handler(...data);
+					// eslint-disable-next-line no-await-in-loop
+					await handler(...arguments_);
 				} catch (error) {
 					// eslint-disable-next-line no-await-in-loop
 					await this.emit('error', new Error(`Error in hook handler for event "${event}": ${(error as Error).message}`));
