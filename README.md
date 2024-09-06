@@ -1,6 +1,6 @@
 <img src="site/logo.svg" alt="Hookified" height="400" align="center">
 
-# Event and Middleware Hooks for Your Libraries
+# Async Event and Middleware Hooks
 
 [![tests](https://github.com/jaredwray/hookified/actions/workflows/tests.yaml/badge.svg)](https://github.com/jaredwray/hookified/actions/workflows/tests.yaml)
 [![GitHub license](https://img.shields.io/github/license/jaredwray/hookified)](https://github.com/jaredwray/hookified/blob/master/LICENSE)
@@ -13,6 +13,8 @@
 - Middleware Hooks with data passing
 - ESM and Nodejs 20+
 - Maintained on a regular basis!
+
+Special thanks to [@sindresorhus](https://github.com/sindresorhus) for the [Emittery](https://npmjs.com/package/emittery) library. 🍻
 
 ## Installation
 ```bash
@@ -43,5 +45,47 @@ class MyClass extends Hookified {
     return data;
   }
 }
+```
+
+You can even pass in multiple arguments to the hooks:
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    let data2 = { some: 'data2' };
+    // do something
+    await this.hook('before:myMethod2', data, data2);
+
+    return data;
+  }
+}
+```
+
+## API
+
+## Development and Testing
+
+Hookified is written in TypeScript and tests are written in `vitest`. To run the tests, use the following command:
+
+To setup the environment and run the tests:
+
+```bash
+npm i && npm test
+```
+
+To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License
+
+[MIT & © Jared Wray](LICENSE)
+
+
 
 
