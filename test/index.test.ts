@@ -61,6 +61,30 @@ describe('Hookified', () => {
 		expect(handlerData.key).toBe('modified');
 	});
 
+	test('execute hook and manipulate multiple data items', async () => {
+		const hookified = new Hookified();
+		const data = {key: 'value'};
+		const data2 = {key: 'value2'};
+		const data3 = {key: 'value3'};
+		const handlerData: Array<{key: string}> = [];
+
+		const handler = (data: {key: string}, data2: {key: string}, data3: {key: string}) => {
+			data.key = 'modified';
+			data2.key = 'foo';
+			data3.key = 'bar';
+
+			handlerData.push(data, data2, data3);
+
+			console.log(handlerData);
+		};
+
+		await hookified.onHook('event', handler);
+		await hookified.hook('event', data, data2, data3);
+		expect(handlerData[0].key).toBe('modified');
+		expect(handlerData[1].key).toBe('foo');
+		expect(handlerData[2].key).toBe('bar');
+	});
+
 	test('hook with error emitted', async () => {
 		const hookified = new Hookified();
 		let errorMessage;
