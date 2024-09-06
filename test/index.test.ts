@@ -13,11 +13,25 @@ describe('Hookified', () => {
 		const handler = () => {};
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		const handler2 = () => {};
-		await hookified.onHook('event', handler);
-		await hookified.onHook('event2', handler2);
-		expect(hookified.hooks.get('event')).toEqual([handler]);
-		expect(hookified.hooks.get('event2')).toEqual([handler2]);
+		hookified.onHook('event', handler);
+		hookified.onHook('event2', handler2);
+		expect(hookified.getHooks('event')).toEqual([handler]);
+		expect(hookified.getHooks('event2')).toEqual([handler2]);
 		expect(hookified.hooks.size).toBe(2);
+	});
+
+	test('onHook with Clear', async () => {
+		const hookified = new Hookified();
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		const handler = () => {};
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		const handler2 = () => {};
+		hookified.onHook('event', handler);
+		hookified.onHook('event2', handler2);
+		expect(hookified.getHooks('event')).toEqual([handler]);
+		expect(hookified.getHooks('event2')).toEqual([handler2]);
+		hookified.clearHooks();
+		expect(hookified.hooks.size).toBe(0);
 	});
 
 	test('onHook multiple handlers', async () => {
@@ -26,8 +40,8 @@ describe('Hookified', () => {
 		const handler = () => {};
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		const handler2 = () => {};
-		await hookified.onHook('event', handler);
-		await hookified.onHook('event', handler2);
+		hookified.onHook('event', handler);
+		hookified.onHook('event', handler2);
 		expect(hookified.hooks.get('event')).toEqual([handler, handler2]);
 		expect(hookified.hooks.size).toBe(1);
 	});
@@ -38,10 +52,10 @@ describe('Hookified', () => {
 		const handler = () => {};
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		const handler2 = () => {};
-		await hookified.onHook('event', handler);
-		await hookified.onHook('event', handler2);
-		await hookified.removeHook('event', handler);
-		expect(hookified.hooks.get('event')).toEqual([handler2]);
+		hookified.onHook('event', handler);
+		hookified.onHook('event', handler2);
+		hookified.removeHook('event', handler);
+		expect(hookified.getHooks('event')).toEqual([handler2]);
 		expect(hookified.hooks.size).toBe(1);
 	});
 
@@ -56,7 +70,7 @@ describe('Hookified', () => {
 			handlerData = data;
 		};
 
-		await hookified.onHook('event', handler);
+		hookified.onHook('event', handler);
 		await hookified.hook('event', data);
 		expect(handlerData.key).toBe('modified');
 	});
@@ -78,7 +92,7 @@ describe('Hookified', () => {
 			console.log(handlerData);
 		};
 
-		await hookified.onHook('event', handler);
+		hookified.onHook('event', handler);
 		await hookified.hook('event', data, data2, data3);
 		expect(handlerData[0].key).toBe('modified');
 		expect(handlerData[1].key).toBe('foo');
@@ -99,7 +113,7 @@ describe('Hookified', () => {
 			throw new Error('error');
 		};
 
-		await hookified.onHook('event', handler);
+		hookified.onHook('event', handler);
 		await hookified.hook('event', data);
 		expect(errorMessage).toBe('Error in hook handler for event "event": error');
 	});
