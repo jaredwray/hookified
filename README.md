@@ -10,7 +10,7 @@
 
 ## Features
 - Emit Events via [Emittery](https://npmjs.com/package/emittery)
-- Middleware Hooks with data passing
+- Async Middleware Hooks for Your Methods
 - ESM and Nodejs 20+
 - Maintained on a regular basis!
 
@@ -33,7 +33,7 @@ class MyClass extends Hookified {
   }
 
   async myMethodEmittingEvent() {
-    await this.emit('message', 'Hello World');
+    await this.emit('message', 'Hello World'); //using Emittery
   }
 
   //with hooks you can pass data in and if they are subscribed via onHook they can modify the data
@@ -69,6 +69,30 @@ class MyClass extends Hookified {
 ```
 
 ## API
+
+Please see the [Emittery](https://npmjs.com/package/emittery) documentation for more information on the event emitter.
+
+### .onHook(eventName, handler)
+
+Subscribe to a hook event.
+
+### .removeHook(eventName)
+
+Unsubscribe from a hook event.
+
+### .hook(eventName, ...args)
+
+Run a hook event.
+
+### .hooks
+
+Get all hooks.
+
+### .getHooks(eventName)
+
+Get all hooks for an event.
+
+### .clearHooks(eventName)
 
 ## Development and Testing
 
