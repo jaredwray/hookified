@@ -94,9 +94,8 @@ describe('Hookified', () => {
 		});
 
 		const data = {key: 'value'};
-		let handlerData;
 
-		const handler = (data: any) => {
+		const handler = () => {
 			throw new Error('error');
 		};
 
