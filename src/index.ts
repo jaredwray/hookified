@@ -11,7 +11,7 @@ export class Hookified extends Emittery {
 	}
 
 	// Adds a handler function for a specific event
-	async onHook(event: string, handler: Hook) {
+	onHook(event: string, handler: Hook) {
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			eventHandlers.push(handler);
@@ -21,7 +21,7 @@ export class Hookified extends Emittery {
 	}
 
 	// Removes a specific handler function for a specific event
-	async removeHook(event: string, handler: Hook) {
+	removeHook(event: string, handler: Hook) {
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			const index = eventHandlers.indexOf(handler);
@@ -51,5 +51,13 @@ export class Hookified extends Emittery {
 	get hooks() {
 		// Creating a new map to prevent external modifications to the original map
 		return this._hooks;
+	}
+
+	getHooks(event: string) {
+		return this._hooks.get(event);
+	}
+
+	clearHooks() {
+		this._hooks.clear();
 	}
 }
