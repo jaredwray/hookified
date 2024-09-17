@@ -22,7 +22,7 @@ npm install hookified --save
 ```
 
 ## Usage
-This was built because we constantly wanted hooks and events extended on libraires we are building such as [Keyv](https://keyv.org). This is a simple way to add hooks and events (via [emittery](https://npmjs.com/package/emittery)) to your libraries.
+This was built because we constantly wanted hooks and events extended on libraires we are building such as [Keyv](https://keyv.org) and [Cacheable](https://cacheable.org). This is a simple way to add hooks and events (via [emittery](https://npmjs.com/package/emittery)) to your libraries.
 
 ```javascript
 import { Hookified } from 'hookified';
