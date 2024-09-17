@@ -24,4 +24,4 @@ If you need more information on the steps to create a pull request, you can find
 
 
 # Code of Conduct
-Please refer to our [Code of Conduct](https://github.com/jaredwray/hookified/blob/main/CODE_OF_CONDUCT.md) readme for how to contribute to this open source project and work within the community. 
+Please refer to our [Code of Conduct](CODE_OF_CONDUCT.md) readme for how to contribute to this open source project and work within the community. 
