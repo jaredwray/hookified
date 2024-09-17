@@ -11,7 +11,7 @@
 ## Features
 - Emit Events via [Emittery](https://npmjs.com/package/emittery)
 - Async Middleware Hooks for Your Methods
-- ESM and Nodejs 20+
+- ESM / CJS and Nodejs 20+
 - Maintained on a regular basis!
 
 Special thanks to [@sindresorhus](https://github.com/sindresorhus) for the [Emittery](https://npmjs.com/package/emittery) library. 🍻

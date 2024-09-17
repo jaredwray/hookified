@@ -1,11 +1,17 @@
 {
   "name": "hookified",
-  "version": "0.7.1",
+  "version": "1.0.0",
   "description": "Event and Middleware Hooks",
   "type": "module",
-  "main": "./dist/index.js",
-  "exports": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    }
+  },
   "engines": {
     "node": ">=20"
   },
@@ -13,7 +19,7 @@
     "test": "xo --fix && vitest run --coverage",
     "test:ci": "xo && vitest run --coverage",
     "clean": "rimraf ./dist ./coverage ./site/dist",
-    "build": "rimraf ./dist && tsc",
+    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --clean",
     "website:build": "docula build",
     "website:serve": "docula serve",
     "prepare": "npm run build"
@@ -55,11 +61,12 @@
     "emittery": "^1.0.3"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^2.0.5",
+    "@vitest/coverage-v8": "^2.1.1",
     "docula": "^0.9.0",
     "rimraf": "^6.0.1",
-    "typescript": "^5.5.4",
-    "vitest": "^2.0.5",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.1",
     "xo": "^0.59.3"
   },
   "files": [
