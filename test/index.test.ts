@@ -88,8 +88,6 @@ describe('Hookified', () => {
 			data3.key = 'bar';
 
 			handlerData.push(data, data2, data3);
-
-			console.log(handlerData);
 		};
 
 		hookified.onHook('event', handler);

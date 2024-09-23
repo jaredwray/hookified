@@ -9,12 +9,10 @@
 [![npm](https://img.shields.io/npm/v/hookified)](https://npmjs.com/package/hookified)
 
 ## Features
-- Emit Events via [Emittery](https://npmjs.com/package/emittery)
+- Simple replacement for EventEmitter
 - Async Middleware Hooks for Your Methods
 - ESM / CJS and Nodejs 20+
 - Maintained on a regular basis!
-
-Special thanks to [@sindresorhus](https://github.com/sindresorhus) for the [Emittery](https://npmjs.com/package/emittery) library. 🍻
 
 ## Installation
 ```bash
@@ -70,8 +68,6 @@ class MyClass extends Hookified {
 
 ## API
 
-Please see the [Emittery](https://npmjs.com/package/emittery) documentation for more information on the event emitter.
-
 ### .onHook(eventName, handler)
 
 Subscribe to a hook event.
@@ -93,6 +89,30 @@ Get all hooks.
 Get all hooks for an event.
 
 ### .clearHooks(eventName)
+
+### .on(eventName, handler)
+
+Subscribe to an event.
+
+### .off(eventName, handler)
+
+Unsubscribe from an event.
+
+### .emit(eventName, ...args)
+
+Emit an event.
+
+## .listeners(eventName)
+
+Get all listeners for an event.
+
+## .removeAllListeners(eventName)
+
+Remove all listeners for an event.
+
+## .setMaxListeners(maxListeners: number)
+
+Set the maximum number of listeners and will truncate if there are already too many.
 
 ## Development and Testing
 
