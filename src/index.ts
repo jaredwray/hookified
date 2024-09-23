@@ -1,8 +1,8 @@
-import Emittery from 'emittery';
+import {Eventified} from './eventified.js';
 
 export type Hook = (...arguments_: any[]) => Promise<void> | void;
 
-export class Hookified extends Emittery {
+export class Hookified extends Eventified {
 	_hooks: Map<string, Hook[]>;
 
 	constructor() {
@@ -40,8 +40,7 @@ export class Hookified extends Emittery {
 					// eslint-disable-next-line no-await-in-loop
 					await handler(...arguments_);
 				} catch (error) {
-					// eslint-disable-next-line no-await-in-loop
-					await this.emit('error', new Error(`Error in hook handler for event "${event}": ${(error as Error).message}`));
+					this.emit('error', new Error(`Error in hook handler for event "${event}": ${(error as Error).message}`));
 				}
 			}
 		}
@@ -61,3 +60,5 @@ export class Hookified extends Emittery {
 		this._hooks.clear();
 	}
 }
+
+export {Eventified, type EventListener} from './eventified.js';
