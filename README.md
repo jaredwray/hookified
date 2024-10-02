@@ -1,6 +1,6 @@
 <img src="site/logo.svg" alt="Hookified" height="400" align="center">
 
-# Async Event and Middleware Hooks
+# Event Emitting and Async Middleware Hooks
 
 [![tests](https://github.com/jaredwray/hookified/actions/workflows/tests.yaml/badge.svg)](https://github.com/jaredwray/hookified/actions/workflows/tests.yaml)
 [![GitHub license](https://img.shields.io/github/license/jaredwray/hookified)](https://github.com/jaredwray/hookified/blob/master/LICENSE)
@@ -11,7 +11,7 @@
 ## Features
 - Simple replacement for EventEmitter
 - Async Middleware Hooks for Your Methods
-- ESM / CJS and Nodejs 20+
+- ESM / CJS with Types and Nodejs 20+
 - Maintained on a regular basis!
 
 ## Installation
@@ -20,7 +20,7 @@ npm install hookified --save
 ```
 
 ## Usage
-This was built because we constantly wanted hooks and events extended on libraires we are building such as [Keyv](https://keyv.org) and [Cacheable](https://cacheable.org). This is a simple way to add hooks and events (via [emittery](https://npmjs.com/package/emittery)) to your libraries.
+This was built because we constantly wanted hooks and events extended on libraires we are building such as [Keyv](https://keyv.org) and [Cacheable](https://cacheable.org). This is a simple way to add hooks and events to your classes.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -31,7 +31,7 @@ class MyClass extends Hookified {
   }
 
   async myMethodEmittingEvent() {
-    await this.emit('message', 'Hello World'); //using Emittery
+    this.emit('message', 'Hello World'); //using Emittery
   }
 
   //with hooks you can pass data in and if they are subscribed via onHook they can modify the data

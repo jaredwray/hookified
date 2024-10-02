@@ -26,7 +26,6 @@
   },
   "keywords": [
     "hooks",
-    "emittery",
     "eventemitter",
     "eventemitter3",
     "middleware",
@@ -37,7 +36,6 @@
     "event-driven",
     "event-emitter",
     "hook-handlers",
-    "async-hooks",
     "middleware",
     "emit",
     "event-management",
@@ -59,7 +57,7 @@
   "homepage": "https://github.com/jaredwray/hookified#readme",
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.1",
-    "docula": "^0.9.0",
+    "docula": "^0.9.1",
     "rimraf": "^6.0.1",
     "tsup": "^8.3.0",
     "typescript": "^5.6.2",

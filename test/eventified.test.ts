@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import {describe, test, expect} from 'vitest';
-import {Eventified, CustomEventError} from '../src/eventified.js';
+import {Eventified} from '../src/eventified.js';
 
 describe('Eventified', () => {
 	test('remove event listener', t => {
@@ -133,18 +133,5 @@ describe('Eventified', () => {
 		emitter.on('test-event', listener);
 
 		t.expect(emitter.listeners('test-event')).toEqual([listener]);
-	});
-
-	test('if it is an error with no listeners throw error', () => {
-		const emitter = new Eventified();
-
-		expect(() => {
-			emitter.emit('error', new Error('test'));
-		}).toThrow(Error);
-	});
-
-	test('custom event error initiated', () => {
-		const error = new CustomEventError('test');
-		expect(error.message).toBe('test');
 	});
 });
