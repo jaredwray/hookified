@@ -60,18 +60,6 @@ export class Eventified {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 				listener(...arguments_);
 			}
-		} else if (event === 'error') {
-			// If it's an 'error' event with no listeners, throw the error.
-			if (arguments_[0] instanceof Error) {
-				throw arguments_[0]; // Throws the error object if the first arg is an error
-			} else {
-				/* c8 ignore next 6 */
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-				const error = new CustomEventError(arguments_[0]);
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				error.context = arguments_[0];
-				throw error;
-			}
 		}
 	}
 
@@ -97,22 +85,5 @@ export class Eventified {
 				listeners.splice(n);
 			}
 		}
-	}
-}
-
-export class CustomEventError extends Error {
-	public context: any;
-
-	constructor(message: string, context?: any) {
-		super(message);
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-		this.context = context;
-
-		// Maintains proper stack trace for where our error was thrown (only available on V8)
-		if (Error.captureStackTrace) {
-			Error.captureStackTrace(this, CustomEventError);
-		}
-
-		this.name = this.constructor.name;
 	}
 }
