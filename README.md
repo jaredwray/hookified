@@ -1,4 +1,4 @@
-<img src="site/logo.svg" alt="Hookified" height="400" align="center">
+![site/logo.svg](site/logo.svg)
 
 # Event Emitting and Async Middleware Hooks
 
