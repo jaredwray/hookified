@@ -9,6 +9,7 @@ export default defineConfig({
 				'vitest.config.ts',
 				'dist/**',
 				'test/**',
+				'src/event-emitter-type.ts',
 			],
 		},
 	},
