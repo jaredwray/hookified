@@ -1,6 +1,6 @@
 {
   "name": "hookified",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Event and Middleware Hooks",
   "type": "module",
   "main": "dist/node/index.cjs",
@@ -57,12 +57,12 @@
   },
   "homepage": "https://github.com/jaredwray/hookified#readme",
   "devDependencies": {
-    "@vitest/coverage-v8": "^2.1.2",
+    "@vitest/coverage-v8": "^2.1.3",
     "docula": "^0.9.3",
     "rimraf": "^6.0.1",
     "tsup": "^8.3.0",
     "typescript": "^5.6.3",
-    "vitest": "^2.1.2",
+    "vitest": "^2.1.3",
     "xo": "^0.59.3"
   },
   "files": [
