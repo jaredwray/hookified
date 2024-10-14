@@ -3,23 +3,24 @@
   "version": "1.2.1",
   "description": "Event and Middleware Hooks",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "dist/node/index.cjs",
+  "module": "dist/node/index.js",
   "exports": {
     ".": {
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.js"
+      "import": "./dist/node/index.js",
+      "require": "./dist/node/index.cjs"
+    },
+    "./browser": {
+      "import": "./dist/browser/index.js",
+      "default": "./dist/browser/index.global.js"
     }
   },
-  "engines": {
-    "node": ">=20"
-  },
+  "types": "dist/node/index.d.ts",
   "scripts": {
     "test": "xo --fix && vitest run --coverage",
     "test:ci": "xo && vitest run --coverage",
     "clean": "rimraf ./dist ./coverage ./site/dist",
-    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --clean",
+    "build": "rimraf ./dist && tsup",
     "website:build": "docula build",
     "website:serve": "docula serve",
     "prepare": "npm run build"

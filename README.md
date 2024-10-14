@@ -8,18 +8,18 @@
 [![npm](https://img.shields.io/npm/dm/hookified)](https://npmjs.com/package/hookified)
 [![npm](https://img.shields.io/npm/v/hookified)](https://npmjs.com/package/hookified)
 
-## Features
+# Features
 - Simple replacement for EventEmitter
 - Async Middleware Hooks for Your Methods
 - ESM / CJS with Types and Nodejs 20+
 - Maintained on a regular basis!
 
-## Installation
+# Installation
 ```bash
 npm install hookified --save
 ```
 
-## Usage
+# Usage
 This was built because we constantly wanted hooks and events extended on libraires we are building such as [Keyv](https://keyv.org) and [Cacheable](https://cacheable.org). This is a simple way to add hooks and events to your classes.
 
 ```javascript
@@ -66,39 +66,92 @@ class MyClass extends Hookified {
 }
 ```
 
-## API
+# Using it in the Browser
 
-### .onHook(eventName, handler)
+```html
+<script type="module">
+  import { Hookified } from 'https://cdn.jsdelivr.net/npm/hookified/dist/browser/index.js';
+
+  class MyClass extends Hookified {
+    constructor() {
+      super();
+    }
+
+    async myMethodEmittingEvent() {
+      this.emit('message', 'Hello World'); //using Emittery
+    }
+
+    //with hooks you can pass data in and if they are subscribed via onHook they can modify the data
+    async myMethodWithHooks() Promise<any> {
+      let data = { some: 'data' };
+      // do something
+      await this.hook('before:myMethod2', data);
+
+      return data;
+    }
+  }
+</script>
+```
+
+if you are not using ESM modules, you can use the following:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/hookified/dist/browser/index.global.js"></script>
+<script>
+  class MyClass extends Hookified {
+    constructor() {
+      super();
+    }
+
+    async myMethodEmittingEvent() {
+      this.emit('message', 'Hello World'); //using Emittery
+    }
+
+    //with hooks you can pass data in and if they are subscribed via onHook they can modify the data
+    async myMethodWithHooks() Promise<any> {
+      let data = { some: 'data' };
+      // do something
+      await this.hook('before:myMethod2', data);
+
+      return data;
+    }
+  }
+</script>
+```
+
+# API
+
+## .onHook(eventName, handler)
 
 Subscribe to a hook event.
 
-### .removeHook(eventName)
+## .removeHook(eventName)
 
 Unsubscribe from a hook event.
 
-### .hook(eventName, ...args)
+## .hook(eventName, ...args)
 
 Run a hook event.
 
-### .hooks
+## .hooks
 
 Get all hooks.
 
-### .getHooks(eventName)
+## .getHooks(eventName)
 
 Get all hooks for an event.
 
-### .clearHooks(eventName)
+## .clearHooks(eventName)
 
-### .on(eventName, handler)
+## .on(eventName, handler)
 
 Subscribe to an event.
 
-### .off(eventName, handler)
+## .off(eventName, handler)
 
 Unsubscribe from an event.
 
-### .emit(eventName, ...args)
+## .emit(eventName, ...args)
 
 Emit an event.
 
@@ -114,7 +167,7 @@ Remove all listeners for an event.
 
 Set the maximum number of listeners and will truncate if there are already too many.
 
-## Development and Testing
+# Development and Testing
 
 Hookified is written in TypeScript and tests are written in `vitest`. To run the tests, use the following command:
 
@@ -126,7 +179,7 @@ npm i && npm test
 
 To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
 
-## License
+# License
 
 [MIT & © Jared Wray](LICENSE)
 
