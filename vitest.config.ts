@@ -10,6 +10,7 @@ export default defineConfig({
 				'dist/**',
 				'test/**',
 				'src/event-emitter-type.ts',
+				'tsup.config.ts',
 			],
 		},
 	},
