@@ -22,7 +22,11 @@ export class Eventified implements IEventEmitter {
 		return this;
 	}
 
-	listenerCount(eventName: string | symbol): number {
+	listenerCount(eventName?: string | symbol): number {
+		if (!eventName) {
+			return this.getAllListeners().length;
+		}
+
 		const listeners = this._eventListeners.get(eventName as string);
 		return listeners ? listeners.length : 0;
 	}
@@ -129,5 +133,14 @@ export class Eventified implements IEventEmitter {
 				listeners.splice(n);
 			}
 		}
+	}
+
+	public getAllListeners(): EventListener[] {
+		let result = new Array<EventListener>();
+		for (const listeners of this._eventListeners.values()) {
+			result = result.concat(listeners);
+		}
+
+		return result;
 	}
 }

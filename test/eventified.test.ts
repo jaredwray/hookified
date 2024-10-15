@@ -148,4 +148,17 @@ describe('Eventified', () => {
 
 		t.expect(dataReceived).toBe(1);
 	});
+
+	test('get listener count', t => {
+		const emitter = new Eventified();
+		const listener = () => {};
+
+		emitter.on('test-event', listener);
+		emitter.on('test-event', listener);
+		emitter.on('test-event1', listener);
+		emitter.on('test-event2', listener);
+
+		t.expect(emitter.listenerCount()).toBe(4);
+		t.expect(emitter.listenerCount('test-event')).toBe(2);
+	});
 });
