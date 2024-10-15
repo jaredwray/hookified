@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type IEventEmitter = {
 	/**
 	 * Registers a listener for the specified event.

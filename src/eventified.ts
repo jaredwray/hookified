@@ -1,14 +1,46 @@
-import { type IEventEmitter } from './event-emitter.js';
+import {type IEventEmitter} from './event-emitter.js';
 
 export type EventListener = (...arguments_: any[]) => void;
 
 export class Eventified implements IEventEmitter {
-	_eventListeners: Map<string, EventListener[]>;
+	_eventListeners: Map<string | symbol, EventListener[]>;
 	_maxListeners: number;
 
 	constructor() {
-		this._eventListeners = new Map();
+		this._eventListeners = new Map<string | symbol, EventListener[]>();
 		this._maxListeners = 100; // Default maximum number of listeners
+	}
+
+	once(eventName: string | symbol, listener: EventListener): IEventEmitter {
+		const onceListener: EventListener = (...arguments_: any[]) => {
+			this.off(eventName as string, onceListener);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			listener(...arguments_);
+		};
+
+		this.on(eventName as string, onceListener);
+		return this;
+	}
+
+	listenerCount(eventName: string | symbol): number {
+		const listeners = this._eventListeners.get(eventName as string);
+		return listeners ? listeners.length : 0;
+	}
+
+	eventNames(): Array<string | symbol> {
+		throw new Error('Method not implemented.');
+	}
+
+	rawListeners(eventName: string | symbol): EventListener[] {
+		throw new Error('Method not implemented.');
+	}
+
+	prependListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
+		throw new Error('Method not implemented.');
+	}
+
+	prependOnceListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
+		throw new Error('Method not implemented.');
 	}
 
 	public maxListeners(): number {
@@ -16,12 +48,12 @@ export class Eventified implements IEventEmitter {
 	}
 
 	// Add an event listener
-	public addListener(event: string, listener: EventListener): IEventEmitter {
+	public addListener(event: string | symbol, listener: EventListener): IEventEmitter {
 		this.on(event, listener);
 		return this;
 	}
 
-	public on(event: string, listener: EventListener): IEventEmitter {
+	public on(event: string | symbol, listener: EventListener): IEventEmitter {
 		if (!this._eventListeners.has(event)) {
 			this._eventListeners.set(event, []);
 		}
@@ -30,11 +62,13 @@ export class Eventified implements IEventEmitter {
 
 		if (listeners) {
 			if (listeners.length >= this._maxListeners) {
-				console.warn(`MaxListenersExceededWarning: Possible event memory leak detected. ${listeners.length + 1} ${event} listeners added. Use setMaxListeners() to increase limit.`);
+				console.warn(`MaxListenersExceededWarning: Possible event memory leak detected. ${listeners.length + 1} ${event as string} listeners added. Use setMaxListeners() to increase limit.`);
 			}
 
 			listeners.push(listener);
 		}
+
+		return this;
 	}
 
 	// Remove an event listener
