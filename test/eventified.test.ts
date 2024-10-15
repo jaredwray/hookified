@@ -134,4 +134,18 @@ describe('Eventified', () => {
 
 		t.expect(emitter.listeners('test-event')).toEqual([listener]);
 	});
+
+	test('emit event only once with once method', t => {
+		const emitter = new Eventified();
+		let dataReceived = 0;
+
+		emitter.once('test-event', () => {
+			dataReceived++;
+		});
+
+		emitter.emit('test-event');
+		emitter.emit('test-event');
+
+		t.expect(dataReceived).toBe(1);
+	});
 });
