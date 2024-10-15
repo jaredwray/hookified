@@ -1,4 +1,4 @@
-type EventEmitterType = {
+export type IEventEmitter = {
 	/**
 	 * Registers a listener for the specified event.
 	 *
@@ -11,7 +11,7 @@ type EventEmitterType = {
 	 *   console.log(message);
 	 * });
 	 */
-	on(eventName: string | symbol, listener: (...arguments_: any[]) => void): EventEmitterType;
+	on(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
 
 	/**
 	 * Alias for `on`. Registers a listener for the specified event.
@@ -20,7 +20,7 @@ type EventEmitterType = {
 	 * @param listener - A callback function that will be invoked when the event is emitted.
 	 * @returns The current instance of EventEmitter for method chaining.
 	 */
-	addListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): EventEmitterType;
+	addListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
 
 	/**
 	 * Registers a one-time listener for the specified event. The listener is removed after it is called once.
@@ -34,7 +34,7 @@ type EventEmitterType = {
 	 *   console.log('The connection was closed.');
 	 * });
 	 */
-	once(eventName: string | symbol, listener: (...arguments_: any[]) => void): EventEmitterType;
+	once(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
 
 	/**
 	 * Removes a previously registered listener for the specified event.
@@ -46,7 +46,7 @@ type EventEmitterType = {
 	 * @example
 	 * emitter.off('data', myListener);
 	 */
-	off(eventName: string | symbol, listener: (...arguments_: any[]) => void): EventEmitterType;
+	off(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
 
 	/**
 	 * Alias for `off`. Removes a previously registered listener for the specified event.
@@ -55,7 +55,7 @@ type EventEmitterType = {
 	 * @param listener - The specific callback function to remove.
 	 * @returns The current instance of EventEmitter for method chaining.
 	 */
-	removeListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): EventEmitterType;
+	removeListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
 
 	/**
 	 * Emits the specified event, invoking all registered listeners with the provided arguments.
@@ -90,7 +90,7 @@ type EventEmitterType = {
 	 * @example
 	 * emitter.removeAllListeners('data');
 	 */
-	removeAllListeners(eventName?: string | symbol): EventEmitterType;
+	removeAllListeners(eventName?: string | symbol): IEventEmitter;
 
 	/**
 	 * Returns an array of event names for which listeners have been registered.
@@ -138,7 +138,7 @@ type EventEmitterType = {
 	 *   console.log('This will run first.');
 	 * });
 	 */
-	prependListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): EventEmitterType;
+	prependListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
 
 	/**
 	 * Adds a one-time listener to the beginning of the listeners array for the specified event.
@@ -152,5 +152,5 @@ type EventEmitterType = {
 	 *   console.log('This will run first and only once.');
 	 * });
 	 */
-	prependOnceListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): EventEmitterType;
+	prependOnceListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
 };
