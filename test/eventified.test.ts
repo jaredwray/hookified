@@ -162,6 +162,11 @@ describe('Eventified', () => {
 		t.expect(emitter.listenerCount('test-event')).toBe(2);
 	});
 
+	test('no listener count', t => {
+		const emitter = new Eventified();
+		t.expect(emitter.listenerCount('test-event')).toBe(0);
+	});
+
 	test('get event names', t => {
 		const emitter = new Eventified();
 		const listener = () => {};
@@ -185,5 +190,42 @@ describe('Eventified', () => {
 		t.expect(emitter.rawListeners('test-event')).toEqual([listener, listener]);
 		t.expect(emitter.rawListeners('test-event1')).toEqual([listener]);
 		t.expect(emitter.rawListeners().length).toEqual(4);
+	});
+
+	test('get raw listeners when no listeners', t => {
+		const emitter = new Eventified();
+		t.expect(emitter.rawListeners('test-event')).toEqual([]);
+	});
+
+	test('prepend listener', t => {
+		const emitter = new Eventified();
+		const listener = () => {};
+
+		emitter.on('test-event', listener);
+		emitter.prependListener('test-event', () => {});
+
+		t.expect(emitter.rawListeners('test-event').length).toBe(2);
+		t.expect(emitter.rawListeners('test-event')[0]).not.toBe(listener);
+	});
+
+	test('prepend with no listenters', t => {
+		const emitter = new Eventified();
+		emitter.prependListener('test-event', () => {});
+		t.expect(emitter.rawListeners('test-event').length).toBe(1);
+	});
+
+	test('prepend once listener', t => {
+		const emitter = new Eventified();
+		const listener = () => {};
+
+		emitter.on('test-event', listener);
+		emitter.prependOnceListener('test-event', () => {});
+
+		t.expect(emitter.rawListeners('test-event').length).toBe(2);
+		t.expect(emitter.rawListeners('test-event')[0]).not.toBe(listener);
+
+		emitter.emit('test-event');
+
+		t.expect(emitter.rawListeners('test-event').length).toBe(1);
 	});
 });

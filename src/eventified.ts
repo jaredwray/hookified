@@ -44,11 +44,21 @@ export class Eventified implements IEventEmitter {
 	}
 
 	prependListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
-		throw new Error('Method not implemented.');
+		const listeners = this._eventListeners.get(eventName) ?? [];
+		listeners.unshift(listener);
+		this._eventListeners.set(eventName, listeners);
+		return this;
 	}
 
 	prependOnceListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
-		throw new Error('Method not implemented.');
+		const onceListener: EventListener = (...arguments_: any[]) => {
+			this.off(eventName as string, onceListener);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			listener(...arguments_);
+		};
+
+		this.prependListener(eventName as string, onceListener);
+		return this;
 	}
 
 	public maxListeners(): number {
