@@ -32,11 +32,15 @@ export class Eventified implements IEventEmitter {
 	}
 
 	eventNames(): Array<string | symbol> {
-		throw new Error('Method not implemented.');
+		return Array.from(this._eventListeners.keys());
 	}
 
-	rawListeners(eventName: string | symbol): EventListener[] {
-		throw new Error('Method not implemented.');
+	rawListeners(eventName?: string | symbol): EventListener[] {
+		if (!eventName) {
+			return this.getAllListeners();
+		}
+
+		return this._eventListeners.get(eventName) ?? [];
 	}
 
 	prependListener(eventName: string | symbol, listener: EventListener): IEventEmitter {

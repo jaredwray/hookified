@@ -161,4 +161,29 @@ describe('Eventified', () => {
 		t.expect(emitter.listenerCount()).toBe(4);
 		t.expect(emitter.listenerCount('test-event')).toBe(2);
 	});
+
+	test('get event names', t => {
+		const emitter = new Eventified();
+		const listener = () => {};
+
+		emitter.on('test-event', listener);
+		emitter.on('test-event1', listener);
+		emitter.on('test-event2', listener);
+
+		t.expect(emitter.eventNames()).toEqual(['test-event', 'test-event1', 'test-event2']);
+	});
+
+	test('get raw listeners', t => {
+		const emitter = new Eventified();
+		const listener = () => {};
+
+		emitter.on('test-event', listener);
+		emitter.on('test-event', listener);
+		emitter.on('test-event1', listener);
+		emitter.on('test-event2', listener);
+
+		t.expect(emitter.rawListeners('test-event')).toEqual([listener, listener]);
+		t.expect(emitter.rawListeners('test-event1')).toEqual([listener]);
+		t.expect(emitter.rawListeners().length).toEqual(4);
+	});
 });
