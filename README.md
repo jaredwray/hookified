@@ -119,7 +119,7 @@ if you are not using ESM modules, you can use the following:
 </script>
 ```
 
-# API
+# API - Hooks
 
 ## .onHook(eventName, handler)
 
@@ -142,6 +142,8 @@ Get all hooks.
 Get all hooks for an event.
 
 ## .clearHooks(eventName)
+
+# API - Events
 
 ## .on(eventName, handler)
 
@@ -166,6 +168,30 @@ Remove all listeners for an event.
 ## .setMaxListeners(maxListeners: number)
 
 Set the maximum number of listeners and will truncate if there are already too many.
+
+## .once(eventName, handler)
+
+Subscribe to an event once.
+
+## .prependListener(eventName, handler)
+
+Prepend a listener to an event.
+
+## .prependOnceListener(eventName, handler)
+
+Prepend a listener to an event once.
+
+## .eventNames()
+
+Get all event names.
+
+## .listenerCount(eventName?)
+
+Get the count of listeners for an event or all events if evenName not provided.
+
+## .rawListeners(eventName?)
+
+Get all listeners for an event or all events if evenName not provided.
 
 # Development and Testing
 
