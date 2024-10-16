@@ -52,15 +52,15 @@ export class Eventified implements IEventEmitter {
 
 	/**
 	 * Gets an array of listeners for a specific event. If no event is provided, it returns all listeners
-	 * @param {string} eventName (Optional) The event name
+	 * @param {string} [event] (Optional) The event name
 	 * @returns {EventListener[]} An array of listeners
 	 */
-	rawListeners(eventName?: string | symbol): EventListener[] {
-		if (!eventName) {
+	rawListeners(event?: string | symbol): EventListener[] {
+		if (!event) {
 			return this.getAllListeners();
 		}
 
-		return this._eventListeners.get(eventName) ?? [];
+		return this._eventListeners.get(event) ?? [];
 	}
 
 	/**
@@ -153,7 +153,7 @@ export class Eventified implements IEventEmitter {
 	 * @param {EventListener} listener
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
-	public off(event: string, listener: EventListener): IEventEmitter {
+	public off(event: string | symbol, listener: EventListener): IEventEmitter {
 		const listeners = this._eventListeners.get(event) ?? [];
 		const index = listeners.indexOf(listener);
 		if (index > -1) {
@@ -190,7 +190,7 @@ export class Eventified implements IEventEmitter {
 
 	/**
 	 * Gets all listeners for a specific event. If no event is provided, it returns all listeners
-	 * @param {string} event (Optional) The event name
+	 * @param {string} [event] (Optional) The event name
 	 * @returns {EventListener[]} An array of listeners
 	 */
 	public listeners(event: string): EventListener[] {
@@ -199,7 +199,7 @@ export class Eventified implements IEventEmitter {
 
 	/**
 	 * Removes all listeners for a specific event. If no event is provided, it removes all listeners
-	 * @param {string} event (Optional) The event name
+	 * @param {string} [event] (Optional) The event name
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
 	public removeAllListeners(event?: string): IEventEmitter {
