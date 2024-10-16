@@ -11,6 +11,12 @@ export class Eventified implements IEventEmitter {
 		this._maxListeners = 100; // Default maximum number of listeners
 	}
 
+	/**
+	 * Adds a handler function for a specific event that will run only once
+	 * @param {string | symbol} eventName
+	 * @param {EventListener} listener
+	 * @returns {IEventEmitter} returns the instance of the class for chaining
+	 */
 	once(eventName: string | symbol, listener: EventListener): IEventEmitter {
 		const onceListener: EventListener = (...arguments_: any[]) => {
 			this.off(eventName as string, onceListener);
@@ -22,6 +28,11 @@ export class Eventified implements IEventEmitter {
 		return this;
 	}
 
+	/**
+	 * Gets the number of listeners for a specific event. If no event is provided, it returns the total number of listeners
+	 * @param {string} eventName The event name. Not required
+	 * @returns {number} The number of listeners
+	 */
 	listenerCount(eventName?: string | symbol): number {
 		if (!eventName) {
 			return this.getAllListeners().length;
@@ -31,10 +42,19 @@ export class Eventified implements IEventEmitter {
 		return listeners ? listeners.length : 0;
 	}
 
+	/**
+	 * Gets an array of event names
+	 * @returns {Array<string | symbol>} An array of event names
+	 */
 	eventNames(): Array<string | symbol> {
 		return Array.from(this._eventListeners.keys());
 	}
 
+	/**
+	 * Gets an array of listeners for a specific event. If no event is provided, it returns all listeners
+	 * @param {string} eventName (Optional) The event name
+	 * @returns {EventListener[]} An array of listeners
+	 */
 	rawListeners(eventName?: string | symbol): EventListener[] {
 		if (!eventName) {
 			return this.getAllListeners();
@@ -43,6 +63,12 @@ export class Eventified implements IEventEmitter {
 		return this._eventListeners.get(eventName) ?? [];
 	}
 
+	/**
+	 * Prepends a listener to the beginning of the listeners array for the specified event
+	 * @param {string | symbol} eventName
+	 * @param {EventListener} listener
+	 * @returns {IEventEmitter} returns the instance of the class for chaining
+	 */
 	prependListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
 		const listeners = this._eventListeners.get(eventName) ?? [];
 		listeners.unshift(listener);
@@ -50,6 +76,12 @@ export class Eventified implements IEventEmitter {
 		return this;
 	}
 
+	/**
+	 * Prepends a one-time listener to the beginning of the listeners array for the specified event
+	 * @param {string | symbol} eventName
+	 * @param {EventListener} listener
+	 * @returns {IEventEmitter} returns the instance of the class for chaining
+	 */
 	prependOnceListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
 		const onceListener: EventListener = (...arguments_: any[]) => {
 			this.off(eventName as string, onceListener);
@@ -61,16 +93,31 @@ export class Eventified implements IEventEmitter {
 		return this;
 	}
 
+	/**
+	 * Gets the maximum number of listeners that can be added for a single event
+	 * @returns {number} The maximum number of listeners
+	 */
 	public maxListeners(): number {
 		return this._maxListeners;
 	}
 
-	// Add an event listener
+	/**
+	 * Adds a listener for a specific event. It is an alias for the on() method
+	 * @param {string | symbol} event
+	 * @param {EventListener} listener
+	 * @returns {IEventEmitter} returns the instance of the class for chaining
+	 */
 	public addListener(event: string | symbol, listener: EventListener): IEventEmitter {
 		this.on(event, listener);
 		return this;
 	}
 
+	/**
+	 * Adds a listener for a specific event
+	 * @param {string | symbol} event
+	 * @param {EventListener} listener
+	 * @returns {IEventEmitter} returns the instance of the class for chaining
+	 */
 	public on(event: string | symbol, listener: EventListener): IEventEmitter {
 		if (!this._eventListeners.has(event)) {
 			this._eventListeners.set(event, []);
@@ -89,12 +136,23 @@ export class Eventified implements IEventEmitter {
 		return this;
 	}
 
-	// Remove an event listener
+	/**
+	 * Removes a listener for a specific event. It is an alias for the off() method
+	 * @param {string | symbol} event
+	 * @param {EventListener} listener
+	 * @returns {IEventEmitter} returns the instance of the class for chaining
+	 */
 	public removeListener(event: string, listener: EventListener): IEventEmitter {
 		this.off(event, listener);
 		return this;
 	}
 
+	/**
+	 * Removes a listener for a specific event
+	 * @param {string | symbol} event
+	 * @param {EventListener} listener
+	 * @returns {IEventEmitter} returns the instance of the class for chaining
+	 */
 	public off(event: string, listener: EventListener): IEventEmitter {
 		const listeners = this._eventListeners.get(event) ?? [];
 		const index = listeners.indexOf(listener);
@@ -109,26 +167,41 @@ export class Eventified implements IEventEmitter {
 		return this;
 	}
 
-	// Emit an event
-	public emit(event: string, ...arguments_: any[]): boolean {
+	/**
+	 * Calls all listeners for a specific event
+	 * @param {string | symbol} event
+	 * @param arguments_ The arguments to pass to the listeners
+	 * @returns {boolean} Returns true if the event had listeners, false otherwise
+	 */
+	public emit(event: string | symbol, ...arguments_: any[]): boolean {
+		let result = false;
 		const listeners = this._eventListeners.get(event);
 
 		if (listeners && listeners.length > 0) {
 			for (const listener of listeners) {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 				listener(...arguments_);
+				result = true;
 			}
 		}
 
-		return true;
+		return result;
 	}
 
-	// Get all listeners for a specific event
+	/**
+	 * Gets all listeners for a specific event. If no event is provided, it returns all listeners
+	 * @param {string} event (Optional) The event name
+	 * @returns {EventListener[]} An array of listeners
+	 */
 	public listeners(event: string): EventListener[] {
 		return this._eventListeners.get(event) ?? [];
 	}
 
-	// Remove all listeners for a specific event
+	/**
+	 * Removes all listeners for a specific event. If no event is provided, it removes all listeners
+	 * @param {string} event (Optional) The event name
+	 * @returns {IEventEmitter} returns the instance of the class for chaining
+	 */
 	public removeAllListeners(event?: string): IEventEmitter {
 		if (event) {
 			this._eventListeners.delete(event);
@@ -139,7 +212,11 @@ export class Eventified implements IEventEmitter {
 		return this;
 	}
 
-	// Set the maximum number of listeners for a single event
+	/**
+	 * Sets the maximum number of listeners that can be added for a single event
+	 * @param {number} n The maximum number of listeners
+	 * @returns {void}
+	 */
 	public setMaxListeners(n: number): void {
 		this._maxListeners = n;
 		for (const listeners of this._eventListeners.values()) {
@@ -149,6 +226,10 @@ export class Eventified implements IEventEmitter {
 		}
 	}
 
+	/**
+	 * Gets all listeners
+	 * @returns {EventListener[]} An array of listeners
+	 */
 	public getAllListeners(): EventListener[] {
 		let result = new Array<EventListener>();
 		for (const listeners of this._eventListeners.values()) {
