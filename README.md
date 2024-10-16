@@ -1,6 +1,6 @@
 ![site/logo.svg](site/logo.svg)
 
-# Event Emitting and Async Middleware Hooks
+# Event Emitting and Middleware Hooks
 
 [![tests](https://github.com/jaredwray/hookified/actions/workflows/tests.yaml/badge.svg)](https://github.com/jaredwray/hookified/actions/workflows/tests.yaml)
 [![GitHub license](https://img.shields.io/github/license/jaredwray/hookified)](https://github.com/jaredwray/hookified/blob/master/LICENSE)
@@ -10,8 +10,9 @@
 
 # Features
 - Simple replacement for EventEmitter
-- Async Middleware Hooks for Your Methods
+- Async / Sync Middleware Hooks for Your Methods
 - ESM / CJS with Types and Nodejs 20+
+- Browser Support and Delivered via CDN
 - Maintained on a regular basis!
 
 # Installation

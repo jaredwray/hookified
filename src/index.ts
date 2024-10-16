@@ -13,7 +13,7 @@ export class Hookified extends Eventified {
 	/**
 	 * Adds a handler function for a specific event
 	 * @param {string} event
-	 * @param {Hook} handler
+	 * @param {Hook} handler - this can be async or sync
 	 * @returns {void}
 	 */
 	onHook(event: string, handler: Hook) {

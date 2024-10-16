@@ -115,4 +115,17 @@ describe('Hookified', () => {
 		await hookified.hook('event', data);
 		expect(errorMessage).toBe('Error in hook handler for event "event": error');
 	});
+
+	test('hook with sync function', async () => {
+		const hookified = new Hookified();
+		const data = {key: 'value'};
+
+		const handler = (data: any) => {
+			data.key = 'modified';
+		};
+
+		hookified.onHook('event', handler);
+		await hookified.hook('event', data);
+		expect(data.key).toBe('modified');
+	});
 });
