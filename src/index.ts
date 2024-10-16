@@ -10,7 +10,12 @@ export class Hookified extends Eventified {
 		this._hooks = new Map();
 	}
 
-	// Adds a handler function for a specific event
+	/**
+	 * Adds a handler function for a specific event
+	 * @param {string} event
+	 * @param {Hook} handler
+	 * @returns {void}
+	 */
 	onHook(event: string, handler: Hook) {
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
@@ -20,7 +25,12 @@ export class Hookified extends Eventified {
 		}
 	}
 
-	// Removes a specific handler function for a specific event
+	/**
+	 * Removes a handler function for a specific event
+	 * @param {string} event
+	 * @param {Hook} handler
+	 * @returns {void}
+	 */
 	removeHook(event: string, handler: Hook) {
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
@@ -31,7 +41,12 @@ export class Hookified extends Eventified {
 		}
 	}
 
-	// Triggers all handlers for a specific event with provided data
+	/**
+	 * Calls all handlers for a specific event
+	 * @param {string} event
+	 * @param {T[]} arguments_
+	 * @returns {Promise<void>}
+	 */
 	async hook<T>(event: string, ...arguments_: T[]) {
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
@@ -46,16 +61,27 @@ export class Hookified extends Eventified {
 		}
 	}
 
-	// Provides read-only access to the current handlers
+	/**
+	 * Gets all hooks
+	 * @returns {Map<string, Hook[]>}
+	 */
 	get hooks() {
-		// Creating a new map to prevent external modifications to the original map
 		return this._hooks;
 	}
 
+	/**
+	 * Gets all hooks for a specific event
+	 * @param {string} event
+	 * @returns {Hook[]}
+	 */
 	getHooks(event: string) {
 		return this._hooks.get(event);
 	}
 
+	/**
+	 * Removes all hooks
+	 * @returns {void}
+	 */
 	clearHooks() {
 		this._hooks.clear();
 	}
