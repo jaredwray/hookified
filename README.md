@@ -6,7 +6,7 @@
 [![GitHub license](https://img.shields.io/github/license/jaredwray/hookified)](https://github.com/jaredwray/hookified/blob/master/LICENSE)
 [![codecov](https://codecov.io/gh/jaredwray/hookified/graph/badge.svg?token=nKkVklTFdA)](https://codecov.io/gh/jaredwray/hookified)
 [![npm](https://img.shields.io/npm/dm/hookified)](https://npmjs.com/package/hookified)
-![jsDelivr hits](https://img.shields.io/jsdelivr/npm/hm/hookified)
+[![jsDelivr hits](https://img.shields.io/jsdelivr/npm/hm/hookified)](https://www.jsdelivr.com/package/npm/hookified)
 [![npm](https://img.shields.io/npm/v/hookified)](https://npmjs.com/package/hookified)
 
 # Features
