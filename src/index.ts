@@ -26,6 +26,21 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Adds a handler that only executes once for a specific event
+	 * @param event
+	 * @param handler
+	 */
+	onceHook(event: string, handler: Hook) {
+		const hook = async (...arguments_: any[]) => {
+			this.removeHook(event, hook);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			return handler(...arguments_);
+		};
+
+		this.onHook(event, hook);
+	}
+
+	/**
 	 * Removes a handler function for a specific event
 	 * @param {string} event
 	 * @param {Hook} handler

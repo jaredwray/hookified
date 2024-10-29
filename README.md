@@ -150,6 +150,38 @@ myClass.onHook('before:myMethod2', async (data) => {
 });
 ```
 
+## .onceHook(eventName, handler)
+
+Subscribe to a hook event once.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.onHookOnce('before:myMethod2', async (data) => {
+  data.some = 'new data';
+});
+
+myClass.myMethodWithHooks();
+
+console.log(myClass.hooks.length); // 0
+```
+
 ## .removeHook(eventName)
 
 Unsubscribe from a hook event.

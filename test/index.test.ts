@@ -20,6 +20,16 @@ describe('Hookified', () => {
 		expect(hookified.hooks.size).toBe(2);
 	});
 
+	test('onHookOnce will remove hook after execution', async () => {
+		const hookified = new Hookified();
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		const handler = () => {};
+		hookified.onceHook('event', handler);
+		expect(hookified.getHooks('event')?.length).toEqual(1);
+		await hookified.hook('event');
+		expect(hookified.getHooks('event')?.length).toEqual(0);
+	});
+
 	test('onHook with Clear', async () => {
 		const hookified = new Hookified();
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
