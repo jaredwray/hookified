@@ -127,23 +127,199 @@ if you are not using ESM modules, you can use the following:
 
 Subscribe to a hook event.
 
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+myClass.onHook('before:myMethod2', async (data) => {
+  data.some = 'new data';
+});
+```
+
 ## .removeHook(eventName)
 
 Unsubscribe from a hook event.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+const handler = async (data) => {
+  data.some = 'new data';
+};
+
+myClass.onHook('before:myMethod2', handler);
+
+myClass.removeHook('before:myMethod2', handler);
+```
 
 ## .hook(eventName, ...args)
 
 Run a hook event.
 
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+```
+
+in this example we are passing multiple arguments to the hook:
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    let data2 = { some: 'data2' };
+    // do something
+    await this.hook('before:myMethod2', data, data2);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.onHook('before:myMethod2', async (data, data2) => {
+  data.some = 'new data';
+  data2.some = 'new data2';
+});
+
+await myClass.myMethodWithHooks();
+```
+
 ## .hooks
 
 Get all hooks.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+myClass.onHook('before:myMethod2', async (data) => {
+  data.some = 'new data';
+});
+
+console.log(myClass.hooks);
+```
 
 ## .getHooks(eventName)
 
 Get all hooks for an event.
 
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+myClass.onHook('before:myMethod2', async (data) => {
+  data.some = 'new data';
+});
+
+console.log(myClass.getHooks('before:myMethod2'));
+```
+
 ## .clearHooks(eventName)
+
+Clear all hooks for an event.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.onHook('before:myMethod2', async (data) => {
+  data.some = 'new data';
+});
+
+myClass.clearHooks('before:myMethod2');
+```
 
 # API - Events
 
@@ -151,49 +327,286 @@ Get all hooks for an event.
 
 Subscribe to an event.
 
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodEmittingEvent() {
+    this.emit('message', 'Hello World');
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.on('message', (message) => {
+  console.log(message);
+});
+```
+
 ## .off(eventName, handler)
 
 Unsubscribe from an event.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodEmittingEvent() {
+    this.emit('message', 'Hello World');
+  }
+}
+
+const myClass = new MyClass();
+myClass.on('message', (message) => {
+  console.log(message);
+});
+
+myClass.off('message', (message) => {
+  console.log(message);
+});
+```
 
 ## .emit(eventName, ...args)
 
 Emit an event.
 
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodEmittingEvent() {
+    this.emit('message', 'Hello World');
+  }
+}
+```
+
 ## .listeners(eventName)
 
 Get all listeners for an event.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodEmittingEvent() {
+    this.emit('message', 'Hello World');
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.on('message', (message) => {
+  console.log(message);
+});
+
+console.log(myClass.listeners('message'));
+```
 
 ## .removeAllListeners(eventName)
 
 Remove all listeners for an event.
 
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodEmittingEvent() {
+    this.emit('message', 'Hello World');
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.on('message', (message) => {
+  console.log(message);
+});
+
+myClass.removeAllListeners('message');
+```
+
 ## .setMaxListeners(maxListeners: number)
 
 Set the maximum number of listeners and will truncate if there are already too many.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodEmittingEvent() {
+    this.emit('message', 'Hello World');
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.setMaxListeners(1);
+
+myClass.on('message', (message) => {
+  console.log(message);
+});
+
+myClass.on('message', (message) => {
+  console.log(message);
+}); // this will not be added and console warning
+
+console.log(myClass.listenerCount('message')); // 1
+```
 
 ## .once(eventName, handler)
 
 Subscribe to an event once.
 
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.once('message', (message) => {
+  console.log(message);
+});
+
+myClass.emit('message', 'Hello World');
+
+myClass.emit('message', 'Hello World'); // this will not be called
+```
+
 ## .prependListener(eventName, handler)
 
-Prepend a listener to an event.
+Prepend a listener to an event. This will be called before any other listeners.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.prependListener('message', (message) => {
+  console.log(message);
+});
+```
 
 ## .prependOnceListener(eventName, handler)
 
-Prepend a listener to an event once.
+Prepend a listener to an event once. This will be called before any other listeners.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.prependOnceListener('message', (message) => {
+  console.log(message);
+});
+
+myClass.emit('message', 'Hello World');
+```
 
 ## .eventNames()
 
 Get all event names.
 
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.on('message', (message) => {
+  console.log(message);
+});
+
+console.log(myClass.eventNames());
+```
+
 ## .listenerCount(eventName?)
 
 Get the count of listeners for an event or all events if evenName not provided.
 
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.on('message', (message) => {
+  console.log(message);
+});
+
+console.log(myClass.listenerCount('message')); // 1
+```
+
 ## .rawListeners(eventName?)
 
 Get all listeners for an event or all events if evenName not provided.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.on('message', (message) => {
+  console.log(message);
+});
+
+console.log(myClass.rawListeners('message'));
+```
 
 # Development and Testing
 
