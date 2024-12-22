@@ -182,6 +182,66 @@ myClass.myMethodWithHooks();
 console.log(myClass.hooks.length); // 0
 ```
 
+## .prependHook(eventName, handler)
+
+Subscribe to a hook event before all other hooks.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+myClass.onHook('before:myMethod2', async (data) => {
+  data.some = 'new data';
+});
+myClass.preHook('before:myMethod2', async (data) => {
+  data.some = 'will run before new data';
+});
+```
+
+## .prependOnceHook(eventName, handler)
+
+Subscribe to a hook event before all other hooks. After it is used once it will be removed.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+myClass.onHook('before:myMethod2', async (data) => {
+  data.some = 'new data';
+});
+myClass.preHook('before:myMethod2', async (data) => {
+  data.some = 'will run before new data';
+});
+```
+
 ## .removeHook(eventName)
 
 Unsubscribe from a hook event.
