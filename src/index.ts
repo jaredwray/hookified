@@ -26,6 +26,36 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Adds a handler function for a specific event that runs before all other handlers
+	 * @param {string} event
+	 * @param {Hook} handler - this can be async or sync
+	 * @returns {void}
+	 */
+	prependHook(event: string, handler: Hook) {
+		const eventHandlers = this._hooks.get(event);
+		if (eventHandlers) {
+			eventHandlers.unshift(handler);
+		} else {
+			this._hooks.set(event, [handler]);
+		}
+	}
+
+	/**
+	 * Adds a handler that only executes once for a specific event before all other handlers
+	 * @param event
+	 * @param handler
+	 */
+	prependOnceHook(event: string, handler: Hook) {
+		const hook = async (...arguments_: any[]) => {
+			this.removeHook(event, hook);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			return handler(...arguments_);
+		};
+
+		this.prependHook(event, hook);
+	}
+
+	/**
 	 * Adds a handler that only executes once for a specific event
 	 * @param event
 	 * @param handler

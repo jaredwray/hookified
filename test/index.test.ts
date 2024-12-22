@@ -138,4 +138,49 @@ describe('Hookified', () => {
 		await hookified.hook('event', data);
 		expect(data.key).toBe('modified');
 	});
+
+	test('prepends hook to the beginning of the array', async () => {
+		const hookified = new Hookified();
+		const handlerData: string[] = [];
+
+		const handler = () => {
+			handlerData.push('modified2');
+		};
+
+		const handler2 = () => {
+			handlerData.push('modified1');
+		};
+
+		hookified.onHook('event', handler);
+		hookified.prependHook('event', handler2);
+		await hookified.hook('event');
+		expect(handlerData[0]).toBe('modified1');
+		expect(handlerData[1]).toBe('modified2');
+	});
+
+	test('prepends hook and creates new array', async () => {
+		const hookified = new Hookified();
+		const handlerData: string[] = [];
+
+		const handler = () => {
+			handlerData.push('modified1');
+		};
+
+		hookified.prependHook('event', handler);
+		await hookified.hook('event');
+		expect(handlerData[0]).toBe('modified1');
+	});
+
+	test('prepends a hook and removes it', async () => {
+		const hookified = new Hookified();
+		const handlerData: string[] = [];
+
+		const handler = () => {
+			handlerData.push('modified1');
+		};
+
+		hookified.prependOnceHook('event20', handler);
+		await hookified.hook('event20');
+		expect(hookified.hooks.get('event20')?.length).toBe(0);
+	});
 });
