@@ -112,7 +112,7 @@ describe('Hookified', () => {
 		let errorMessage;
 		hookified.on('error', (error: Error) => {
 			errorMessage = error.message;
-			expect(error.message).toBe('Error in hook handler for event "event": error');
+			expect(error.message).toBe('event: error');
 		});
 
 		const data = {key: 'value'};
@@ -123,7 +123,7 @@ describe('Hookified', () => {
 
 		hookified.onHook('event', handler);
 		await hookified.hook('event', data);
-		expect(errorMessage).toBe('Error in hook handler for event "event": error');
+		expect(errorMessage).toBe('event: error');
 	});
 
 	test('hook with sync function', async () => {
@@ -182,5 +182,32 @@ describe('Hookified', () => {
 		hookified.prependOnceHook('event20', handler);
 		await hookified.hook('event20');
 		expect(hookified.hooks.get('event20')?.length).toBe(0);
+	});
+
+	test('should set throwErrorOnHook to true', async () => {
+		const hookified = new Hookified({throwHookErrors: true});
+		expect(hookified.throwHookErrors).toBe(true);
+		hookified.throwHookErrors = false;
+		expect(hookified.throwHookErrors).toBe(false);
+	});
+
+	test('should throw error when throwErrorOnHook is true', async () => {
+		const hookified = new Hookified({throwHookErrors: true});
+		const data = {key: 'value'};
+		let errorMessage;
+
+		const handler = () => {
+			throw new Error('error: this handler throws stuff');
+		};
+
+		hookified.onHook('event', handler);
+
+		try {
+			await hookified.hook('event', data);
+		} catch (error) {
+			errorMessage = (error as Error).message;
+		}
+
+		expect(errorMessage).toBe('event: error: this handler throws stuff');
 	});
 });

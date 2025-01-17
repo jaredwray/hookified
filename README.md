@@ -123,6 +123,40 @@ if you are not using ESM modules, you can use the following:
 
 # API - Hooks
 
+## .throwHookErrors
+
+If set to true, errors thrown in hooks will be thrown. If set to false, errors will be only emitted.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ throwHookErrors: true});
+  }
+}
+
+const myClass = new MyClass();
+
+console.log(myClass.throwHookErrors); // true. because it is set in super
+
+try {
+  myClass.onHook('error-event', async () => {
+    throw new Error('error');
+  });
+
+  await myClass.hook('error-event');
+} catch (error) {
+  console.log(error.message); // error
+}
+
+myClass.throwHookErrors = false;
+console.log(myClass.throwHookErrors); // false
+
+
+
+```
+
 ## .onHook(eventName, handler)
 
 Subscribe to a hook event.

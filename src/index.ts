@@ -2,12 +2,45 @@ import {Eventified} from './eventified.js';
 
 export type Hook = (...arguments_: any[]) => Promise<void> | void;
 
+export type HookifiedOptions = {
+	throwHookErrors?: boolean;
+};
+
 export class Hookified extends Eventified {
 	_hooks: Map<string, Hook[]>;
+	_throwHookErrors = false;
 
-	constructor() {
+	constructor(options?: HookifiedOptions) {
 		super();
 		this._hooks = new Map();
+
+		if (options?.throwHookErrors !== undefined) {
+			this._throwHookErrors = options.throwHookErrors;
+		}
+	}
+
+	/**
+	 * Gets all hooks
+	 * @returns {Map<string, Hook[]>}
+	 */
+	get hooks() {
+		return this._hooks;
+	}
+
+	/**
+	 * Gets whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
+	 * @returns {boolean}
+	 */
+	get throwHookErrors() {
+		return this._throwHookErrors;
+	}
+
+	/**
+	 * Sets whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
+	 * @param {boolean} value
+	 */
+	set throwHookErrors(value) {
+		this._throwHookErrors = value;
 	}
 
 	/**
@@ -100,18 +133,14 @@ export class Hookified extends Eventified {
 					// eslint-disable-next-line no-await-in-loop
 					await handler(...arguments_);
 				} catch (error) {
-					this.emit('error', new Error(`Error in hook handler for event "${event}": ${(error as Error).message}`));
+					const message = `${event}: ${(error as Error).message}`;
+					this.emit('error', new Error(message));
+					if (this._throwHookErrors) {
+						throw new Error(message);
+					}
 				}
 			}
 		}
-	}
-
-	/**
-	 * Gets all hooks
-	 * @returns {Map<string, Hook[]>}
-	 */
-	get hooks() {
-		return this._hooks;
 	}
 
 	/**
