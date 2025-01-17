@@ -1,6 +1,6 @@
 {
   "name": "hookified",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Event and Middleware Hooks",
   "type": "module",
   "main": "dist/node/index.cjs",
