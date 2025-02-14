@@ -6,7 +6,7 @@ export const options = {
 	githubPath: 'jaredwray/hookified',
 	outputPath: './site/dist',
 	siteTitle: 'Hookified',
-	siteDescription: 'Event and Middleware Hooks for Node.js',
+	siteDescription: 'Event Emitting and Middleware Hooks for Node.js',
 	siteUrl: 'https://hookified.org',
 };
 
