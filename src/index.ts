@@ -23,7 +23,7 @@ export class Hookified extends Eventified {
 	 * Gets all hooks
 	 * @returns {Map<string, Hook[]>}
 	 */
-	get hooks() {
+	public get hooks() {
 		return this._hooks;
 	}
 
@@ -31,7 +31,7 @@ export class Hookified extends Eventified {
 	 * Gets whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
 	 * @returns {boolean}
 	 */
-	get throwHookErrors() {
+	public get throwHookErrors() {
 		return this._throwHookErrors;
 	}
 
@@ -39,7 +39,7 @@ export class Hookified extends Eventified {
 	 * Sets whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
 	 * @param {boolean} value
 	 */
-	set throwHookErrors(value) {
+	public set throwHookErrors(value) {
 		this._throwHookErrors = value;
 	}
 
@@ -49,7 +49,7 @@ export class Hookified extends Eventified {
 	 * @param {Hook} handler - this can be async or sync
 	 * @returns {void}
 	 */
-	onHook(event: string, handler: Hook) {
+	public onHook(event: string, handler: Hook) {
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			eventHandlers.push(handler);
@@ -64,7 +64,7 @@ export class Hookified extends Eventified {
 	 * @param {Hook} handler - this can be async or sync
 	 * @returns {void}
 	 */
-	prependHook(event: string, handler: Hook) {
+	public prependHook(event: string, handler: Hook) {
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			eventHandlers.unshift(handler);
@@ -78,7 +78,7 @@ export class Hookified extends Eventified {
 	 * @param event
 	 * @param handler
 	 */
-	prependOnceHook(event: string, handler: Hook) {
+	public prependOnceHook(event: string, handler: Hook) {
 		const hook = async (...arguments_: any[]) => {
 			this.removeHook(event, hook);
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -93,7 +93,7 @@ export class Hookified extends Eventified {
 	 * @param event
 	 * @param handler
 	 */
-	onceHook(event: string, handler: Hook) {
+	public onceHook(event: string, handler: Hook) {
 		const hook = async (...arguments_: any[]) => {
 			this.removeHook(event, hook);
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -109,7 +109,7 @@ export class Hookified extends Eventified {
 	 * @param {Hook} handler
 	 * @returns {void}
 	 */
-	removeHook(event: string, handler: Hook) {
+	public removeHook(event: string, handler: Hook) {
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			const index = eventHandlers.indexOf(handler);
@@ -125,7 +125,7 @@ export class Hookified extends Eventified {
 	 * @param {T[]} arguments_
 	 * @returns {Promise<void>}
 	 */
-	async hook<T>(event: string, ...arguments_: T[]) {
+	public async hook<T>(event: string, ...arguments_: T[]) {
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			for (const handler of eventHandlers) {
@@ -148,7 +148,7 @@ export class Hookified extends Eventified {
 	 * @param {string} event
 	 * @returns {Hook[]}
 	 */
-	getHooks(event: string) {
+	public getHooks(event: string) {
 		return this._hooks.get(event);
 	}
 
@@ -156,7 +156,7 @@ export class Hookified extends Eventified {
 	 * Removes all hooks
 	 * @returns {void}
 	 */
-	clearHooks() {
+	public clearHooks() {
 		this._hooks.clear();
 	}
 }
