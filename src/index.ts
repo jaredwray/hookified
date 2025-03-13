@@ -184,3 +184,4 @@ export class Hookified extends Eventified {
 }
 
 export {Eventified, type EventListener} from './eventified.js';
+export {type Logger} from './logger.js';

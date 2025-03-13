@@ -9,11 +9,45 @@
 [![jsDelivr hits](https://img.shields.io/jsdelivr/npm/hm/hookified)](https://www.jsdelivr.com/package/npm/hookified)
 [![npm](https://img.shields.io/npm/v/hookified)](https://npmjs.com/package/hookified)
 
+# Table of Contents
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Using it in the Browser](#using-it-in-the-browser)
+- [API - Hooks](#api---hooks)
+  - [.throwHookErrors](#throwhookerrors)
+  - [.onHook(eventName, handler)](#onhookeventname-handler)
+  - [.onceHook(eventName, handler)](#oncehookeventname-handler)
+  - [.prependHook(eventName, handler)](#prependhookeventname-handler)
+  - [.prependOnceHook(eventName, handler)](#prependoncehookeventname-handler)
+  - [.removeHook(eventName)](#removehookeventname)
+  - [.hook(eventName, ...args)](#hookeventname-args)
+  - [.hooks](#hooks)
+  - [.getHooks(eventName)](#gethookseventname)
+  - [.clearHooks(eventName)](#clearhookeventname)
+- [API - Events](#api---events)
+  - [.on(eventName, handler)](#oneventname-handler)
+  - [.off(eventName, handler)](#offeventname-handler)
+  - [.emit(eventName, ...args)](#emiteventname-args)
+  - [.listeners(eventName)](#listenerseventname)
+  - [.removeAllListeners(eventName)](#removealllistenerseventname)
+  - [.setMaxListeners(maxListeners: number)](#setmaxlistenersmaxlisteners-number)
+  - [.once(eventName, handler)](#oneventname-handler-1)
+  - [.prependListener(eventName, handler)](#prependlistenereventname-handler)
+  - [.prependOnceListener(eventName, handler)](#prependoncelistenereventname-handler)
+  - [.eventNames()](#eventnames)
+  - [.listenerCount(eventName?)](#listenercounteventname)
+  - [.rawListeners(eventName?)](#rawlistenerseventname)
+- [Development and Testing](#development-and-testing)
+- [License](#license)
+
 # Features
 - Simple replacement for EventEmitter
 - Async / Sync Middleware Hooks for Your Methods
 - ESM / CJS with Types and Nodejs 20+
 - Browser Support and Delivered via CDN
+- Ability to throw errors in hooks
+- Ability to pass in a logger for errors
 - Maintained on a regular basis!
 
 # Installation
@@ -152,9 +186,38 @@ try {
 
 myClass.throwHookErrors = false;
 console.log(myClass.throwHookErrors); // false
+```
 
+## .logger
+If set, errors thrown in hooks will be logged to the logger. If not set, errors will be only emitted.
 
+```javascript
+import { Hookified } from 'hookified';
+import pino from 'pino';
 
+const logger = pino(); // create a logger instance that is compatible with Logger type
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ logger });
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+myClass.onHook('before:myMethod2', async () => {
+  throw new Error('error');
+});
+
+// when you call before:myMethod2 it will log the error to the logger
+await myClass.hook('before:myMethod2');
 ```
 
 ## .onHook(eventName, handler)
