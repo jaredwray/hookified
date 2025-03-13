@@ -6,11 +6,20 @@
 [![GitHub license](https://img.shields.io/github/license/jaredwray/hookified)](https://github.com/jaredwray/hookified/blob/master/LICENSE)
 [![codecov](https://codecov.io/gh/jaredwray/hookified/graph/badge.svg?token=nKkVklTFdA)](https://codecov.io/gh/jaredwray/hookified)
 [![npm](https://img.shields.io/npm/dm/hookified)](https://npmjs.com/package/hookified)
-[![jsDelivr hits](https://img.shields.io/jsdelivr/npm/hm/hookified)](https://www.jsdelivr.com/package/npm/hookified)
+[![jsDelivr](https://data.jsdelivr.com/v1/package/npm/hookified/badge)](https://www.jsdelivr.com/package/npm/hookified)
 [![npm](https://img.shields.io/npm/v/hookified)](https://npmjs.com/package/hookified)
 
+# Features
+- Simple replacement for EventEmitter
+- Async / Sync Middleware Hooks for Your Methods 
+- ESM / CJS with Types and Nodejs 20+
+- Browser Support and Delivered via CDN
+- Ability to throw errors in hooks
+- Ability to pass in a logger (such as Pino) for errors
+- No package dependencies
+- Maintained on a regular basis!
+
 # Table of Contents
-- [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Using it in the Browser](#using-it-in-the-browser)
@@ -40,15 +49,6 @@
   - [.rawListeners(eventName?)](#rawlistenerseventname)
 - [Development and Testing](#development-and-testing)
 - [License](#license)
-
-# Features
-- Simple replacement for EventEmitter
-- Async / Sync Middleware Hooks for Your Methods
-- ESM / CJS with Types and Nodejs 20+
-- Browser Support and Delivered via CDN
-- Ability to throw errors in hooks
-- Ability to pass in a logger for errors
-- Maintained on a regular basis!
 
 # Installation
 ```bash
