@@ -48,6 +48,7 @@
   - [.listenerCount(eventName?)](#listenercounteventname)
   - [.rawListeners(eventName?)](#rawlistenerseventname)
 - [Development and Testing](#development-and-testing)
+- [Benchmarks](#benchmarks)
 - [License](#license)
 
 # Installation
