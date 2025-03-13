@@ -1,9 +1,10 @@
-import {bench} from 'vitest';
+import {Bench} from 'tinybench';
+import {tinybenchPrinter} from '@monstermann/tinybench-pretty-printer';
 import {createHooks} from 'hookable';
 import {Hookified} from '../src/index.js';
 import pkg from '../package.json' assert { type: 'json' };
 
-const iterations = 1000;
+const bench = new Bench({name: 'hook', iterations: 10_000});
 
 const hookified = new Hookified();
 // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -15,10 +16,16 @@ const hookable = createHooks();
 const genericHookableHandler = () => {};
 hookable.hook('event', genericHookableHandler);
 
-bench(`Hookable ${pkg.devDependencies.hookable}`, async () => {
+bench.add(`Hookable ${pkg.devDependencies.hookable}`, async () => {
 	await hookable.callHook('event', 'test');
-}, {iterations});
+});
 
-bench(`Hookified ${pkg.version}`, async () => {
+bench.add(`Hookified ${pkg.version}`, async () => {
 	await hookified.hook('event', 'test');
-}, {iterations});
+});
+
+await bench.run();
+
+const cli = tinybenchPrinter.toMarkdown(bench);
+console.log(cli);
+console.log('');

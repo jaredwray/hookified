@@ -6,6 +6,7 @@ export default defineConfig({
 		coverage: {
 			exclude: [
 				'site/**',
+				'benchmark/**',
 				'vitest.config.ts',
 				'dist/**',
 				'test/**',

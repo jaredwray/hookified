@@ -813,7 +813,22 @@ To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of
 
 We are doing very simple benchmarking to see how this compares to other libraries using `vitest bench`. This is not a full benchmark but just a simple way to see how it performs. We are using `hookified` and `eventemitter3` as the libraries to compare against.
 
-![./site/benchmark.png](./site/benchmark.png)
+## Hooks
+|       name        |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
+|-------------------|:---------:|----------:|----------:|:--------:|----------:|
+|  Hookified 1.8.0  |    🥇     |       4M  |    306ns  |  ±2.46%  |       3M  |
+|  Hookable ^5.5.3  |   -71%    |       1M  |      1µs  |  ±2.93%  |     826K  |
+
+## Emits
+
+This shows how close the native `EventEmitter` is to `hookified` and `eventemitter3`. We are using the same test as above but just emitting events.
+
+|      name       |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
+|-----------------|:---------:|----------:|----------:|:--------:|----------:|
+|  EventEmitter3  |    🥇     |      10M  |    111ns  |  ±0.55%  |       9M  |
+|  Hookified      |  -0.14%   |      10M  |    113ns  |  ±1.94%  |       9M  |
+|  EventEmitter   |   -3.5%   |       9M  |    115ns  |  ±1.27%  |       9M  |
+|  Emittery       |   -92%    |     783K  |      1µs  |  ±2.31%  |     749K  |
 
 # License
 
