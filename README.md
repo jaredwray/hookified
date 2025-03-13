@@ -809,6 +809,12 @@ npm i && npm test
 
 To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
 
+# Benchmarks
+
+We are doing very simple benchmarking to see how this compares to other libraries using `vitest bench`. This is not a full benchmark but just a simple way to see how it performs. We are using `hookified` and `eventemitter3` as the libraries to compare against.
+
+![./site/benchmark.png](./site/benchmark.png)
+
 # License
 
 [MIT & © Jared Wray](LICENSE)
