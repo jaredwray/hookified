@@ -822,14 +822,16 @@ We are doing very simple benchmarking to see how this compares to other librarie
 
 ## Emits
 
-This shows how close the native `EventEmitter` is to `hookified` and `eventemitter3`. We are using the same test as above but just emitting events.
+This shows how close the native `EventEmitter` is to `hookified` and `eventemitter3`. We are using the same test as above but just emitting events. It is not a fair comparison but it is interesting to see how close they are.
 
-|      name       |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
-|-----------------|:---------:|----------:|----------:|:--------:|----------:|
-|  EventEmitter3  |    🥇     |      10M  |    111ns  |  ±0.55%  |       9M  |
-|  Hookified      |  -0.14%   |      10M  |    113ns  |  ±1.94%  |       9M  |
-|  EventEmitter   |   -3.5%   |       9M  |    115ns  |  ±1.27%  |       9M  |
-|  Emittery       |   -92%    |     783K  |      1µs  |  ±2.31%  |     749K  |
+|          name           |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
+|-------------------------|:---------:|----------:|----------:|:--------:|----------:|
+|  Hookified 1.8.0        |    🥇     |      10M  |    112ns  |  ±1.13%  |       9M  |
+|  EventEmitter3 5.0.1    |   -1.3%   |      10M  |    114ns  |  ±1.84%  |       9M  |
+|  EventEmitter v22.12.0  |   -1.5%   |       9M  |    114ns  |  ±1.18%  |       9M  |
+|  Emittery 1.1.0         |   -92%    |     785K  |      1µs  |  ±0.45%  |     761K  |
+
+_Note: the `EventEmitter` version is Nodejs versioning._
 
 # License
 
