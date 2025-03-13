@@ -173,7 +173,7 @@ export class Eventified implements IEventEmitter {
 	 * @param {EventListener} listener
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
-	once(eventName: string | symbol, listener: EventListener): IEventEmitter {
+	public once(eventName: string | symbol, listener: EventListener): IEventEmitter {
 		const onceListener: EventListener = (...arguments_: any[]) => {
 			this.off(eventName as string, onceListener);
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -189,7 +189,7 @@ export class Eventified implements IEventEmitter {
 	 * @param {string} eventName The event name. Not required
 	 * @returns {number} The number of listeners
 	 */
-	listenerCount(eventName?: string | symbol): number {
+	public listenerCount(eventName?: string | symbol): number {
 		if (!eventName) {
 			return this.getAllListeners().length;
 		}
@@ -202,7 +202,7 @@ export class Eventified implements IEventEmitter {
 	 * Gets an array of event names
 	 * @returns {Array<string | symbol>} An array of event names
 	 */
-	eventNames(): Array<string | symbol> {
+	public eventNames(): Array<string | symbol> {
 		return Array.from(this._eventListeners.keys());
 	}
 
@@ -211,7 +211,7 @@ export class Eventified implements IEventEmitter {
 	 * @param {string} [event] (Optional) The event name
 	 * @returns {EventListener[]} An array of listeners
 	 */
-	rawListeners(event?: string | symbol): EventListener[] {
+	public rawListeners(event?: string | symbol): EventListener[] {
 		if (!event) {
 			return this.getAllListeners();
 		}
@@ -225,7 +225,7 @@ export class Eventified implements IEventEmitter {
 	 * @param {EventListener} listener
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
-	prependListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
+	public prependListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
 		const listeners = this._eventListeners.get(eventName) ?? [];
 		listeners.unshift(listener);
 		this._eventListeners.set(eventName, listeners);
@@ -238,7 +238,7 @@ export class Eventified implements IEventEmitter {
 	 * @param {EventListener} listener
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
-	prependOnceListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
+	public prependOnceListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
 		const onceListener: EventListener = (...arguments_: any[]) => {
 			this.off(eventName as string, onceListener);
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument

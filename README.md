@@ -132,7 +132,7 @@ import { Hookified } from 'hookified';
 
 class MyClass extends Hookified {
   constructor() {
-    super({ throwHookErrors: true});
+    super({ throwHookErrors: true });
   }
 }
 
