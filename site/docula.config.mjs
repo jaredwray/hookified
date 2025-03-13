@@ -20,7 +20,7 @@ export const onPrepare = async config => {
 	await fs.promises.writeFile(readmeSitePath, updatedReadme);
 
 	const benchmarkImagePath = path.join(config.sitePath, './benchmark.png');
-	const siteDistPath = path.join(config.outputPath, './benchmark.png');
-	console.log('copying benchmark image to ', siteDistPath);
-	await fs.promises.copyFile(benchmarkImagePath, siteDistPath);
+	const siteDistributionPath = path.join(config.outputPath, './benchmark.png');
+	console.log('copying benchmark image to', siteDistributionPath);
+	await fs.promises.copyFile(benchmarkImagePath, siteDistributionPath);
 };
