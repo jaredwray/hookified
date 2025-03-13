@@ -1,4 +1,5 @@
 import {describe, test, expect} from 'vitest';
+import pino from 'pino';
 import {Hookified} from '../src/index.js';
 
 describe('Hookified', () => {
@@ -209,5 +210,49 @@ describe('Hookified', () => {
 		}
 
 		expect(errorMessage).toBe('event: error: this handler throws stuff');
+	});
+
+	describe('logger', () => {
+		test('should set logger', async () => {
+			const hookified = new Hookified();
+			const logger = pino();
+			hookified.logger = logger;
+			expect(hookified.logger).toBe(logger);
+		});
+
+		test('should set logger to undefined', async () => {
+			const hookified = new Hookified();
+			hookified.logger = undefined;
+			expect(hookified.logger).toBe(undefined);
+		});
+
+		test('should log error', async () => {
+			const logger = pino();
+			let loggerErrorMessage;
+			logger.error = (object: unknown, ...arguments_: unknown[]) => {
+				const message = typeof object === 'string' ? object : arguments_[0];
+				expect(message).toBe('event: error: this handler throws stuff');
+				loggerErrorMessage = message as string;
+			};
+
+			const hookified = new Hookified({logger, throwHookErrors: true});
+			const data = {key: 'value'};
+			let errorMessage;
+
+			const handler = () => {
+				throw new Error('error: this handler throws stuff');
+			};
+
+			hookified.onHook('event', handler);
+
+			try {
+				await hookified.hook('event', data);
+			} catch (error) {
+				errorMessage = (error as Error).message;
+			}
+
+			expect(errorMessage).toBe('event: error: this handler throws stuff');
+			expect(loggerErrorMessage).toBe('event: error: this handler throws stuff');
+		});
 	});
 });

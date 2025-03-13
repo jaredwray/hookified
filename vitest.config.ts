@@ -11,6 +11,7 @@ export default defineConfig({
 				'test/**',
 				'src/event-emitter.ts',
 				'tsup.config.ts',
+				'src/logger.ts',
 			],
 		},
 	},

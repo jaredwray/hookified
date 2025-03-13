@@ -1,9 +1,11 @@
 import {Eventified} from './eventified.js';
+import {type Logger} from './logger.js';
 
 export type Hook = (...arguments_: any[]) => Promise<void> | void;
 
 export type HookifiedOptions = {
 	throwHookErrors?: boolean;
+	logger?: Logger;
 };
 
 export class Hookified extends Eventified {
@@ -11,7 +13,7 @@ export class Hookified extends Eventified {
 	_throwHookErrors = false;
 
 	constructor(options?: HookifiedOptions) {
-		super();
+		super({logger: options?.logger});
 		this._hooks = new Map();
 
 		if (options?.throwHookErrors !== undefined) {
@@ -41,6 +43,22 @@ export class Hookified extends Eventified {
 	 */
 	public set throwHookErrors(value) {
 		this._throwHookErrors = value;
+	}
+
+	/**
+	 * Gets the logger
+	 * @returns {Logger}
+	 */
+	public get logger(): Logger | undefined {
+		return this._logger;
+	}
+
+	/**
+	 * Sets the logger
+	 * @param {Logger} logger
+	 */
+	public set logger(logger: Logger | undefined) {
+		this._logger = logger;
 	}
 
 	/**
@@ -135,6 +153,10 @@ export class Hookified extends Eventified {
 				} catch (error) {
 					const message = `${event}: ${(error as Error).message}`;
 					this.emit('error', new Error(message));
+					if (this._logger) {
+						this._logger.error(message);
+					}
+
 					if (this._throwHookErrors) {
 						throw new Error(message);
 					}
