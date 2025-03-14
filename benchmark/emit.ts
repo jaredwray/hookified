@@ -22,16 +22,16 @@ const eventEmitter3 = new EventEmitter3();
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 const emitter3Version = cleanVersion(pkg.devDependencies.eventemitter3);
 
-bench.add(`EventEmitter ${process.version}`, async () => {
+bench.add(`EventEmitter (${process.version})`, async () => {
 	eventEmitter.emit('event', 'test');
 });
-bench.add(`Emittery ${emitteryVersion}`, async () => {
+bench.add(`Emittery (v${emitteryVersion})`, async () => {
 	await emittery.emit('event', 'test');
 });
-bench.add(`EventEmitter3 ${emitter3Version}`, async () => {
+bench.add(`EventEmitter3 (v${emitter3Version})`, async () => {
 	eventEmitter3.emit('event', 'test');
 });
-bench.add(`Hookified ${pkg.version}`, async () => {
+bench.add(`Hookified (v${pkg.version})`, async () => {
 	hookified.emit('event', 'test');
 });
 

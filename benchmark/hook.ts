@@ -21,11 +21,11 @@ hookable.hook('event', genericHookableHandler);
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 const hookableVersion = cleanVersion(pkg.devDependencies.hookable);
 
-bench.add(`Hookable ${hookableVersion}`, async () => {
+bench.add(`Hookable (v${hookableVersion})`, async () => {
 	await hookable.callHook('event', 'test');
 });
 
-bench.add(`Hookified ${hookifiedVersion}`, async () => {
+bench.add(`Hookified (v${hookifiedVersion})`, async () => {
 	await hookified.hook('event', 'test');
 });
 
