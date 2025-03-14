@@ -816,10 +816,11 @@ To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of
 We are doing very simple benchmarking to see how this compares to other libraries using `tinybench`. This is not a full benchmark but just a simple way to see how it performs. Our goal is to be as close or better than the other libraries including native (EventEmitter).
 
 ## Hooks
+
 |       name        |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
 |-------------------|:---------:|----------:|----------:|:--------:|----------:|
-|  Hookified 1.8.0  |    🥇     |       4M  |    306ns  |  ±2.46%  |       3M  |
-|  Hookable ^5.5.3  |   -71%    |       1M  |      1µs  |  ±2.93%  |     826K  |
+|  Hookified 1.8.0  |    🥇     |       4M  |    299ns  |  ±2.42%  |       3M  |
+|  Hookable 5.5.3   |   -73%    |     982K  |      1µs  |  ±2.92%  |     812K  |
 
 ## Emits
 
