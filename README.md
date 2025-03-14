@@ -48,6 +48,7 @@
   - [.listenerCount(eventName?)](#listenercounteventname)
   - [.rawListeners(eventName?)](#rawlistenerseventname)
 - [Development and Testing](#development-and-testing)
+- [Benchmarks](#benchmarks)
 - [License](#license)
 
 # Installation
@@ -808,6 +809,29 @@ npm i && npm test
 ```
 
 To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
+
+# Benchmarks
+
+We are doing very simple benchmarking to see how this compares to other libraries using `vitest bench`. This is not a full benchmark but just a simple way to see how it performs. We are using `hookified` and `eventemitter3` as the libraries to compare against.
+
+## Hooks
+|       name        |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
+|-------------------|:---------:|----------:|----------:|:--------:|----------:|
+|  Hookified 1.8.0  |    🥇     |       4M  |    306ns  |  ±2.46%  |       3M  |
+|  Hookable ^5.5.3  |   -71%    |       1M  |      1µs  |  ±2.93%  |     826K  |
+
+## Emits
+
+This shows how close the native `EventEmitter` is to `hookified` and `eventemitter3`. We are using the same test as above but just emitting events. It is not a fair comparison but it is interesting to see how close they are.
+
+|          name           |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
+|-------------------------|:---------:|----------:|----------:|:--------:|----------:|
+|  Hookified 1.8.0        |    🥇     |      10M  |    112ns  |  ±1.13%  |       9M  |
+|  EventEmitter3 5.0.1    |   -1.3%   |      10M  |    114ns  |  ±1.84%  |       9M  |
+|  EventEmitter v22.12.0  |   -1.5%   |       9M  |    114ns  |  ±1.18%  |       9M  |
+|  Emittery 1.1.0         |   -92%    |     785K  |      1µs  |  ±0.45%  |     761K  |
+
+_Note: the `EventEmitter` version is Nodejs versioning._
 
 # License
 

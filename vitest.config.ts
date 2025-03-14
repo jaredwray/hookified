@@ -2,10 +2,11 @@ import {defineConfig} from 'vitest/config';
 
 export default defineConfig({
 	test: {
-		include: ['test/*.ts'],
+		include: ['test/*.test.ts'],
 		coverage: {
 			exclude: [
 				'site/**',
+				'benchmark/**',
 				'vitest.config.ts',
 				'dist/**',
 				'test/**',
