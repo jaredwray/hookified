@@ -16,7 +16,8 @@
 - Browser Support and Delivered via CDN
 - Ability to throw errors in hooks
 - Ability to pass in a logger (such as Pino) for errors
-- No package dependencies
+- No package dependencies and only 100KB in size
+- Fast and Efficient with [Benchmarks](#benchmarks)
 - Maintained on a regular basis!
 
 # Table of Contents
@@ -812,7 +813,7 @@ To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of
 
 # Benchmarks
 
-We are doing very simple benchmarking to see how this compares to other libraries using `vitest bench`. This is not a full benchmark but just a simple way to see how it performs. We are using `hookified` and `eventemitter3` as the libraries to compare against.
+We are doing very simple benchmarking to see how this compares to other libraries using `tinybench`. This is not a full benchmark but just a simple way to see how it performs. Our goal is to be as close or better than the other libraries including native (EventEmitter).
 
 ## Hooks
 |       name        |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
