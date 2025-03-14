@@ -7,6 +7,7 @@ export default defineConfig([
 		dts: true, // Generate TypeScript declaration files
 		outDir: 'dist/node', // Output directory for Node.js builds
 		splitting: false, // Do not split code (especially useful for libraries)
+		minify: true, // Minify for smaller files
 		clean: true, // Clean output directory before each build
 	},
 	{
