@@ -799,14 +799,20 @@ myClass.on('message', (message) => {
 console.log(myClass.rawListeners('message'));
 ```
 
-# Development and Testing
+# Development and Contribution
 
 Hookified is written in TypeScript and tests are written in `vitest`. To run the tests, use the following command:
 
 To setup the environment and run the tests:
 
 ```bash
-npm i && npm test
+pnpm i && pnpm test
+```
+
+Note that we are using `pnpm` as our package manager. If you don't have it installed, you can install it globally with:
+
+```bash
+npm install -g pnpm
 ```
 
 To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
