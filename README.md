@@ -48,7 +48,7 @@
   - [.eventNames()](#eventnames)
   - [.listenerCount(eventName?)](#listenercounteventname)
   - [.rawListeners(eventName?)](#rawlistenerseventname)
-- [Development and Testing](#development-and-testing)
+- [Development and Contribution](#development-and-contribution)
 - [Benchmarks](#benchmarks)
 - [License](#license)
 
