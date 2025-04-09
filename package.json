@@ -26,7 +26,7 @@
     "benchmark:emit": "pnpm tsx benchmark/emit.ts",
     "website:build": "docula build",
     "website:serve": "docula serve",
-    "prepare": "npm run build"
+    "prepare": "pnpm build"
   },
   "keywords": [
     "hooks",
