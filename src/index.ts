@@ -3,6 +3,11 @@ import {type Logger} from './logger.js';
 
 export type Hook = (...arguments_: any[]) => Promise<void> | void;
 
+export type HookEntry = {
+	event: string;
+	handler: Hook;
+};
+
 export type HookifiedOptions = {
 	throwHookErrors?: boolean;
 	logger?: Logger;
@@ -77,6 +82,17 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Adds a handler function for a specific event
+	 * @param {Array<HookEntry>} hooks
+	 * @returns {void}
+	 */
+	public onHooks(hooks: HookEntry[]) {
+		for (const hook of hooks) {
+			this.onHook(hook.event, hook.handler);
+		}
+	}
+
+	/**
 	 * Adds a handler function for a specific event that runs before all other handlers
 	 * @param {string} event
 	 * @param {Hook} handler - this can be async or sync
@@ -134,6 +150,17 @@ export class Hookified extends Eventified {
 			if (index !== -1) {
 				eventHandlers.splice(index, 1);
 			}
+		}
+	}
+
+	/**
+	 * Removes all handlers for a specific event
+	 * @param {Array<HookEntry>} hooks
+	 * @returns {void}
+	 */
+	public removeHooks(hooks: HookEntry[]) {
+		for (const hook of hooks) {
+			this.removeHook(hook.event, hook.handler);
 		}
 	}
 
