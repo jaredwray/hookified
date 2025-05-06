@@ -27,10 +27,12 @@
 - [API - Hooks](#api---hooks)
   - [.throwHookErrors](#throwhookerrors)
   - [.onHook(eventName, handler)](#onhookeventname-handler)
+  - [.onHooks(Array<HookEntry>)](#onhooksarrayhookentry)
   - [.onceHook(eventName, handler)](#oncehookeventname-handler)
   - [.prependHook(eventName, handler)](#prependhookeventname-handler)
   - [.prependOnceHook(eventName, handler)](#prependoncehookeventname-handler)
   - [.removeHook(eventName)](#removehookeventname)
+  - [.removeHooks(Array<HookEntry>)](#removehooksarrayhookentry)
   - [.hook(eventName, ...args)](#hookeventname-args)
   - [.hooks](#hooks)
   - [.getHooks(eventName)](#gethookseventname)
@@ -249,6 +251,48 @@ myClass.onHook('before:myMethod2', async (data) => {
 });
 ```
 
+## .onHooks(Array<HookEntry>)
+
+Subscribe to multiple hook events at once
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    await this.hook('before:myMethodWithHooks', data);
+    
+    // do something here with the data
+    data.some = 'new data';
+
+    await this.hook('after:myMethodWithHooks', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+const hooks = [
+  {
+    event: 'before:myMethodWithHooks',
+    handler: async (data) => {
+      data.some = 'new data1';
+    },
+  },
+  {
+    event: 'after:myMethodWithHooks',
+    handler: async (data) => {
+      data.some = 'new data2';
+    },
+  },
+];
+```
+
 ## .onceHook(eventName, handler)
 
 Subscribe to a hook event once.
@@ -370,6 +414,51 @@ const handler = async (data) => {
 myClass.onHook('before:myMethod2', handler);
 
 myClass.removeHook('before:myMethod2', handler);
+```
+
+## .removeHooks(Array<HookEntry>)
+Unsubscribe from multiple hooks.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    await this.hook('before:myMethodWithHooks', data);
+    
+    // do something
+    data.some = 'new data';
+    await this.hook('after:myMethodWithHooks', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+
+const hooks = [
+  {
+    event: 'before:myMethodWithHooks',
+    handler: async (data) => {
+      data.some = 'new data1';
+    },
+  },
+  {
+    event: 'after:myMethodWithHooks',
+    handler: async (data) => {
+      data.some = 'new data2';
+    },
+  },
+];
+myClass.onHooks(hooks);
+
+// remove all hooks
+myClass.removeHook(hooks);
 ```
 
 ## .hook(eventName, ...args)
