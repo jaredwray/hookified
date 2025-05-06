@@ -27,12 +27,12 @@
 - [API - Hooks](#api---hooks)
   - [.throwHookErrors](#throwhookerrors)
   - [.onHook(eventName, handler)](#onhookeventname-handler)
-  - [.onHooks(Array<HookEntry>)](#onhooksarrayhookentry)
+  - [.onHooks(Array)](#onhooksarray)
   - [.onceHook(eventName, handler)](#oncehookeventname-handler)
   - [.prependHook(eventName, handler)](#prependhookeventname-handler)
   - [.prependOnceHook(eventName, handler)](#prependoncehookeventname-handler)
   - [.removeHook(eventName)](#removehookeventname)
-  - [.removeHooks(Array<HookEntry>)](#removehooksarrayhookentry)
+  - [.removeHooks(Array)](#removehooksarray)
   - [.hook(eventName, ...args)](#hookeventname-args)
   - [.hooks](#hooks)
   - [.getHooks(eventName)](#gethookseventname)
@@ -251,7 +251,7 @@ myClass.onHook('before:myMethod2', async (data) => {
 });
 ```
 
-## .onHooks(Array<HookEntry>)
+## .onHooks(Array)
 
 Subscribe to multiple hook events at once
 
@@ -416,7 +416,7 @@ myClass.onHook('before:myMethod2', handler);
 myClass.removeHook('before:myMethod2', handler);
 ```
 
-## .removeHooks(Array<HookEntry>)
+## .removeHooks(Array)
 Unsubscribe from multiple hooks.
 
 ```javascript
