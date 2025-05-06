@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import pino from 'pino';
-import {Hookified} from '../src/index.js';
+import {Hookified, type HookEntry} from '../src/index.js';
 
 describe('Hookified', () => {
 	test('initialization', () => {
@@ -18,6 +18,27 @@ describe('Hookified', () => {
 		hookified.onHook('event2', handler2);
 		expect(hookified.getHooks('event')).toEqual([handler]);
 		expect(hookified.getHooks('event2')).toEqual([handler2]);
+		expect(hookified.hooks.size).toBe(2);
+	});
+
+	test('onHooks', async () => {
+		const hookified = new Hookified();
+		const eventName = 'event-on-hooks';
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		const handler1 = () => {};
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		const handler2 = () => {};
+		const hooks = new Array<HookEntry>();
+		hooks.push({event: eventName, handler: handler1}, {event: eventName, handler: handler2});
+		hookified.onHooks(hooks);
+		expect(hookified.getHooks(eventName)).toEqual([handler1, handler2]);
+		expect(hookified.hooks.size).toBe(1);
+		// Add another hook
+		const eventName2 = 'event-on-hooks2';
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		const handler3 = () => {};
+		hookified.onHook(eventName2, handler3);
+		expect(hookified.getHooks(eventName2)).toEqual([handler3]);
 		expect(hookified.hooks.size).toBe(2);
 	});
 
@@ -67,6 +88,23 @@ describe('Hookified', () => {
 		hookified.onHook('event', handler2);
 		hookified.removeHook('event', handler);
 		expect(hookified.getHooks('event')).toEqual([handler2]);
+		expect(hookified.hooks.size).toBe(1);
+	});
+
+	test('removeHooks', async () => {
+		const hookified = new Hookified();
+		const eventName = 'event-remove-hooks';
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		const handler1 = () => {};
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		const handler2 = () => {};
+		hookified.onHook(eventName, handler1);
+		hookified.onHook(eventName, handler2);
+		const hooks = [
+			{event: eventName, handler: handler2},
+		];
+		hookified.removeHooks(hooks);
+		expect(hookified.getHooks(eventName)).toEqual([handler1]);
 		expect(hookified.hooks.size).toBe(1);
 	});
 
