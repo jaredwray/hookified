@@ -55,6 +55,7 @@ export class Hookified extends Eventified {
 	 * @returns {Logger}
 	 */
 	public get logger(): Logger | undefined {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 		return this._logger;
 	}
 
@@ -181,6 +182,7 @@ export class Hookified extends Eventified {
 					const message = `${event}: ${(error as Error).message}`;
 					this.emit('error', new Error(message));
 					if (this._logger) {
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 						this._logger.error(message);
 					}
 
