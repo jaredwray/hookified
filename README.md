@@ -1,4 +1,4 @@
-![site/logo.svg](site/logo.svg)
+![Hookified](site/logo.svg)
 
 # Event Emitting and Middleware Hooks
 
