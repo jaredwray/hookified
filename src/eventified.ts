@@ -172,6 +172,7 @@ export class Eventified implements IEventEmitter {
 	constructor(options?: EventEmitterOptions) {
 		this._eventListeners = new Map<string | symbol, EventListener[]>();
 		this._maxListeners = 100; // Default maximum number of listeners
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		this._logger = options?.logger;
 	}
 
@@ -211,7 +212,7 @@ export class Eventified implements IEventEmitter {
 	 * @returns {Array<string | symbol>} An array of event names
 	 */
 	public eventNames(): Array<string | symbol> {
-		return Array.from(this._eventListeners.keys());
+		return [...this._eventListeners.keys()];
 	}
 
 	/**
@@ -397,7 +398,7 @@ export class Eventified implements IEventEmitter {
 	public getAllListeners(): EventListener[] {
 		let result = new Array<EventListener>();
 		for (const listeners of this._eventListeners.values()) {
-			result = result.concat(listeners);
+			result = [...result, ...listeners];
 		}
 
 		return result;
