@@ -13,7 +13,7 @@ const bench = new Bench({name: 'emit', iterations: 10_000});
 const hookified = new Hookified();
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 const hookifiedVersion = cleanVersion(pkg.version);
-// eslint-disable-next-line unicorn/prefer-event-target, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+// eslint-disable-next-line unicorn/prefer-event-target
 const eventEmitter = new EventEmitter();
 const emittery = new Emittery();
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -23,7 +23,6 @@ const eventEmitter3 = new EventEmitter3();
 const emitter3Version = cleanVersion(pkg.devDependencies.eventemitter3);
 
 bench.add(`EventEmitter (${process.version})`, async () => {
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 	eventEmitter.emit('event', 'test');
 });
 bench.add(`Emittery (v${emitteryVersion})`, async () => {
