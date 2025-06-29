@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/no-empty-function, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 import {describe, test, expect} from 'vitest';
 import {Eventified} from '../src/eventified.js';
 
@@ -88,7 +88,6 @@ describe('Eventified', () => {
 		let capturedWarning = '';
 		const originalWarn = console.warn;
 		console.warn = message => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			capturedWarning = message;
 		};
 
