@@ -62,7 +62,7 @@
   "devDependencies": {
     "@monstermann/tinybench-pretty-printer": "^0.1.0",
     "@types/node": "^22.15.29",
-    "@vitest/coverage-v8": "^3.1.4",
+    "@vitest/coverage-v8": "^3.2.4",
     "docula": "^0.12.2",
     "emittery": "^1.1.0",
     "eventemitter3": "^5.0.1",
@@ -73,7 +73,7 @@
     "tsup": "^8.5.0",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
-    "vitest": "^3.1.4",
+    "vitest": "^3.2.4",
     "xo": "^1.1.1"
   },
   "files": [
