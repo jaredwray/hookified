@@ -22,6 +22,19 @@ describe('Hookified', () => {
 		expect(hookified.hooks.size).toBe(2);
 	});
 
+	test('addHook', async () => {
+		const hookified = new Hookified();
+
+		const handler = () => {};
+
+		const handler2 = () => {};
+		hookified.addHook('event', handler);
+		hookified.addHook('event2', handler2);
+		expect(hookified.getHooks('event')).toEqual([handler]);
+		expect(hookified.getHooks('event2')).toEqual([handler2]);
+		expect(hookified.hooks.size).toBe(2);
+	});
+
 	test('onHooks', async () => {
 		const hookified = new Hookified();
 		const eventName = 'event-on-hooks';
