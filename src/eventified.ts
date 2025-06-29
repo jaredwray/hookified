@@ -172,7 +172,7 @@ export class Eventified implements IEventEmitter {
 	constructor(options?: EventEmitterOptions) {
 		this._eventListeners = new Map<string | symbol, EventListener[]>();
 		this._maxListeners = 100; // Default maximum number of listeners
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
 		this._logger = options?.logger;
 	}
 
