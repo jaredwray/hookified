@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 import {describe, test, expect} from 'vitest';
 import pino from 'pino';
 import {Hookified, type HookEntry} from '../src/index.js';
@@ -10,9 +11,9 @@ describe('Hookified', () => {
 
 	test('onHook', async () => {
 		const hookified = new Hookified();
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler = () => {};
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler2 = () => {};
 		hookified.onHook('event', handler);
 		hookified.onHook('event2', handler2);
@@ -24,9 +25,9 @@ describe('Hookified', () => {
 	test('onHooks', async () => {
 		const hookified = new Hookified();
 		const eventName = 'event-on-hooks';
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler1 = () => {};
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler2 = () => {};
 		const hooks = new Array<HookEntry>();
 		hooks.push({event: eventName, handler: handler1}, {event: eventName, handler: handler2});
@@ -35,7 +36,7 @@ describe('Hookified', () => {
 		expect(hookified.hooks.size).toBe(1);
 		// Add another hook
 		const eventName2 = 'event-on-hooks2';
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler3 = () => {};
 		hookified.onHook(eventName2, handler3);
 		expect(hookified.getHooks(eventName2)).toEqual([handler3]);
@@ -44,7 +45,7 @@ describe('Hookified', () => {
 
 	test('onHookOnce will remove hook after execution', async () => {
 		const hookified = new Hookified();
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler = () => {};
 		hookified.onceHook('event', handler);
 		expect(hookified.getHooks('event')?.length).toEqual(1);
@@ -54,9 +55,9 @@ describe('Hookified', () => {
 
 	test('onHook with Clear', async () => {
 		const hookified = new Hookified();
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler = () => {};
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler2 = () => {};
 		hookified.onHook('event', handler);
 		hookified.onHook('event2', handler2);
@@ -68,9 +69,9 @@ describe('Hookified', () => {
 
 	test('onHook multiple handlers', async () => {
 		const hookified = new Hookified();
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler = () => {};
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler2 = () => {};
 		hookified.onHook('event', handler);
 		hookified.onHook('event', handler2);
@@ -80,9 +81,9 @@ describe('Hookified', () => {
 
 	test('removeHook', async () => {
 		const hookified = new Hookified();
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler = () => {};
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler2 = () => {};
 		hookified.onHook('event', handler);
 		hookified.onHook('event', handler2);
@@ -94,9 +95,9 @@ describe('Hookified', () => {
 	test('removeHooks', async () => {
 		const hookified = new Hookified();
 		const eventName = 'event-remove-hooks';
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler1 = () => {};
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const handler2 = () => {};
 		hookified.onHook(eventName, handler1);
 		hookified.onHook(eventName, handler2);
@@ -115,7 +116,7 @@ describe('Hookified', () => {
 
 		const handler = (data: any) => {
 			data.key = 'modified';
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
 			handlerData = data;
 		};
 
