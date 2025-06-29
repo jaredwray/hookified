@@ -26,6 +26,7 @@
 - [Using it in the Browser](#using-it-in-the-browser)
 - [API - Hooks](#api---hooks)
   - [.throwHookErrors](#throwhookerrors)
+  - [.logger](#logger)
   - [.onHook(eventName, handler)](#onhookeventname-handler)
   - [.onHooks(Array)](#onhooksarray)
   - [.onceHook(eventName, handler)](#oncehookeventname-handler)
@@ -250,6 +251,10 @@ myClass.onHook('before:myMethod2', async (data) => {
   data.some = 'new data';
 });
 ```
+
+## .addHook(eventName, handler)
+
+This is an alias for `.onHook(eventName, handler)` for backwards compatibility.
 
 ## .onHooks(Array)
 
