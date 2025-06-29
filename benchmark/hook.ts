@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 import {Bench} from 'tinybench';
 import {tinybenchPrinter} from '@monstermann/tinybench-pretty-printer';
 import {createHooks} from 'hookable';
@@ -8,14 +9,14 @@ import {cleanVersion} from './utils.js';
 const bench = new Bench({name: 'hook', iterations: 10_000});
 
 const hookified = new Hookified();
-// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 const genericHookifiedHandler = () => {};
 hookified.onHook('event', genericHookifiedHandler);
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 const hookifiedVersion = cleanVersion(pkg.version);
 
 const hookable = createHooks();
-// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 const genericHookableHandler = () => {};
 hookable.hook('event', genericHookableHandler);
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
