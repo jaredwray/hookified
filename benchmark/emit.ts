@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 import EventEmitter from 'node:events';
 import process from 'node:process';
 import {Bench} from 'tinybench';
