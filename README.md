@@ -28,6 +28,7 @@
   - [.throwHookErrors](#throwhookerrors)
   - [.logger](#logger)
   - [.onHook(eventName, handler)](#onhookeventname-handler)
+  - [.addHook(eventName, handler)](#addhookeventname-handler)
   - [.onHooks(Array)](#onhooksarray)
   - [.onceHook(eventName, handler)](#oncehookeventname-handler)
   - [.prependHook(eventName, handler)](#prependhookeventname-handler)
@@ -35,6 +36,7 @@
   - [.removeHook(eventName)](#removehookeventname)
   - [.removeHooks(Array)](#removehooksarray)
   - [.hook(eventName, ...args)](#hookeventname-args)
+  - [.callHook(eventName, ...args)](#callhookeventname-args)
   - [.hooks](#hooks)
   - [.getHooks(eventName)](#gethookseventname)
   - [.clearHooks(eventName)](#clearhookeventname)
@@ -517,6 +519,10 @@ myClass.onHook('before:myMethod2', async (data, data2) => {
 
 await myClass.myMethodWithHooks();
 ```
+
+## .callHook(eventName, ...args)
+
+This is an alias for `.hook(eventName, ...args)` for backwards compatibility.
 
 ## .hooks
 

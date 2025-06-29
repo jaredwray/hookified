@@ -204,6 +204,17 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Calls all handlers for a specific event. This is an alias for `hook` and is provided for
+	 * compatibility with other libraries that use the `callHook` method.
+	 * @param {string} event
+	 * @param {T[]} arguments_
+	 * @returns {Promise<void>}
+	 */
+	public async callHook<T>(event: string, ...arguments_: T[]) {
+		await this.hook(event, ...arguments_);
+	}
+
+	/**
 	 * Gets all hooks for a specific event
 	 * @param {string} event
 	 * @returns {Hook[]}

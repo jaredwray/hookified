@@ -138,6 +138,22 @@ describe('Hookified', () => {
 		expect(handlerData.key).toBe('modified');
 	});
 
+	test('execute callHook and manipulate data', async () => {
+		const hookified = new Hookified();
+		const data = {key: 'value'};
+		let handlerData;
+
+		const handler = (data: any) => {
+			data.key = 'modified';
+
+			handlerData = data;
+		};
+
+		hookified.onHook('event', handler);
+		await hookified.callHook('event', data);
+		expect(handlerData.key).toBe('modified');
+	});
+
 	test('execute hook and manipulate multiple data items', async () => {
 		const hookified = new Hookified();
 		const data = {key: 'value'};
