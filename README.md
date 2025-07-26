@@ -930,7 +930,7 @@ We are doing very simple benchmarking to see how this compares to other librarie
 
 ## Emits
 
-This shows how close the native `EventEmitter` is to `hookified` and `eventemitter3`. We are using the same test as above but just emitting events. It is not a fair comparison but it is interesting to see how close they are.
+This shows how on par `hookified` is to the native `EventEmitter` and popular `eventemitter3`. These are simple emitting benchmarks to see how it performs.
 
 |          name           |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
 |-------------------------|:---------:|----------:|----------:|:--------:|----------:|
