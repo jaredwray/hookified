@@ -391,7 +391,7 @@ export class Eventified implements IEventEmitter {
 		if (event === 'error') {
 			const error = arguments_[0] instanceof Error ? arguments_[0] : new Error(`Uncaught, "error" event. ${arguments_[0]}`);
 
-			if (this._throwOnEmitError) {
+			if (this._throwOnEmitError && !result) {
 				throw error;
 			}
 		}
