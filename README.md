@@ -42,6 +42,7 @@
   - [.getHooks(eventName)](#gethookseventname)
   - [.clearHooks(eventName)](#clearhookeventname)
 - [API - Events](#api---events)
+  - [.throwOnEmitError](#throwonemitterror)
   - [.on(eventName, handler)](#oneventname-handler)
   - [.off(eventName, handler)](#offeventname-handler)
   - [.emit(eventName, ...args)](#emiteventname-args)
@@ -644,6 +645,28 @@ myClass.clearHooks('before:myMethod2');
 ```
 
 # API - Events
+
+## .throwOnEmitError
+
+If set to true, errors emitted as `error` will be thrown if there are no listeners. If set to false, errors will be only emitted.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+```
 
 ## .on(eventName, handler)
 
