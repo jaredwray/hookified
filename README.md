@@ -28,6 +28,7 @@
   - [.throwHookErrors](#throwhookerrors)
   - [.logger](#logger)
   - [.onHook(eventName, handler)](#onhookeventname-handler)
+  - [.onHookEntry(hookEntry)](#onhookentryhookentry)
   - [.addHook(eventName, handler)](#addhookeventname-handler)
   - [.onHooks(Array)](#onhooksarray)
   - [.onceHook(eventName, handler)](#oncehookeventname-handler)
@@ -251,6 +252,36 @@ class MyClass extends Hookified {
 const myClass = new MyClass();
 myClass.onHook('before:myMethod2', async (data) => {
   data.some = 'new data';
+});
+```
+
+## .onHookEntry(hookEntry)
+
+This allows you to create a hook with the `HookEntry` type which includes the event and handler. This is useful for creating hooks with a single object.
+
+```javascript
+import { Hookified, HookEntry } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // do something
+    await this.hook('before:myMethod2', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+myClass.onHookEntry({
+  event: 'before:myMethod2',
+  handler: async (data) => {
+    data.some = 'new data';
+  },
 });
 ```
 

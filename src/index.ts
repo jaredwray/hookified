@@ -82,6 +82,15 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Adds a handler function for a specific event that runs before all other handlers
+	 * @param {HookEntry} hookEntry
+	 * @returns {void}
+	 */
+	public onHookEntry(hookEntry: HookEntry) {
+		this.onHook(hookEntry.event, hookEntry.handler);
+	}
+
+	/**
 	 * Alias for onHook. This is provided for compatibility with other libraries that use the `addHook` method.
 	 * @param {string} event
 	 * @param {Hook} handler - this can be async or sync
