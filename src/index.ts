@@ -1,4 +1,4 @@
-import {Eventified} from './eventified.js';
+import {Eventified, type EventEmitterOptions} from './eventified.js';
 import {type Logger} from './logger.js';
 
 export type Hook = (...arguments_: any[]) => Promise<void> | void;
@@ -10,12 +10,11 @@ export type HookEntry = {
 
 export type HookifiedOptions = {
 	throwHookErrors?: boolean;
-	logger?: Logger;
-};
+} & EventEmitterOptions;
 
 export class Hookified extends Eventified {
-	_hooks: Map<string, Hook[]>;
-	_throwHookErrors = false;
+	private readonly _hooks: Map<string, Hook[]>;
+	private _throwHookErrors = false;
 
 	constructor(options?: HookifiedOptions) {
 		super({logger: options?.logger});
@@ -48,22 +47,6 @@ export class Hookified extends Eventified {
 	 */
 	public set throwHookErrors(value) {
 		this._throwHookErrors = value;
-	}
-
-	/**
-	 * Gets the logger
-	 * @returns {Logger}
-	 */
-	public get logger(): Logger | undefined {
-		return this._logger;
-	}
-
-	/**
-	 * Sets the logger
-	 * @param {Logger} logger
-	 */
-	public set logger(logger: Logger | undefined) {
-		this._logger = logger;
 	}
 
 	/**
@@ -200,8 +183,8 @@ export class Hookified extends Eventified {
 				} catch (error) {
 					const message = `${event}: ${(error as Error).message}`;
 					this.emit('error', new Error(message));
-					if (this._logger) {
-						this._logger.error(message);
+					if (this.logger) {
+						this.logger.error(message);
 					}
 
 					if (this._throwHookErrors) {

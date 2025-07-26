@@ -19,6 +19,29 @@ describe('Eventified', () => {
 		t.expect(dataReceived).toBe(1);
 	});
 
+	test('get / set logger', t => {
+		const emitter = new Eventified();
+		const logger = {
+			info() {},
+			error() {},
+			warn() {},
+			debug() {},
+		};
+		emitter.logger = logger;
+		t.expect(emitter.logger).toBe(logger);
+		emitter.logger = undefined;
+		t.expect(emitter.logger).toBeUndefined();
+	});
+
+	test('get / set throwOnEmitError', t => {
+		const emitter = new Eventified({throwOnEmitError: true});
+		t.expect(emitter.throwOnEmitError).toBe(true);
+		emitter.throwOnEmitError = false;
+		t.expect(emitter.throwOnEmitError).toBe(false);
+		emitter.throwOnEmitError = true;
+		t.expect(emitter.throwOnEmitError).toBe(true);
+	});
+
 	test('get max listeners', t => {
 		const emitter = new Eventified();
 		t.expect(emitter.maxListeners()).toBe(100);
@@ -226,5 +249,21 @@ describe('Eventified', () => {
 		emitter.emit('test-event');
 
 		t.expect(emitter.rawListeners('test-event').length).toBe(1);
+	});
+
+	test('should throw on emit error when throwOnEmitError is true', async () => {
+		const emitter = new Eventified({throwOnEmitError: true});
+		let errorCaught = false;
+		let errorMessage;
+
+		try {
+			emitter.emit('error', new Error('Test error'));
+		} catch (error) {
+			errorCaught = true;
+			errorMessage = (error as Error).message;
+		}
+
+		expect(errorCaught).toBe(true);
+		expect(errorMessage).toBe('Test error');
 	});
 });

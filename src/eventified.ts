@@ -162,18 +162,56 @@ export type EventListener = (...arguments_: any[]) => void;
 
 export type EventEmitterOptions = {
 	logger?: Logger;
+	throwOnEmitError?: boolean;
 };
 
 export class Eventified implements IEventEmitter {
-	_eventListeners: Map<string | symbol, EventListener[]>;
-	_maxListeners: number;
-	_logger?: Logger;
+	private readonly _eventListeners: Map<string | symbol, EventListener[]>;
+	private _maxListeners: number;
+	private _logger?: Logger;
+	private _throwOnEmitError = false;
 
 	constructor(options?: EventEmitterOptions) {
 		this._eventListeners = new Map<string | symbol, EventListener[]>();
 		this._maxListeners = 100; // Default maximum number of listeners
 
 		this._logger = options?.logger;
+
+		if (options?.throwOnEmitError !== undefined) {
+			this._throwOnEmitError = options.throwOnEmitError;
+		}
+	}
+
+	/**
+	 * Gets the logger
+	 * @returns {Logger}
+	 */
+	public get logger(): Logger | undefined {
+		return this._logger;
+	}
+
+	/**
+	 * Sets the logger
+	 * @param {Logger} logger
+	 */
+	public set logger(logger: Logger | undefined) {
+		this._logger = logger;
+	}
+
+	/**
+	 * Gets whether an error should be thrown when an emit throws an error. Default is false and only emits an error event.
+	 * @returns {boolean}
+	 */
+	public get throwOnEmitError(): boolean {
+		return this._throwOnEmitError;
+	}
+
+	/**
+	 * Sets whether an error should be thrown when an emit throws an error. Default is false and only emits an error event.
+	 * @param {boolean} value
+	 */
+	public set throwOnEmitError(value: boolean) {
+		this._throwOnEmitError = value;
 	}
 
 	/**
@@ -347,6 +385,14 @@ export class Eventified implements IEventEmitter {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 				listener(...arguments_);
 				result = true;
+			}
+		}
+
+		if (event === 'error') {
+			const error = arguments_[0] instanceof Error ? arguments_[0] : new Error(`Uncaught, "error" event. ${arguments_[0]}`);
+
+			if (this._throwOnEmitError) {
+				throw error;
 			}
 		}
 
