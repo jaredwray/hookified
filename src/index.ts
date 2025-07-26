@@ -4,11 +4,20 @@ import {type Logger} from './logger.js';
 export type Hook = (...arguments_: any[]) => Promise<void> | void;
 
 export type HookEntry = {
+	/**
+	 * The event name for the hook
+	 */
 	event: string;
+	/**
+	 * The handler function for the hook
+	 */
 	handler: Hook;
 };
 
 export type HookifiedOptions = {
+	/**
+	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
+	 */
 	throwHookErrors?: boolean;
 } & EventEmitterOptions;
 

@@ -161,7 +161,13 @@ export type IEventEmitter = {
 export type EventListener = (...arguments_: any[]) => void;
 
 export type EventEmitterOptions = {
+	/**
+	 * Logger instance for logging errors.
+	 */
 	logger?: Logger;
+	/**
+	 * Whether to throw an error when emit 'error' and there are no listeners. Default is false and only emits an error event.
+	 */
 	throwOnEmitError?: boolean;
 };
 
