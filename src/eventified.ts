@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: this is for event emitter compatibility
 import type { Logger } from "logger.js";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -435,7 +436,7 @@ export class Eventified implements IEventEmitter {
 			const error =
 				arguments_[0] instanceof Error
 					? arguments_[0]
-					: new Error(`Uncaught, "error" event. ${arguments_[0]}`);
+					: new Error(`${arguments_[0]}`);
 
 			if (this._throwOnEmitError && !result) {
 				throw error;

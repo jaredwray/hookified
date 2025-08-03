@@ -271,4 +271,20 @@ describe("Eventified", () => {
 		expect(errorCaught).toBe(true);
 		expect(errorMessage).toBe("Test error");
 	});
+
+	test("should throw on emit error string when throwOnEmitError is true", async () => {
+		const emitter = new Eventified({ throwOnEmitError: true });
+		let errorCaught = false;
+		let errorMessage = "";
+
+		try {
+			emitter.emit("error", "Test error");
+		} catch (error) {
+			errorCaught = true;
+			errorMessage = (error as Error).message;
+		}
+
+		expect(errorCaught).toBe(true);
+		expect(errorMessage).toBe("Test error");
+	});
 });

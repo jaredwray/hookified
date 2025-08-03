@@ -1,5 +1,6 @@
 import { type EventEmitterOptions, Eventified } from "./eventified.js";
 
+// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 export type Hook = (...arguments_: any[]) => Promise<void> | void;
 
 export type HookEntry = {
@@ -124,6 +125,7 @@ export class Hookified extends Eventified {
 	 * @param handler
 	 */
 	public prependOnceHook(event: string, handler: Hook) {
+		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		const hook = async (...arguments_: any[]) => {
 			this.removeHook(event, hook);
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -139,6 +141,7 @@ export class Hookified extends Eventified {
 	 * @param handler
 	 */
 	public onceHook(event: string, handler: Hook) {
+		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		const hook = async (...arguments_: any[]) => {
 			this.removeHook(event, hook);
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
