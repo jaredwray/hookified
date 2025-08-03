@@ -1,4 +1,5 @@
-import {type Logger} from 'logger.js';
+// biome-ignore-all lint/suspicious/noExplicitAny: this is for event emitter compatibility
+import type { Logger } from "logger.js";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type IEventEmitter = {
@@ -14,7 +15,10 @@ export type IEventEmitter = {
 	 *   console.log(message);
 	 * });
 	 */
-	on(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
+	on(
+		eventName: string | symbol,
+		listener: (...arguments_: any[]) => void,
+	): IEventEmitter;
 
 	/**
 	 * Alias for `on`. Registers a listener for the specified event.
@@ -23,7 +27,10 @@ export type IEventEmitter = {
 	 * @param listener - A callback function that will be invoked when the event is emitted.
 	 * @returns The current instance of EventEmitter for method chaining.
 	 */
-	addListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
+	addListener(
+		eventName: string | symbol,
+		listener: (...arguments_: any[]) => void,
+	): IEventEmitter;
 
 	/**
 	 * Registers a one-time listener for the specified event. The listener is removed after it is called once.
@@ -37,7 +44,10 @@ export type IEventEmitter = {
 	 *   console.log('The connection was closed.');
 	 * });
 	 */
-	once(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
+	once(
+		eventName: string | symbol,
+		listener: (...arguments_: any[]) => void,
+	): IEventEmitter;
 
 	/**
 	 * Removes a previously registered listener for the specified event.
@@ -49,7 +59,10 @@ export type IEventEmitter = {
 	 * @example
 	 * emitter.off('data', myListener);
 	 */
-	off(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
+	off(
+		eventName: string | symbol,
+		listener: (...arguments_: any[]) => void,
+	): IEventEmitter;
 
 	/**
 	 * Alias for `off`. Removes a previously registered listener for the specified event.
@@ -58,7 +71,10 @@ export type IEventEmitter = {
 	 * @param listener - The specific callback function to remove.
 	 * @returns The current instance of EventEmitter for method chaining.
 	 */
-	removeListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
+	removeListener(
+		eventName: string | symbol,
+		listener: (...arguments_: any[]) => void,
+	): IEventEmitter;
 
 	/**
 	 * Emits the specified event, invoking all registered listeners with the provided arguments.
@@ -127,7 +143,9 @@ export type IEventEmitter = {
 	 * @example
 	 * const rawListeners = emitter.rawListeners('data');
 	 */
-	rawListeners(eventName: string | symbol): Array<(...arguments_: any[]) => void>;
+	rawListeners(
+		eventName: string | symbol,
+	): Array<(...arguments_: any[]) => void>;
 
 	/**
 	 * Adds a listener to the beginning of the listeners array for the specified event.
@@ -141,7 +159,10 @@ export type IEventEmitter = {
 	 *   console.log('This will run first.');
 	 * });
 	 */
-	prependListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
+	prependListener(
+		eventName: string | symbol,
+		listener: (...arguments_: any[]) => void,
+	): IEventEmitter;
 
 	/**
 	 * Adds a one-time listener to the beginning of the listeners array for the specified event.
@@ -155,7 +176,10 @@ export type IEventEmitter = {
 	 *   console.log('This will run first and only once.');
 	 * });
 	 */
-	prependOnceListener(eventName: string | symbol, listener: (...arguments_: any[]) => void): IEventEmitter;
+	prependOnceListener(
+		eventName: string | symbol,
+		listener: (...arguments_: any[]) => void,
+	): IEventEmitter;
 };
 
 export type EventListener = (...arguments_: any[]) => void;
@@ -226,7 +250,10 @@ export class Eventified implements IEventEmitter {
 	 * @param {EventListener} listener
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
-	public once(eventName: string | symbol, listener: EventListener): IEventEmitter {
+	public once(
+		eventName: string | symbol,
+		listener: EventListener,
+	): IEventEmitter {
 		const onceListener: EventListener = (...arguments_: any[]) => {
 			this.off(eventName as string, onceListener);
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -278,7 +305,10 @@ export class Eventified implements IEventEmitter {
 	 * @param {EventListener} listener
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
-	public prependListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
+	public prependListener(
+		eventName: string | symbol,
+		listener: EventListener,
+	): IEventEmitter {
 		const listeners = this._eventListeners.get(eventName) ?? [];
 		listeners.unshift(listener);
 		this._eventListeners.set(eventName, listeners);
@@ -291,7 +321,10 @@ export class Eventified implements IEventEmitter {
 	 * @param {EventListener} listener
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
-	public prependOnceListener(eventName: string | symbol, listener: EventListener): IEventEmitter {
+	public prependOnceListener(
+		eventName: string | symbol,
+		listener: EventListener,
+	): IEventEmitter {
 		const onceListener: EventListener = (...arguments_: any[]) => {
 			this.off(eventName as string, onceListener);
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -316,7 +349,10 @@ export class Eventified implements IEventEmitter {
 	 * @param {EventListener} listener
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
-	public addListener(event: string | symbol, listener: EventListener): IEventEmitter {
+	public addListener(
+		event: string | symbol,
+		listener: EventListener,
+	): IEventEmitter {
 		this.on(event, listener);
 		return this;
 	}
@@ -336,7 +372,9 @@ export class Eventified implements IEventEmitter {
 
 		if (listeners) {
 			if (listeners.length >= this._maxListeners) {
-				console.warn(`MaxListenersExceededWarning: Possible event memory leak detected. ${listeners.length + 1} ${event as string} listeners added. Use setMaxListeners() to increase limit.`);
+				console.warn(
+					`MaxListenersExceededWarning: Possible event memory leak detected. ${listeners.length + 1} ${event as string} listeners added. Use setMaxListeners() to increase limit.`,
+				);
 			}
 
 			listeners.push(listener);
@@ -394,8 +432,11 @@ export class Eventified implements IEventEmitter {
 			}
 		}
 
-		if (event === 'error') {
-			const error = arguments_[0] instanceof Error ? arguments_[0] : new Error(`Uncaught, "error" event. ${arguments_[0]}`);
+		if (event === "error") {
+			const error =
+				arguments_[0] instanceof Error
+					? arguments_[0]
+					: new Error(`${arguments_[0]}`);
 
 			if (this._throwOnEmitError && !result) {
 				throw error;
@@ -448,7 +489,7 @@ export class Eventified implements IEventEmitter {
 	 * @returns {EventListener[]} An array of listeners
 	 */
 	public getAllListeners(): EventListener[] {
-		let result = new Array<EventListener>();
+		let result: EventListener[] = [];
 		for (const listeners of this._eventListeners.values()) {
 			result = [...result, ...listeners];
 		}
