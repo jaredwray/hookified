@@ -1,5 +1,5 @@
 // biome-ignore-all lint/suspicious/noExplicitAny: this is a test file
-// biome-ignore-all lint/suspicious/noExplicitAnyLet: this is a test file
+// biome-ignore-all lint/suspicious/noImplicitAnyLet: this is a test file
 import { describe, expect, test } from "vitest";
 import { Eventified } from "../src/eventified.js";
 
@@ -82,14 +82,14 @@ describe("Eventified", () => {
 
 	test("remove all event listeners", (t) => {
 		const emitter = new Eventified();
-		let dataReceived = 0;
+		let _dataReceived = 0;
 
 		const listener = () => {
-			dataReceived++;
+			_dataReceived++;
 		};
 
 		const listener1 = () => {
-			dataReceived++;
+			_dataReceived++;
 		};
 
 		emitter.on("test-event", listener);
@@ -259,7 +259,7 @@ describe("Eventified", () => {
 	test("should throw on emit error when throwOnEmitError is true", async () => {
 		const emitter = new Eventified({ throwOnEmitError: true });
 		let errorCaught = false;
-		let errorMessage;
+		let errorMessage = "";
 
 		try {
 			emitter.emit("error", new Error("Test error"));

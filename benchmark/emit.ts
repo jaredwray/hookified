@@ -14,7 +14,7 @@ const bench = new Bench({ name: "emit", iterations: 10_000 });
 
 const hookified = new Hookified();
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-const hookifiedVersion = cleanVersion(pkg.version);
+const _hookifiedVersion = cleanVersion(pkg.version);
 // eslint-disable-next-line unicorn/prefer-event-target
 const eventEmitter = new EventEmitter();
 const emittery = new Emittery();

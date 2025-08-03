@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-empty-function, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
-
+// biome-ignore-all lint/suspicious/noExplicitAny: this is a test file
+// biome-ignore-all lint/suspicious/noImplicitAnyLet: this is a test file
 import pino from "pino";
 import { describe, expect, test } from "vitest";
 import { type HookEntry, Hookified } from "../src/index.js";
