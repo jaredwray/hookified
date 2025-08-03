@@ -1,7 +1,6 @@
 // biome-ignore-all lint/suspicious/noExplicitAny: this is for event emitter compatibility
 import type { Logger } from "logger.js";
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export type IEventEmitter = {
 	/**
 	 * Registers a listener for the specified event.
@@ -256,7 +255,6 @@ export class Eventified implements IEventEmitter {
 	): IEventEmitter {
 		const onceListener: EventListener = (...arguments_: any[]) => {
 			this.off(eventName as string, onceListener);
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			listener(...arguments_);
 		};
 
@@ -327,7 +325,6 @@ export class Eventified implements IEventEmitter {
 	): IEventEmitter {
 		const onceListener: EventListener = (...arguments_: any[]) => {
 			this.off(eventName as string, onceListener);
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			listener(...arguments_);
 		};
 
@@ -426,7 +423,6 @@ export class Eventified implements IEventEmitter {
 
 		if (listeners && listeners.length > 0) {
 			for (const listener of listeners) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 				listener(...arguments_);
 				result = true;
 			}
