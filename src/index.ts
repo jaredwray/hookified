@@ -1,5 +1,4 @@
-import {Eventified, type EventEmitterOptions} from './eventified.js';
-import {type Logger} from './logger.js';
+import { type EventEmitterOptions, Eventified } from "./eventified.js";
 
 export type Hook = (...arguments_: any[]) => Promise<void> | void;
 
@@ -26,7 +25,7 @@ export class Hookified extends Eventified {
 	private _throwHookErrors = false;
 
 	constructor(options?: HookifiedOptions) {
-		super({logger: options?.logger});
+		super({ logger: options?.logger });
 		this._hooks = new Map();
 
 		if (options?.throwHookErrors !== undefined) {
@@ -191,7 +190,7 @@ export class Hookified extends Eventified {
 					await handler(...arguments_);
 				} catch (error) {
 					const message = `${event}: ${(error as Error).message}`;
-					this.emit('error', new Error(message));
+					this.emit("error", new Error(message));
 					if (this.logger) {
 						this.logger.error(message);
 					}
@@ -233,5 +232,5 @@ export class Hookified extends Eventified {
 	}
 }
 
-export {Eventified, type EventListener} from './eventified.js';
-export {type Logger} from './logger.js';
+export { Eventified, type EventListener } from "./eventified.js";
+export type { Logger } from "./logger.js";
