@@ -128,7 +128,6 @@ export class Hookified extends Eventified {
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		const hook = async (...arguments_: any[]) => {
 			this.removeHook(event, hook);
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			return handler(...arguments_);
 		};
 
@@ -144,7 +143,6 @@ export class Hookified extends Eventified {
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		const hook = async (...arguments_: any[]) => {
 			this.removeHook(event, hook);
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			return handler(...arguments_);
 		};
 
@@ -189,7 +187,6 @@ export class Hookified extends Eventified {
 		if (eventHandlers) {
 			for (const handler of eventHandlers) {
 				try {
-					// eslint-disable-next-line no-await-in-loop
 					await handler(...arguments_);
 				} catch (error) {
 					const message = `${event}: ${(error as Error).message}`;
