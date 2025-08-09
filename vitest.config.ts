@@ -5,13 +5,13 @@ export default defineConfig({
 	test: {
 		include: ['test/*.test.ts'],
 		coverage: {
+			reporter: ['text', 'json', 'lcov'],
 			exclude: [
 				'site/**',
 				'benchmark/**',
 				'vitest.config.ts',
 				'dist/**',
 				'test/**',
-				'src/event-emitter.ts',
 				'tsup.config.ts',
 				'src/logger.ts',
 			],
