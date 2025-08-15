@@ -268,11 +268,11 @@ export class Eventified implements IEventEmitter {
 	 * @returns {number} The number of listeners
 	 */
 	public listenerCount(eventName?: string | symbol): number {
-		if (!eventName) {
+		if (eventName === undefined) {
 			return this.getAllListeners().length;
 		}
 
-		const listeners = this._eventListeners.get(eventName as string);
+		const listeners = this._eventListeners.get(eventName);
 		return listeners ? listeners.length : 0;
 	}
 
@@ -290,7 +290,7 @@ export class Eventified implements IEventEmitter {
 	 * @returns {EventListener[]} An array of listeners
 	 */
 	public rawListeners(event?: string | symbol): EventListener[] {
-		if (!event) {
+		if (event === undefined) {
 			return this.getAllListeners();
 		}
 
@@ -447,7 +447,7 @@ export class Eventified implements IEventEmitter {
 	 * @param {string} [event] (Optional) The event name
 	 * @returns {EventListener[]} An array of listeners
 	 */
-	public listeners(event: string): EventListener[] {
+	public listeners(event: string | symbol): EventListener[] {
 		return this._eventListeners.get(event) ?? [];
 	}
 
@@ -456,8 +456,8 @@ export class Eventified implements IEventEmitter {
 	 * @param {string} [event] (Optional) The event name
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
-	public removeAllListeners(event?: string): IEventEmitter {
-		if (event) {
+	public removeAllListeners(event?: string | symbol): IEventEmitter {
+		if (event !== undefined) {
 			this._eventListeners.delete(event);
 		} else {
 			this._eventListeners.clear();
