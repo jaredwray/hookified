@@ -190,6 +190,21 @@ describe("Eventified", () => {
 		t.expect(emitter.listenerCount("test-event")).toBe(0);
 	});
 
+	test("handles empty string event names", (t) => {
+		const emitter = new Eventified();
+		const listener = () => {};
+
+		emitter.on("", listener);
+		emitter.on("other", listener);
+
+		t.expect(emitter.listenerCount("")).toBe(1);
+		t.expect(emitter.rawListeners("")).toEqual([listener]);
+
+		emitter.removeAllListeners("");
+		t.expect(emitter.listenerCount("")).toBe(0);
+		t.expect(emitter.listenerCount("other")).toBe(1);
+	});
+
 	test("get event names", (t) => {
 		const emitter = new Eventified();
 		const listener = () => {};
