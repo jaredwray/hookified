@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {defineConfig} from 'vitest/config';
 
 export default defineConfig({
