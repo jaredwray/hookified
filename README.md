@@ -1023,21 +1023,21 @@ We are doing very simple benchmarking to see how this compares to other librarie
 
 ## Hooks
 
-|       name        |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
-|-------------------|:---------:|----------:|----------:|:--------:|----------:|
-|  Hookified 1.8.0  |    🥇     |       4M  |    299ns  |  ±2.42%  |       3M  |
-|  Hookable 5.5.3   |   -73%    |     982K  |      1µs  |  ±2.92%  |     812K  |
+|         name          |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
+|-----------------------|:---------:|----------:|----------:|:--------:|----------:|
+|  Hookified (v1.12.0)  |    🥇     |       3M  |    318ns  |  ±0.43%  |       3M  |
+|  Hookable (v5.5.3)    |   -70%    |       1M  |      1µs  |  ±2.65%  |     833K  |
 
 ## Emits
 
 This shows how on par `hookified` is to the native `EventEmitter` and popular `eventemitter3`. These are simple emitting benchmarks to see how it performs.
 
-|          name           |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
-|-------------------------|:---------:|----------:|----------:|:--------:|----------:|
-|  Hookified 1.8.0        |    🥇     |      10M  |    112ns  |  ±1.13%  |       9M  |
-|  EventEmitter3 5.0.1    |   -1.3%   |      10M  |    114ns  |  ±1.84%  |       9M  |
-|  EventEmitter v22.12.0  |   -1.5%   |       9M  |    114ns  |  ±1.18%  |       9M  |
-|  Emittery 1.1.0         |   -92%    |     785K  |      1µs  |  ±0.45%  |     761K  |
+|           name            |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
+|---------------------------|:---------:|----------:|----------:|:--------:|----------:|
+|  Hookified (v1.12.0)      |    🥇     |       8M  |    128ns  |  ±0.08%  |       8M  |
+|  EventEmitter (v22.12.0)  |  -0.049%  |       8M  |    130ns  |  ±1.18%  |       8M  |
+|  EventEmitter3 (v5.0.1)   |  -0.27%   |       8M  |    130ns  |  ±1.97%  |       8M  |
+|  Emittery (v1.2.0)        |   -90%    |     761K  |      1µs  |  ±0.43%  |     744K  |
 
 _Note: the `EventEmitter` version is Nodejs versioning._
 
