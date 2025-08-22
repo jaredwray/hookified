@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 import EventEmitter from "node:events";
 import process from "node:process";
 import { tinybenchPrinter } from "@monstermann/tinybench-pretty-printer";
@@ -13,15 +12,11 @@ import { cleanVersion } from "./utils.js";
 const bench = new Bench({ name: "emit", iterations: 10_000 });
 
 const hookified = new Hookified();
-// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 const _hookifiedVersion = cleanVersion(pkg.version);
-// eslint-disable-next-line unicorn/prefer-event-target
 const eventEmitter = new EventEmitter();
 const emittery = new Emittery();
-// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 const emitteryVersion = cleanVersion(pkg.devDependencies.emittery);
 const eventEmitter3 = new EventEmitter3();
-// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 const emitter3Version = cleanVersion(pkg.devDependencies.eventemitter3);
 
 bench.add(`EventEmitter (${process.version})`, async () => {
