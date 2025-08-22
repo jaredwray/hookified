@@ -204,6 +204,24 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Prepends the word `before` to your hook. Example is event is `test`, the before hook is `before:test`.
+	 * @param {string} event - The event name
+	 * @param {T[]} arguments_ - The arguments to pass to the hook
+	 */
+	public async beforeHook<T>(event: string, ...arguments_: T[]) {
+		await this.hook(`before:${event}`, ...arguments_);
+	}
+
+	/**
+	 * Prepends the word `after` to your hook. Example is event is `test`, the after hook is `after:test`.
+	 * @param {string} event - The event name
+	 * @param {T[]} arguments_ - The arguments to pass to the hook
+	 */
+	public async afterHook<T>(event: string, ...arguments_: T[]) {
+		await this.hook(`after:${event}`, ...arguments_);
+	}
+
+	/**
 	 * Calls all handlers for a specific event. This is an alias for `hook` and is provided for
 	 * compatibility with other libraries that use the `callHook` method.
 	 * @param {string} event

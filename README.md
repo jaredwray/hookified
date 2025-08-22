@@ -38,6 +38,8 @@
   - [.removeHooks(Array)](#removehooksarray)
   - [.hook(eventName, ...args)](#hookeventname-args)
   - [.callHook(eventName, ...args)](#callhookeventname-args)
+  - [.beforeHook(eventName, ...args)](#beforehookeventname-args)
+  - [.afterHook(eventName, ...args)](#afterhookeventname-args)
   - [.hooks](#hooks)
   - [.getHooks(eventName)](#gethookseventname)
   - [.clearHooks(eventName)](#clearhookeventname)
@@ -555,6 +557,50 @@ await myClass.myMethodWithHooks();
 ## .callHook(eventName, ...args)
 
 This is an alias for `.hook(eventName, ...args)` for backwards compatibility.
+
+## .beforeHook(eventName, ...args)
+
+This is a helper function that will prepend a hook name with `before:`.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // the event name will be `before:myMethod2`
+    await this.beforeHook('myMethod2', data);
+
+    return data;
+  }
+}
+```
+
+## .afterHook(eventName, ...args)
+
+This is a helper function that will prepend a hook name with `after:`.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks() Promise<any> {
+    let data = { some: 'data' };
+    // the event name will be `after:myMethod2`
+    await this.afterHook('myMethod2', data);
+
+    return data;
+  }
+}
+```
 
 ## .hooks
 

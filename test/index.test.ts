@@ -347,4 +347,189 @@ describe("Hookified", () => {
 			);
 		});
 	});
+
+	describe("beforeHook", () => {
+		test("should call before:event hooks", async () => {
+			const hookified = new Hookified();
+			const handlerData: string[] = [];
+
+			const handler = () => {
+				handlerData.push("before");
+			};
+
+			hookified.onHook("before:test", handler);
+			await hookified.beforeHook("test");
+			expect(handlerData).toEqual(["before"]);
+		});
+
+		test("should pass arguments to before hooks", async () => {
+			const hookified = new Hookified();
+			let capturedData;
+			let capturedCount;
+
+			const handler = (data: any, count: number) => {
+				capturedData = data;
+				capturedCount = count;
+			};
+
+			const data = { key: "value" };
+			hookified.onHook("before:process", handler);
+			await hookified.beforeHook("process", data, { key: "42" });
+			expect(capturedData).toEqual({ key: "value" });
+			expect(capturedCount).toEqual({ key: "42" });
+		});
+
+		test("should call multiple before hooks in order", async () => {
+			const hookified = new Hookified();
+			const handlerData: string[] = [];
+
+			const handler1 = () => {
+				handlerData.push("first");
+			};
+
+			const handler2 = () => {
+				handlerData.push("second");
+			};
+
+			hookified.onHook("before:action", handler1);
+			hookified.onHook("before:action", handler2);
+			await hookified.beforeHook("action");
+			expect(handlerData).toEqual(["first", "second"]);
+		});
+
+		test("should handle errors in before hooks", async () => {
+			const hookified = new Hookified();
+			let errorMessage;
+
+			hookified.on("error", (error: Error) => {
+				errorMessage = error.message;
+			});
+
+			const handler = () => {
+				throw new Error("before hook error");
+			};
+
+			hookified.onHook("before:task", handler);
+			await hookified.beforeHook("task");
+			expect(errorMessage).toBe("before:task: before hook error");
+		});
+	});
+
+	describe("afterHook", () => {
+		test("should call after:event hooks", async () => {
+			const hookified = new Hookified();
+			const handlerData: string[] = [];
+
+			const handler = () => {
+				handlerData.push("after");
+			};
+
+			hookified.onHook("after:test", handler);
+			await hookified.afterHook("test");
+			expect(handlerData).toEqual(["after"]);
+		});
+
+		test("should pass arguments to after hooks", async () => {
+			const hookified = new Hookified();
+			let capturedData;
+			let capturedMessage;
+
+			const handler = (data: any, message: string) => {
+				capturedData = data;
+				capturedMessage = message;
+			};
+
+			const data = { status: "complete" };
+			hookified.onHook("after:process", handler);
+			await hookified.afterHook("process", data, { status: "success" });
+			expect(capturedData).toEqual({ status: "complete" });
+			expect(capturedMessage).toEqual({ status: "success" });
+		});
+
+		test("should call multiple after hooks in order", async () => {
+			const hookified = new Hookified();
+			const handlerData: string[] = [];
+
+			const handler1 = () => {
+				handlerData.push("cleanup1");
+			};
+
+			const handler2 = () => {
+				handlerData.push("cleanup2");
+			};
+
+			hookified.onHook("after:action", handler1);
+			hookified.onHook("after:action", handler2);
+			await hookified.afterHook("action");
+			expect(handlerData).toEqual(["cleanup1", "cleanup2"]);
+		});
+
+		test("should handle errors in after hooks", async () => {
+			const hookified = new Hookified();
+			let errorMessage;
+
+			hookified.on("error", (error: Error) => {
+				errorMessage = error.message;
+			});
+
+			const handler = () => {
+				throw new Error("after hook error");
+			};
+
+			hookified.onHook("after:task", handler);
+			await hookified.afterHook("task");
+			expect(errorMessage).toBe("after:task: after hook error");
+		});
+	});
+
+	describe("beforeHook and afterHook integration", () => {
+		test("should work with before and after hooks together", async () => {
+			const hookified = new Hookified();
+			const executionOrder: string[] = [];
+
+			const beforeHandler = () => {
+				executionOrder.push("before");
+			};
+
+			const mainHandler = () => {
+				executionOrder.push("main");
+			};
+
+			const afterHandler = () => {
+				executionOrder.push("after");
+			};
+
+			hookified.onHook("before:operation", beforeHandler);
+			hookified.onHook("operation", mainHandler);
+			hookified.onHook("after:operation", afterHandler);
+
+			await hookified.beforeHook("operation");
+			await hookified.hook("operation");
+			await hookified.afterHook("operation");
+
+			expect(executionOrder).toEqual(["before", "main", "after"]);
+		});
+
+		test("should maintain data integrity across before and after hooks", async () => {
+			const hookified = new Hookified();
+			const data = { value: 0 };
+
+			const beforeHandler = (data: any) => {
+				data.value = 10;
+			};
+
+			const afterHandler = (data: any) => {
+				data.value = data.value * 2;
+			};
+
+			hookified.onHook("before:transform", beforeHandler);
+			hookified.onHook("after:transform", afterHandler);
+
+			await hookified.beforeHook("transform", data);
+			expect(data.value).toBe(10);
+
+			await hookified.afterHook("transform", data);
+			expect(data.value).toBe(20);
+		});
+	});
 });
