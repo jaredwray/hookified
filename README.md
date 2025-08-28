@@ -16,6 +16,7 @@
 - Browser Support and Delivered via CDN
 - Ability to throw errors in hooks
 - Ability to pass in a logger (such as Pino) for errors
+- Enforce consistent hook naming conventions with `enforceBeforeAfter`
 - No package dependencies and only 100KB in size
 - Fast and Efficient with [Benchmarks](#benchmarks)
 - Maintained on a regular basis!
@@ -27,6 +28,7 @@
 - [API - Hooks](#api---hooks)
   - [.throwHookErrors](#throwhookerrors)
   - [.logger](#logger)
+  - [.enforceBeforeAfter](#enforcebeforeafter)
   - [.onHook(eventName, handler)](#onhookeventname-handler)
   - [.onHookEntry(hookEntry)](#onhookentryhookentry)
   - [.addHook(eventName, handler)](#addhookeventname-handler)
@@ -230,6 +232,60 @@ myClass.onHook('before:myMethod2', async () => {
 // when you call before:myMethod2 it will log the error to the logger
 await myClass.hook('before:myMethod2');
 ```
+
+## .enforceBeforeAfter
+
+If set to true, enforces that all hook names must start with 'before' or 'after'. This is useful for maintaining consistent hook naming conventions in your application. Default is false.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ enforceBeforeAfter: true });
+  }
+}
+
+const myClass = new MyClass();
+
+console.log(myClass.enforceBeforeAfter); // true
+
+// These will work fine
+myClass.onHook('beforeSave', async () => {
+  console.log('Before save hook');
+});
+
+myClass.onHook('afterSave', async () => {
+  console.log('After save hook');
+});
+
+myClass.onHook('before:validation', async () => {
+  console.log('Before validation hook');
+});
+
+// This will throw an error
+try {
+  myClass.onHook('customEvent', async () => {
+    console.log('This will not work');
+  });
+} catch (error) {
+  console.log(error.message); // Hook event "customEvent" must start with "before" or "after" when enforceBeforeAfter is enabled
+}
+
+// You can also change it dynamically
+myClass.enforceBeforeAfter = false;
+myClass.onHook('customEvent', async () => {
+  console.log('This will work now');
+});
+```
+
+The validation applies to all hook-related methods:
+- `onHook()`, `addHook()`, `onHookEntry()`, `onHooks()`
+- `prependHook()`, `onceHook()`, `prependOnceHook()`
+- `hook()`, `callHook()`
+- `getHooks()`, `removeHook()`, `removeHooks()`
+
+Note: The `beforeHook()` and `afterHook()` helper methods automatically generate proper hook names and work regardless of the `enforceBeforeAfter` setting.
 
 ## .onHook(eventName, handler)
 
