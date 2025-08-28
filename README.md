@@ -57,9 +57,9 @@
   - [.eventNames()](#eventnames)
   - [.listenerCount(eventName?)](#listenercounteventname)
   - [.rawListeners(eventName?)](#rawlistenerseventname)
-- [Development and Contribution](#development-and-contribution)
 - [Benchmarks](#benchmarks)
-- [License](#license)
+- [How to Contribute](#how-to-contribute)
+- [License and Copyright](#license-and-copyright)
 
 # Installation
 ```bash
@@ -999,24 +999,6 @@ myClass.on('message', (message) => {
 console.log(myClass.rawListeners('message'));
 ```
 
-# Development and Contribution
-
-Hookified is written in TypeScript and tests are written in `vitest`. To run the tests, use the following command:
-
-To setup the environment and run the tests:
-
-```bash
-pnpm i && pnpm test
-```
-
-Note that we are using `pnpm` as our package manager. If you don't have it installed, you can install it globally with:
-
-```bash
-npm install -g pnpm
-```
-
-To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
-
 # Benchmarks
 
 We are doing very simple benchmarking to see how this compares to other libraries using `tinybench`. This is not a full benchmark but just a simple way to see how it performs. Our goal is to be as close or better than the other libraries including native (EventEmitter).
@@ -1041,7 +1023,37 @@ This shows how on par `hookified` is to the native `EventEmitter` and popular `e
 
 _Note: the `EventEmitter` version is Nodejs versioning._
 
-# License
+# How to Contribute
+
+Hookified is written in TypeScript and tests are written in `vitest`. To run the tests, use the following command:
+
+To setup the environment and run the tests:
+
+```bash
+pnpm i && pnpm test
+```
+
+Note that we are using `pnpm` as our package manager. If you don't have it installed, you can install it globally with:
+
+```bash
+npm install -g pnpm
+```
+
+To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
+
+```bash
+pnpm i && pnpm test
+```
+
+Note that we are using `pnpm` as our package manager. If you don't have it installed, you can install it globally with:
+
+```bash
+npm install -g pnpm
+```
+
+To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
+
+# License and Copyright
 
 [MIT & © Jared Wray](LICENSE)
 
