@@ -1,7 +1,7 @@
 // biome-ignore-all lint/suspicious/noExplicitAny: this is a test file
 // biome-ignore-all lint/suspicious/noImplicitAnyLet: this is a test file
 import pino from "pino";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { type HookEntry, Hookified } from "../src/index.js";
 
 describe("Hookified", () => {
@@ -777,6 +777,712 @@ describe("Hookified", () => {
 			// Should work with valid names
 			expect(() => hookified.onHook("beforeSomething", handler)).not.toThrow();
 			expect(() => hookified.onHook("afterSomething", handler)).not.toThrow();
+		});
+	});
+
+	describe("deprecatedHooks", () => {
+		test("should be empty Map by default", () => {
+			const hookified = new Hookified();
+			expect(hookified.deprecatedHooks).toEqual(new Map());
+		});
+
+		test("should be configurable via options", () => {
+			const deprecatedHooks = new Map([
+				["oldHook", "Use newHook instead"],
+				["legacyHook", "This hook will be removed in v2.0"],
+			]);
+			const hookified = new Hookified({ deprecatedHooks });
+			expect(hookified.deprecatedHooks).toEqual(deprecatedHooks);
+		});
+
+		test("should be settable via property", () => {
+			const hookified = new Hookified();
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			hookified.deprecatedHooks = deprecatedHooks;
+			expect(hookified.deprecatedHooks).toEqual(deprecatedHooks);
+		});
+
+		test("should emit warn event when deprecated hook is used in onHook", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.onHook("oldHook", handler);
+
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should emit warn event without custom message", () => {
+			const deprecatedHooks = new Map([["oldHook", ""]]);
+			const hookified = new Hookified({ deprecatedHooks });
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.onHook("oldHook", handler);
+
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated',
+			});
+		});
+
+		test("should log deprecation warning to logger if available", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const logger = {
+				warn: vi.fn(),
+				error: vi.fn(),
+				info: vi.fn(),
+				debug: vi.fn(),
+			};
+			const hookified = new Hookified({ deprecatedHooks, logger });
+			const handler = () => {};
+
+			hookified.onHook("oldHook", handler);
+
+			expect(logger.warn).toHaveBeenCalledWith(
+				'Hook "oldHook" is deprecated: Use newHook instead',
+			);
+		});
+
+		test("should check for deprecated hooks in addHook", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.addHook("oldHook", handler);
+
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should check for deprecated hooks in prependHook", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.prependHook("oldHook", handler);
+
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should check for deprecated hooks in onceHook", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.onceHook("oldHook", handler);
+
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should check for deprecated hooks in prependOnceHook", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.prependOnceHook("oldHook", handler);
+
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should check for deprecated hooks in hook", async () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			await hookified.hook("oldHook");
+
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should check for deprecated hooks in callHook", async () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			await hookified.callHook("oldHook");
+
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should check for deprecated hooks in getHooks", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.getHooks("oldHook");
+
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should check for deprecated hooks in removeHook", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.removeHook("oldHook", handler);
+
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should check for deprecated hooks in onHookEntry", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.onHookEntry({ event: "oldHook", handler });
+
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should check for deprecated hooks in onHooks", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+			const handler = () => {};
+
+			const warnEvents = [];
+			hookified.on("warn", (event) => {
+				warnEvents.push(event);
+			});
+
+			hookified.onHooks([
+				{ event: "validHook", handler },
+				{ event: "oldHook", handler },
+			]);
+
+			expect(warnEvents).toHaveLength(1);
+			expect(warnEvents[0]).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should check for deprecated hooks in removeHooks", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+			const handler = () => {};
+
+			const warnEvents = [];
+			hookified.on("warn", (event) => {
+				warnEvents.push(event);
+			});
+
+			hookified.removeHooks([
+				{ event: "validHook", handler },
+				{ event: "oldHook", handler },
+			]);
+
+			expect(warnEvents).toHaveLength(1);
+			expect(warnEvents[0]).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should not emit deprecation warning for non-deprecated hooks", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({ deprecatedHooks });
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.onHook("validHook", handler);
+
+			expect(warnEvent).toBeUndefined();
+		});
+
+		test("should work with both enforceBeforeAfter and deprecatedHooks", () => {
+			const deprecatedHooks = new Map([
+				["beforeOldHook", "Use beforeNewHook instead"],
+			]);
+			const hookified = new Hookified({
+				enforceBeforeAfter: true,
+				deprecatedHooks,
+			});
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			// Should work - valid name and deprecated
+			hookified.onHook("beforeOldHook", handler);
+			expect(warnEvent).toEqual({
+				hook: "beforeOldHook",
+				message:
+					'Hook "beforeOldHook" is deprecated: Use beforeNewHook instead',
+			});
+
+			// Should throw - invalid name for enforceBeforeAfter
+			expect(() => hookified.onHook("invalidHook", handler)).toThrow(
+				'Hook event "invalidHook" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should allow dynamically adding deprecated hooks", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+
+			// Initially no deprecation
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.onHook("someHook", handler);
+			expect(warnEvent).toBeUndefined();
+
+			// Add deprecation
+			hookified.deprecatedHooks.set("someHook", "This hook is now deprecated");
+
+			hookified.onHook("someHook", handler);
+			expect(warnEvent).toEqual({
+				hook: "someHook",
+				message: 'Hook "someHook" is deprecated: This hook is now deprecated',
+			});
+		});
+
+		test("should handle logger.warn not being available", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const logger = {
+				error: vi.fn(),
+				info: vi.fn(),
+				debug: vi.fn(),
+				// no warn method
+			};
+			const hookified = new Hookified({ deprecatedHooks, logger });
+			const handler = () => {};
+
+			// Should not throw even without logger.warn
+			expect(() => hookified.onHook("oldHook", handler)).not.toThrow();
+		});
+	});
+
+	describe("allowDeprecated", () => {
+		test("should be true by default", () => {
+			const hookified = new Hookified();
+			expect(hookified.allowDeprecated).toBe(true);
+		});
+
+		test("should be configurable via options", () => {
+			const hookified = new Hookified({ allowDeprecated: false });
+			expect(hookified.allowDeprecated).toBe(false);
+		});
+
+		test("should be settable via property", () => {
+			const hookified = new Hookified();
+			hookified.allowDeprecated = false;
+			expect(hookified.allowDeprecated).toBe(false);
+		});
+
+		test("should allow deprecated hook registration when allowDeprecated is true", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: true,
+			});
+			const handler = () => {};
+
+			hookified.onHook("oldHook", handler);
+
+			expect(hookified.getHooks("oldHook")).toEqual([handler]);
+		});
+
+		test("should prevent deprecated hook registration when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			hookified.onHook("oldHook", handler);
+
+			// Hook should not be registered
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+			// But warning should still be emitted
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should prevent deprecated hook registration in addHook when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const handler = () => {};
+
+			hookified.addHook("oldHook", handler);
+
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+		});
+
+		test("should prevent deprecated hook registration in prependHook when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const handler = () => {};
+
+			hookified.prependHook("oldHook", handler);
+
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+		});
+
+		test("should prevent deprecated hook registration in onceHook when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const handler = () => {};
+
+			hookified.onceHook("oldHook", handler);
+
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+		});
+
+		test("should prevent deprecated hook registration in prependOnceHook when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const handler = () => {};
+
+			hookified.prependOnceHook("oldHook", handler);
+
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+		});
+
+		test("should prevent deprecated hook registration in onHookEntry when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const handler = () => {};
+
+			hookified.onHookEntry({ event: "oldHook", handler });
+
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+		});
+
+		test("should prevent deprecated hook registration in onHooks when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const handler = () => {};
+
+			hookified.onHooks([
+				{ event: "validHook", handler },
+				{ event: "oldHook", handler },
+			]);
+
+			expect(hookified.getHooks("validHook")).toEqual([handler]);
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+		});
+
+		test("should prevent deprecated hook execution when allowDeprecated is false", async () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: true,
+			});
+			const handler = vi.fn();
+
+			// First register the hook when allowed
+			hookified.onHook("oldHook", handler);
+			expect(hookified.getHooks("oldHook")).toEqual([handler]);
+
+			// Then set allowDeprecated to false
+			hookified.allowDeprecated = false;
+
+			// Hook should not execute
+			await hookified.hook("oldHook");
+			expect(handler).not.toHaveBeenCalled();
+		});
+
+		test("should prevent deprecated hook execution in callHook when allowDeprecated is false", async () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: true,
+			});
+			const handler = vi.fn();
+
+			// First register the hook when allowed
+			hookified.onHook("oldHook", handler);
+
+			// Then set allowDeprecated to false
+			hookified.allowDeprecated = false;
+
+			// Hook should not execute
+			await hookified.callHook("oldHook");
+			expect(handler).not.toHaveBeenCalled();
+		});
+
+		test("should return undefined from getHooks for deprecated hooks when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+		});
+
+		test("should prevent removeHook for deprecated hooks when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: true,
+			});
+			const handler = () => {};
+
+			// Register hook first
+			hookified.onHook("oldHook", handler);
+			expect(hookified.getHooks("oldHook")).toEqual([handler]);
+
+			// Set allowDeprecated to false
+			hookified.allowDeprecated = false;
+
+			// Should not be able to remove the hook
+			hookified.removeHook("oldHook", handler);
+			// Since getHooks also respects allowDeprecated, it returns undefined
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+		});
+
+		test("should prevent removeHooks for deprecated hooks when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: true,
+			});
+			const handler = () => {};
+
+			// Register hook first
+			hookified.onHook("oldHook", handler);
+
+			// Set allowDeprecated to false
+			hookified.allowDeprecated = false;
+
+			// Should not be able to remove the hook
+			hookified.removeHooks([{ event: "oldHook", handler }]);
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+		});
+
+		test("should still emit warnings for deprecated hooks even when allowDeprecated is false", async () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const handler = () => {};
+
+			let warnEvent;
+			hookified.on("warn", (event) => {
+				warnEvent = event;
+			});
+
+			// Try to register (should fail but emit warning)
+			hookified.onHook("oldHook", handler);
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+
+			// Reset warning
+			warnEvent = undefined;
+
+			// Try to execute (should fail but emit warning)
+			await hookified.hook("oldHook");
+			expect(warnEvent).toEqual({
+				hook: "oldHook",
+				message: 'Hook "oldHook" is deprecated: Use newHook instead',
+			});
+		});
+
+		test("should work with logger when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const logger = {
+				warn: vi.fn(),
+				error: vi.fn(),
+				info: vi.fn(),
+				debug: vi.fn(),
+			};
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+				logger,
+			});
+			const handler = () => {};
+
+			hookified.onHook("oldHook", handler);
+
+			expect(logger.warn).toHaveBeenCalledWith(
+				'Hook "oldHook" is deprecated: Use newHook instead',
+			);
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+		});
+
+		test("should allow non-deprecated hooks when allowDeprecated is false", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const handler = () => {};
+
+			hookified.onHook("validHook", handler);
+
+			expect(hookified.getHooks("validHook")).toEqual([handler]);
+		});
+
+		test("should work with enforceBeforeAfter and allowDeprecated together", () => {
+			const deprecatedHooks = new Map([
+				["beforeOldHook", "Use beforeNewHook instead"],
+			]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+				enforceBeforeAfter: true,
+			});
+			const handler = () => {};
+
+			// Should not register (deprecated + not allowed)
+			hookified.onHook("beforeOldHook", handler);
+			expect(hookified.getHooks("beforeOldHook")).toBeUndefined();
+
+			// Should throw (doesn't start with before/after)
+			expect(() => hookified.onHook("invalidHook", handler)).toThrow(
+				'Hook event "invalidHook" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+
+			// Should work (valid name + not deprecated)
+			hookified.onHook("beforeValidHook", handler);
+			expect(hookified.getHooks("beforeValidHook")).toEqual([handler]);
+		});
+
+		test("should allow dynamically changing allowDeprecated setting", async () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: true,
+			});
+			const handler = vi.fn();
+
+			// Should work when true
+			hookified.onHook("oldHook", handler);
+			expect(hookified.getHooks("oldHook")).toEqual([handler]);
+
+			await hookified.hook("oldHook");
+			expect(handler).toHaveBeenCalledTimes(1);
+
+			// Change to false
+			hookified.allowDeprecated = false;
+
+			// Should not execute
+			await hookified.hook("oldHook");
+			expect(handler).toHaveBeenCalledTimes(1); // Still 1, not called again
+
+			// Should not return hooks
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
 	});
 });
