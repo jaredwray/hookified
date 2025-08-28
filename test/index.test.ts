@@ -532,4 +532,251 @@ describe("Hookified", () => {
 			expect(data.value).toBe(20);
 		});
 	});
+
+	describe("enforceBeforeAfter", () => {
+		test("should be false by default", () => {
+			const hookified = new Hookified();
+			expect(hookified.enforceBeforeAfter).toBe(false);
+		});
+
+		test("should be configurable via options", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			expect(hookified.enforceBeforeAfter).toBe(true);
+		});
+
+		test("should be settable via property", () => {
+			const hookified = new Hookified();
+			hookified.enforceBeforeAfter = true;
+			expect(hookified.enforceBeforeAfter).toBe(true);
+		});
+
+		test("should allow any hook name when enforceBeforeAfter is false", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: false });
+			const handler = () => {};
+
+			expect(() => hookified.onHook("customEvent", handler)).not.toThrow();
+			expect(() => hookified.onHook("randomName", handler)).not.toThrow();
+			expect(() => hookified.onHook("test", handler)).not.toThrow();
+		});
+
+		test("should allow hooks starting with 'before' when enforceBeforeAfter is true", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handler = () => {};
+
+			expect(() => hookified.onHook("beforeTest", handler)).not.toThrow();
+			expect(() => hookified.onHook("before:test", handler)).not.toThrow();
+			expect(() => hookified.onHook("beforeSomething", handler)).not.toThrow();
+		});
+
+		test("should allow hooks starting with 'after' when enforceBeforeAfter is true", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handler = () => {};
+
+			expect(() => hookified.onHook("afterTest", handler)).not.toThrow();
+			expect(() => hookified.onHook("after:test", handler)).not.toThrow();
+			expect(() => hookified.onHook("afterSomething", handler)).not.toThrow();
+		});
+
+		test("should throw error for invalid hook names when enforceBeforeAfter is true", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handler = () => {};
+
+			expect(() => hookified.onHook("customEvent", handler)).toThrow(
+				'Hook event "customEvent" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+			expect(() => hookified.onHook("test", handler)).toThrow(
+				'Hook event "test" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+			expect(() => hookified.onHook("randomName", handler)).toThrow(
+				'Hook event "randomName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should validate hook names in addHook", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handler = () => {};
+
+			expect(() => hookified.addHook("beforeTest", handler)).not.toThrow();
+			expect(() => hookified.addHook("afterTest", handler)).not.toThrow();
+			expect(() => hookified.addHook("invalidName", handler)).toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should validate hook names in prependHook", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handler = () => {};
+
+			expect(() => hookified.prependHook("beforeTest", handler)).not.toThrow();
+			expect(() => hookified.prependHook("afterTest", handler)).not.toThrow();
+			expect(() => hookified.prependHook("invalidName", handler)).toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should validate hook names in onceHook", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handler = () => {};
+
+			expect(() => hookified.onceHook("beforeTest", handler)).not.toThrow();
+			expect(() => hookified.onceHook("afterTest", handler)).not.toThrow();
+			expect(() => hookified.onceHook("invalidName", handler)).toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should validate hook names in prependOnceHook", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handler = () => {};
+
+			expect(() =>
+				hookified.prependOnceHook("beforeTest", handler),
+			).not.toThrow();
+			expect(() =>
+				hookified.prependOnceHook("afterTest", handler),
+			).not.toThrow();
+			expect(() => hookified.prependOnceHook("invalidName", handler)).toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should validate hook names in hook", async () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+
+			await expect(hookified.hook("beforeTest")).resolves.not.toThrow();
+			await expect(hookified.hook("afterTest")).resolves.not.toThrow();
+			await expect(hookified.hook("invalidName")).rejects.toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should validate hook names in callHook", async () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+
+			await expect(hookified.callHook("beforeTest")).resolves.not.toThrow();
+			await expect(hookified.callHook("afterTest")).resolves.not.toThrow();
+			await expect(hookified.callHook("invalidName")).rejects.toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should validate hook names in getHooks", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+
+			expect(() => hookified.getHooks("beforeTest")).not.toThrow();
+			expect(() => hookified.getHooks("afterTest")).not.toThrow();
+			expect(() => hookified.getHooks("invalidName")).toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should validate hook names in removeHook", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handler = () => {};
+
+			expect(() => hookified.removeHook("beforeTest", handler)).not.toThrow();
+			expect(() => hookified.removeHook("afterTest", handler)).not.toThrow();
+			expect(() => hookified.removeHook("invalidName", handler)).toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should validate hook names in onHookEntry", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handler = () => {};
+
+			expect(() =>
+				hookified.onHookEntry({ event: "beforeTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.onHookEntry({ event: "afterTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.onHookEntry({ event: "invalidName", handler }),
+			).toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should validate hook names in onHooks", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handler = () => {};
+
+			const validHooks = [
+				{ event: "beforeTest", handler },
+				{ event: "afterTest", handler },
+			];
+
+			const invalidHooks = [
+				{ event: "beforeTest", handler },
+				{ event: "invalidName", handler },
+			];
+
+			expect(() => hookified.onHooks(validHooks)).not.toThrow();
+			expect(() => hookified.onHooks(invalidHooks)).toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should validate hook names in removeHooks", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handler = () => {};
+
+			const validHooks = [
+				{ event: "beforeTest", handler },
+				{ event: "afterTest", handler },
+			];
+
+			const invalidHooks = [
+				{ event: "beforeTest", handler },
+				{ event: "invalidName", handler },
+			];
+
+			expect(() => hookified.removeHooks(validHooks)).not.toThrow();
+			expect(() => hookified.removeHooks(invalidHooks)).toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should work with beforeHook and afterHook methods regardless of enforceBeforeAfter", async () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			const handlerData: string[] = [];
+
+			const beforeHandler = () => {
+				handlerData.push("before");
+			};
+
+			const afterHandler = () => {
+				handlerData.push("after");
+			};
+
+			hookified.onHook("before:test", beforeHandler);
+			hookified.onHook("after:test", afterHandler);
+
+			await hookified.beforeHook("test");
+			await hookified.afterHook("test");
+
+			expect(handlerData).toEqual(["before", "after"]);
+		});
+
+		test("should allow dynamically changing enforceBeforeAfter setting", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: false });
+			const handler = () => {};
+
+			// Should work when false
+			expect(() => hookified.onHook("customEvent", handler)).not.toThrow();
+
+			// Change to true
+			hookified.enforceBeforeAfter = true;
+
+			// Should now throw
+			expect(() => hookified.onHook("anotherCustomEvent", handler)).toThrow(
+				'Hook event "anotherCustomEvent" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+
+			// Should work with valid names
+			expect(() => hookified.onHook("beforeSomething", handler)).not.toThrow();
+			expect(() => hookified.onHook("afterSomething", handler)).not.toThrow();
+		});
+	});
 });
