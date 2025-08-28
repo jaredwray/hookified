@@ -17,9 +17,9 @@
   },
   "types": "dist/node/index.d.ts",
   "scripts": {
-    "lint": "biome check --write",
+    "lint": "biome check --write --error-on-warnings",
     "test": "pnpm lint && vitest run --coverage",
-    "test:ci": "biome check && vitest run --coverage",
+    "test:ci": "biome check --error-on-warnings && vitest run --coverage",
     "clean": "rimraf ./dist ./coverage ./site/dist",
     "build": "rimraf ./dist && tsup",
     "benchmark": "pnpm benchmark:hooks && pnpm benchmark:emit",
