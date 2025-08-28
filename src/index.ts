@@ -19,11 +19,18 @@ export type HookifiedOptions = {
 	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
 	 */
 	throwHookErrors?: boolean;
+	/**
+	 * Whether to enforce that all hook names start with 'before' or 'after'. Default is false.
+	 * @type {boolean}
+	 * @default false
+	 */
+	enforceBeforeAfter?: boolean;
 } & EventEmitterOptions;
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, Hook[]>;
 	private _throwHookErrors = false;
+	private _enforceBeforeAfter = false;
 
 	constructor(options?: HookifiedOptions) {
 		super({ logger: options?.logger });
@@ -31,6 +38,10 @@ export class Hookified extends Eventified {
 
 		if (options?.throwHookErrors !== undefined) {
 			this._throwHookErrors = options.throwHookErrors;
+		}
+
+		if (options?.enforceBeforeAfter !== undefined) {
+			this._enforceBeforeAfter = options.enforceBeforeAfter;
 		}
 	}
 
@@ -59,12 +70,46 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Gets whether to enforce that all hook names start with 'before' or 'after'. Default is false.
+	 * @returns {boolean}
+	 * @default false
+	 */
+	public get enforceBeforeAfter() {
+		return this._enforceBeforeAfter;
+	}
+
+	/**
+	 * Sets whether to enforce that all hook names start with 'before' or 'after'. Default is false.
+	 * @param {boolean} value
+	 */
+	public set enforceBeforeAfter(value) {
+		this._enforceBeforeAfter = value;
+	}
+
+	/**
+	 * Validates hook event name if enforceBeforeAfter is enabled
+	 * @param {string} event - The event name to validate
+	 * @throws {Error} If enforceBeforeAfter is true and event doesn't start with 'before' or 'after'
+	 */
+	private validateHookName(event: string): void {
+		if (this._enforceBeforeAfter) {
+			const eventValue = event.trim().toLocaleLowerCase();
+			if (!eventValue.startsWith("before") && !eventValue.startsWith("after")) {
+				throw new Error(
+					`Hook event "${event}" must start with "before" or "after" when enforceBeforeAfter is enabled`,
+				);
+			}
+		}
+	}
+
+	/**
 	 * Adds a handler function for a specific event
 	 * @param {string} event
 	 * @param {Hook} handler - this can be async or sync
 	 * @returns {void}
 	 */
 	public onHook(event: string, handler: Hook) {
+		this.validateHookName(event);
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			eventHandlers.push(handler);
@@ -111,6 +156,7 @@ export class Hookified extends Eventified {
 	 * @returns {void}
 	 */
 	public prependHook(event: string, handler: Hook) {
+		this.validateHookName(event);
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			eventHandlers.unshift(handler);
@@ -125,6 +171,7 @@ export class Hookified extends Eventified {
 	 * @param handler
 	 */
 	public prependOnceHook(event: string, handler: Hook) {
+		this.validateHookName(event);
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		const hook = async (...arguments_: any[]) => {
 			this.removeHook(event, hook);
@@ -140,6 +187,7 @@ export class Hookified extends Eventified {
 	 * @param handler
 	 */
 	public onceHook(event: string, handler: Hook) {
+		this.validateHookName(event);
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		const hook = async (...arguments_: any[]) => {
 			this.removeHook(event, hook);
@@ -156,6 +204,7 @@ export class Hookified extends Eventified {
 	 * @returns {void}
 	 */
 	public removeHook(event: string, handler: Hook) {
+		this.validateHookName(event);
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			const index = eventHandlers.indexOf(handler);
@@ -183,6 +232,7 @@ export class Hookified extends Eventified {
 	 * @returns {Promise<void>}
 	 */
 	public async hook<T>(event: string, ...arguments_: T[]) {
+		this.validateHookName(event);
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			for (const handler of eventHandlers) {
@@ -238,6 +288,7 @@ export class Hookified extends Eventified {
 	 * @returns {Hook[]}
 	 */
 	public getHooks(event: string) {
+		this.validateHookName(event);
 		return this._hooks.get(event);
 	}
 
