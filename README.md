@@ -17,6 +17,8 @@
 - Ability to throw errors in hooks
 - Ability to pass in a logger (such as Pino) for errors
 - Enforce consistent hook naming conventions with `enforceBeforeAfter`
+- Deprecation warnings for hooks with `deprecatedHooks`
+- Control deprecated hook execution with `allowDeprecated`
 - No package dependencies and only 100KB in size
 - Fast and Efficient with [Benchmarks](#benchmarks)
 - Maintained on a regular basis!
@@ -29,6 +31,8 @@
   - [.throwHookErrors](#throwhookerrors)
   - [.logger](#logger)
   - [.enforceBeforeAfter](#enforcebeforeafter)
+  - [.deprecatedHooks](#deprecatedhooks)
+  - [.allowDeprecated](#allowdeprecated)
   - [.onHook(eventName, handler)](#onhookeventname-handler)
   - [.onHookEntry(hookEntry)](#onhookentryhookentry)
   - [.addHook(eventName, handler)](#addhookeventname-handler)
@@ -286,6 +290,143 @@ The validation applies to all hook-related methods:
 - `getHooks()`, `removeHook()`, `removeHooks()`
 
 Note: The `beforeHook()` and `afterHook()` helper methods automatically generate proper hook names and work regardless of the `enforceBeforeAfter` setting.
+
+## .deprecatedHooks
+
+A Map of deprecated hook names to deprecation messages. When a deprecated hook is used, a warning will be emitted via the 'warn' event and logged to the logger (if available). Default is an empty Map.
+
+```javascript
+import { Hookified } from 'hookified';
+
+// Define deprecated hooks with custom messages
+const deprecatedHooks = new Map([
+  ['oldHook', 'Use newHook instead'],
+  ['legacyMethod', 'This hook will be removed in v2.0'],
+  ['deprecatedFeature', ''] // Empty message - will just say "deprecated"
+]);
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ deprecatedHooks });
+  }
+}
+
+const myClass = new MyClass();
+
+console.log(myClass.deprecatedHooks); // Map with deprecated hooks
+
+// Listen for deprecation warnings
+myClass.on('warn', (event) => {
+  console.log(`Deprecation warning: ${event.message}`);
+  // event.hook contains the hook name
+  // event.message contains the full warning message
+});
+
+// Using a deprecated hook will emit warnings
+myClass.onHook('oldHook', () => {
+  console.log('This hook is deprecated');
+});
+// Output: Hook "oldHook" is deprecated: Use newHook instead
+
+// Using a deprecated hook with empty message
+myClass.onHook('deprecatedFeature', () => {
+  console.log('This hook is deprecated');
+});
+// Output: Hook "deprecatedFeature" is deprecated
+
+// You can also set deprecated hooks dynamically
+myClass.deprecatedHooks.set('anotherOldHook', 'Please migrate to the new API');
+
+// Works with logger if provided
+import pino from 'pino';
+const logger = pino();
+
+const myClassWithLogger = new Hookified({ 
+  deprecatedHooks,
+  logger 
+});
+
+// Deprecation warnings will be logged to logger.warn
+```
+
+The deprecation warning system applies to all hook-related methods:
+- Registration: `onHook()`, `addHook()`, `onHookEntry()`, `onHooks()`, `prependHook()`, `onceHook()`, `prependOnceHook()`
+- Execution: `hook()`, `callHook()`
+- Management: `getHooks()`, `removeHook()`, `removeHooks()`
+
+Deprecation warnings are emitted in two ways:
+1. **Event**: A 'warn' event is emitted with `{ hook: string, message: string }`
+2. **Logger**: Logged to `logger.warn()` if a logger is configured and has a `warn` method
+
+## .allowDeprecated
+
+Controls whether deprecated hooks are allowed to be registered and executed. Default is true. When set to false, deprecated hooks will still emit warnings but will be prevented from registration and execution.
+
+```javascript
+import { Hookified } from 'hookified';
+
+const deprecatedHooks = new Map([
+  ['oldHook', 'Use newHook instead']
+]);
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ deprecatedHooks, allowDeprecated: false });
+  }
+}
+
+const myClass = new MyClass();
+
+console.log(myClass.allowDeprecated); // false
+
+// Listen for deprecation warnings (still emitted even when blocked)
+myClass.on('warn', (event) => {
+  console.log(`Warning: ${event.message}`);
+});
+
+// Try to register a deprecated hook - will emit warning but not register
+myClass.onHook('oldHook', () => {
+  console.log('This will never execute');
+});
+// Output: Warning: Hook "oldHook" is deprecated: Use newHook instead
+
+// Verify hook was not registered
+console.log(myClass.getHooks('oldHook')); // undefined
+
+// Try to execute a deprecated hook - will emit warning but not execute
+await myClass.hook('oldHook');
+// Output: Warning: Hook "oldHook" is deprecated: Use newHook instead
+// (but no handlers execute)
+
+// Non-deprecated hooks work normally
+myClass.onHook('validHook', () => {
+  console.log('This works fine');
+});
+
+console.log(myClass.getHooks('validHook')); // [handler function]
+
+// You can dynamically change the setting
+myClass.allowDeprecated = true;
+
+// Now deprecated hooks can be registered and executed
+myClass.onHook('oldHook', () => {
+  console.log('Now this works');
+});
+
+console.log(myClass.getHooks('oldHook')); // [handler function]
+```
+
+**Behavior when `allowDeprecated` is false:**
+- **Registration**: All hook registration methods (`onHook`, `addHook`, `prependHook`, etc.) will emit warnings but skip registration
+- **Execution**: Hook execution methods (`hook`, `callHook`) will emit warnings but skip execution  
+- **Management**: Hook management methods (`getHooks`, `removeHook`) will emit warnings and return undefined/skip operations
+- **Warnings**: Deprecation warnings are always emitted regardless of `allowDeprecated` setting
+
+**Use cases:**
+- **Development**: Keep `allowDeprecated: true` to maintain functionality while seeing warnings
+- **Testing**: Set `allowDeprecated: false` to ensure no deprecated hooks are accidentally used
+- **Migration**: Gradually disable deprecated hooks during API transitions
+- **Production**: Disable deprecated hooks to prevent legacy code execution
 
 ## .onHook(eventName, handler)
 

@@ -25,16 +25,33 @@ export type HookifiedOptions = {
 	 * @default false
 	 */
 	enforceBeforeAfter?: boolean;
+	/**
+	 * Map of deprecated hook names to deprecation messages. When a deprecated hook is used, a warning will be emitted.
+	 * @type {Map<string, string>}
+	 * @default new Map()
+	 */
+	deprecatedHooks?: Map<string, string>;
+	/**
+	 * Whether to allow deprecated hooks to be registered and executed. Default is true.
+	 * @type {boolean}
+	 * @default true
+	 */
+	allowDeprecated?: boolean;
 } & EventEmitterOptions;
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, Hook[]>;
 	private _throwHookErrors = false;
 	private _enforceBeforeAfter = false;
+	private _deprecatedHooks: Map<string, string>;
+	private _allowDeprecated = true;
 
 	constructor(options?: HookifiedOptions) {
 		super({ logger: options?.logger });
 		this._hooks = new Map();
+		this._deprecatedHooks = options?.deprecatedHooks
+			? new Map(options.deprecatedHooks)
+			: new Map();
 
 		if (options?.throwHookErrors !== undefined) {
 			this._throwHookErrors = options.throwHookErrors;
@@ -42,6 +59,10 @@ export class Hookified extends Eventified {
 
 		if (options?.enforceBeforeAfter !== undefined) {
 			this._enforceBeforeAfter = options.enforceBeforeAfter;
+		}
+
+		if (options?.allowDeprecated !== undefined) {
+			this._allowDeprecated = options.allowDeprecated;
 		}
 	}
 
@@ -87,6 +108,38 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Gets the map of deprecated hook names to deprecation messages.
+	 * @returns {Map<string, string>}
+	 */
+	public get deprecatedHooks() {
+		return this._deprecatedHooks;
+	}
+
+	/**
+	 * Sets the map of deprecated hook names to deprecation messages.
+	 * @param {Map<string, string>} value
+	 */
+	public set deprecatedHooks(value) {
+		this._deprecatedHooks = value;
+	}
+
+	/**
+	 * Gets whether deprecated hooks are allowed to be registered and executed. Default is true.
+	 * @returns {boolean}
+	 */
+	public get allowDeprecated() {
+		return this._allowDeprecated;
+	}
+
+	/**
+	 * Sets whether deprecated hooks are allowed to be registered and executed. Default is true.
+	 * @param {boolean} value
+	 */
+	public set allowDeprecated(value) {
+		this._allowDeprecated = value;
+	}
+
+	/**
 	 * Validates hook event name if enforceBeforeAfter is enabled
 	 * @param {string} event - The event name to validate
 	 * @throws {Error} If enforceBeforeAfter is true and event doesn't start with 'before' or 'after'
@@ -103,6 +156,30 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Checks if a hook is deprecated and emits a warning if it is
+	 * @param {string} event - The event name to check
+	 * @returns {boolean} - Returns true if the hook should proceed, false if it should be blocked
+	 */
+	private checkDeprecatedHook(event: string): boolean {
+		if (this._deprecatedHooks.has(event)) {
+			const message = this._deprecatedHooks.get(event);
+			const warningMessage = `Hook "${event}" is deprecated${message ? `: ${message}` : ""}`;
+
+			// Emit deprecation warning event
+			this.emit("warn", { hook: event, message: warningMessage });
+
+			// Log to logger if available
+			if (this.logger?.warn) {
+				this.logger.warn(warningMessage);
+			}
+
+			// Return false if deprecated hooks are not allowed
+			return this._allowDeprecated;
+		}
+		return true;
+	}
+
+	/**
 	 * Adds a handler function for a specific event
 	 * @param {string} event
 	 * @param {Hook} handler - this can be async or sync
@@ -110,6 +187,9 @@ export class Hookified extends Eventified {
 	 */
 	public onHook(event: string, handler: Hook) {
 		this.validateHookName(event);
+		if (!this.checkDeprecatedHook(event)) {
+			return; // Skip registration if deprecated hooks are not allowed
+		}
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			eventHandlers.push(handler);
@@ -157,6 +237,9 @@ export class Hookified extends Eventified {
 	 */
 	public prependHook(event: string, handler: Hook) {
 		this.validateHookName(event);
+		if (!this.checkDeprecatedHook(event)) {
+			return; // Skip registration if deprecated hooks are not allowed
+		}
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			eventHandlers.unshift(handler);
@@ -172,6 +255,9 @@ export class Hookified extends Eventified {
 	 */
 	public prependOnceHook(event: string, handler: Hook) {
 		this.validateHookName(event);
+		if (!this.checkDeprecatedHook(event)) {
+			return; // Skip registration if deprecated hooks are not allowed
+		}
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		const hook = async (...arguments_: any[]) => {
 			this.removeHook(event, hook);
@@ -188,6 +274,9 @@ export class Hookified extends Eventified {
 	 */
 	public onceHook(event: string, handler: Hook) {
 		this.validateHookName(event);
+		if (!this.checkDeprecatedHook(event)) {
+			return; // Skip registration if deprecated hooks are not allowed
+		}
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		const hook = async (...arguments_: any[]) => {
 			this.removeHook(event, hook);
@@ -205,6 +294,9 @@ export class Hookified extends Eventified {
 	 */
 	public removeHook(event: string, handler: Hook) {
 		this.validateHookName(event);
+		if (!this.checkDeprecatedHook(event)) {
+			return; // Skip removal if deprecated hooks are not allowed
+		}
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			const index = eventHandlers.indexOf(handler);
@@ -233,6 +325,9 @@ export class Hookified extends Eventified {
 	 */
 	public async hook<T>(event: string, ...arguments_: T[]) {
 		this.validateHookName(event);
+		if (!this.checkDeprecatedHook(event)) {
+			return; // Skip execution if deprecated hooks are not allowed
+		}
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			for (const handler of eventHandlers) {
@@ -289,6 +384,9 @@ export class Hookified extends Eventified {
 	 */
 	public getHooks(event: string) {
 		this.validateHookName(event);
+		if (!this.checkDeprecatedHook(event)) {
+			return undefined; // Return undefined if deprecated hooks are not allowed
+		}
 		return this._hooks.get(event);
 	}
 
