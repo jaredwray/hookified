@@ -127,7 +127,7 @@ describe("Hookified", () => {
 	test("execute hook and manipulate data", async () => {
 		const hookified = new Hookified();
 		const data = { key: "value" };
-		let handlerData;
+		let handlerData: any;
 
 		const handler = (data: any) => {
 			data.key = "modified";
@@ -143,7 +143,7 @@ describe("Hookified", () => {
 	test("execute hook with HookEntryand manipulate data", async () => {
 		const hookified = new Hookified();
 		const data = { key: "value" };
-		let handlerData;
+		let handlerData: any;
 
 		const handler = (data: any) => {
 			data.key = "modified";
@@ -159,7 +159,7 @@ describe("Hookified", () => {
 	test("execute callHook and manipulate data", async () => {
 		const hookified = new Hookified();
 		const data = { key: "value" };
-		let handlerData;
+		let handlerData: any;
 
 		const handler = (data: any) => {
 			data.key = "modified";
@@ -1020,7 +1020,7 @@ describe("Hookified", () => {
 			const hookified = new Hookified({ deprecatedHooks });
 			const handler = () => {};
 
-			const warnEvents = [];
+			const warnEvents: any[] = [];
 			hookified.on("warn", (event) => {
 				warnEvents.push(event);
 			});
@@ -1042,7 +1042,7 @@ describe("Hookified", () => {
 			const hookified = new Hookified({ deprecatedHooks });
 			const handler = () => {};
 
-			const warnEvents = [];
+			const warnEvents: any[] = [];
 			hookified.on("warn", (event) => {
 				warnEvents.push(event);
 			});
