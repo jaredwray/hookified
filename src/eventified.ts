@@ -206,6 +206,7 @@ export class Eventified implements IEventEmitter {
 	private _logger?: Logger;
 	private _throwOnEmitError = false;
 	private _throwOnEmptyListeners = false;
+	private _errorEvent = "error";
 
 	constructor(options?: EventEmitterOptions) {
 		this._eventListeners = new Map<string | symbol, EventListener[]>();
@@ -455,7 +456,7 @@ export class Eventified implements IEventEmitter {
 			}
 		}
 
-		if (event === "error") {
+		if (event === this._errorEvent) {
 			const error =
 				arguments_[0] instanceof Error
 					? arguments_[0]
@@ -465,7 +466,7 @@ export class Eventified implements IEventEmitter {
 				throw error;
 			} else {
 				if (
-					this.listeners("error").length === 0 &&
+					this.listeners(this._errorEvent).length === 0 &&
 					this._throwOnEmptyListeners === true
 				) {
 					throw error;
