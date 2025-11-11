@@ -65,7 +65,7 @@
     "@monstermann/tinybench-pretty-printer": "^0.2.0",
     "@types/node": "^24.10.0",
     "@vitest/coverage-v8": "^4.0.8",
-    "docula": "^0.30.0",
+    "docula": "^0.31.0",
     "emittery": "^1.2.0",
     "eventemitter3": "^5.0.1",
     "hookable": "^5.5.3",
