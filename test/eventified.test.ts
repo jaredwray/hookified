@@ -43,6 +43,15 @@ describe("Eventified", () => {
 		t.expect(emitter.throwOnEmitError).toBe(true);
 	});
 
+	test("get / set throwOnEmptyListeners", (t) => {
+		const emitter = new Eventified({ throwOnEmptyListeners: true });
+		t.expect(emitter.throwOnEmptyListeners).toBe(true);
+		emitter.throwOnEmptyListeners = false;
+		t.expect(emitter.throwOnEmptyListeners).toBe(false);
+		emitter.throwOnEmptyListeners = true;
+		t.expect(emitter.throwOnEmptyListeners).toBe(true);
+	});
+
 	test("get max listeners", (t) => {
 		const emitter = new Eventified();
 		t.expect(emitter.maxListeners()).toBe(100);
@@ -301,5 +310,126 @@ describe("Eventified", () => {
 
 		expect(errorCaught).toBe(true);
 		expect(errorMessage).toBe("Test error");
+	});
+
+	test("should throw on empty listeners when throwOnEmptyListeners is true", () => {
+		const emitter = new Eventified({ throwOnEmptyListeners: true });
+		let errorCaught = false;
+		let errorMessage = "";
+
+		try {
+			emitter.emit("error", new Error("Test error"));
+		} catch (error) {
+			errorCaught = true;
+			errorMessage = (error as Error).message;
+		}
+
+		expect(errorCaught).toBe(true);
+		expect(errorMessage).toBe("Test error");
+	});
+
+	test("should not throw on empty listeners when throwOnEmptyListeners is false", () => {
+		const emitter = new Eventified({ throwOnEmptyListeners: false });
+		let errorCaught = false;
+
+		try {
+			emitter.emit("error", new Error("Test error"));
+		} catch (_error) {
+			errorCaught = true;
+		}
+
+		expect(errorCaught).toBe(false);
+	});
+
+	test("should not throw when throwOnEmptyListeners is true but has listeners", () => {
+		const emitter = new Eventified({ throwOnEmptyListeners: true });
+		let errorCaught = false;
+		let listenerCalled = false;
+
+		emitter.on("error", () => {
+			listenerCalled = true;
+		});
+
+		try {
+			emitter.emit("error", new Error("Test error"));
+		} catch (_error) {
+			errorCaught = true;
+		}
+
+		expect(errorCaught).toBe(false);
+		expect(listenerCalled).toBe(true);
+	});
+
+	test("should throw on empty listeners with string error when throwOnEmptyListeners is true", () => {
+		const emitter = new Eventified({ throwOnEmptyListeners: true });
+		let errorCaught = false;
+		let errorMessage = "";
+
+		try {
+			emitter.emit("error", "String error");
+		} catch (error) {
+			errorCaught = true;
+			errorMessage = (error as Error).message;
+		}
+
+		expect(errorCaught).toBe(true);
+		expect(errorMessage).toBe("String error");
+	});
+
+	test("throwOnEmitError should take precedence over throwOnEmptyListeners", () => {
+		const emitter = new Eventified({
+			throwOnEmitError: true,
+			throwOnEmptyListeners: true,
+		});
+		let errorCaught = false;
+		let errorMessage = "";
+
+		try {
+			emitter.emit("error", new Error("Test error"));
+		} catch (error) {
+			errorCaught = true;
+			errorMessage = (error as Error).message;
+		}
+
+		expect(errorCaught).toBe(true);
+		expect(errorMessage).toBe("Test error");
+	});
+
+	test("should not throw when both throwOnEmitError and throwOnEmptyListeners are true but has listeners", () => {
+		const emitter = new Eventified({
+			throwOnEmitError: true,
+			throwOnEmptyListeners: true,
+		});
+		let errorCaught = false;
+		let listenerCalled = false;
+
+		emitter.on("error", () => {
+			listenerCalled = true;
+		});
+
+		try {
+			emitter.emit("error", new Error("Test error"));
+		} catch (_error) {
+			errorCaught = true;
+		}
+
+		expect(errorCaught).toBe(false);
+		expect(listenerCalled).toBe(true);
+	});
+
+	test("should dynamically change throwOnEmptyListeners behavior", () => {
+		const emitter = new Eventified({ throwOnEmptyListeners: false });
+
+		// Should not throw when false
+		expect(() => {
+			emitter.emit("error", new Error("Test error"));
+		}).not.toThrow();
+
+		// Change to true - should now throw
+		emitter.throwOnEmptyListeners = true;
+
+		expect(() => {
+			emitter.emit("error", new Error("Test error"));
+		}).toThrow("Test error");
 	});
 });

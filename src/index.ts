@@ -55,6 +55,7 @@ export class Hookified extends Eventified {
 		super({
 			logger: options?.logger,
 			throwOnEmitError: options?.throwOnEmitError,
+			throwOnEmptyListeners: options?.throwOnEmptyListeners,
 		});
 		this._hooks = new Map();
 		this._deprecatedHooks = options?.deprecatedHooks

@@ -192,6 +192,12 @@ export type EventEmitterOptions = {
 	 * Whether to throw an error when emit 'error' and there are no listeners. Default is false and only emits an error event.
 	 */
 	throwOnEmitError?: boolean;
+
+	/**
+	 * Whether to throw on 'error' when there are no listeners. This is the standard functionality in EventEmitter
+	 * @default false - in v2 this will be set to true by default
+	 */
+	throwOnEmptyListeners?: boolean;
 };
 
 export class Eventified implements IEventEmitter {
@@ -199,6 +205,8 @@ export class Eventified implements IEventEmitter {
 	private _maxListeners: number;
 	private _logger?: Logger;
 	private _throwOnEmitError = false;
+	private _throwOnEmptyListeners = false;
+	private _errorEvent = "error";
 
 	constructor(options?: EventEmitterOptions) {
 		this._eventListeners = new Map<string | symbol, EventListener[]>();
@@ -208,6 +216,10 @@ export class Eventified implements IEventEmitter {
 
 		if (options?.throwOnEmitError !== undefined) {
 			this._throwOnEmitError = options.throwOnEmitError;
+		}
+
+		if (options?.throwOnEmptyListeners !== undefined) {
+			this._throwOnEmptyListeners = options.throwOnEmptyListeners;
 		}
 	}
 
@@ -241,6 +253,22 @@ export class Eventified implements IEventEmitter {
 	 */
 	public set throwOnEmitError(value: boolean) {
 		this._throwOnEmitError = value;
+	}
+
+	/**
+	 * Gets whether an error should be thrown when emitting 'error' event with no listeners. Default is false.
+	 * @returns {boolean}
+	 */
+	public get throwOnEmptyListeners(): boolean {
+		return this._throwOnEmptyListeners;
+	}
+
+	/**
+	 * Sets whether an error should be thrown when emitting 'error' event with no listeners. Default is false.
+	 * @param {boolean} value
+	 */
+	public set throwOnEmptyListeners(value: boolean) {
+		this._throwOnEmptyListeners = value;
 	}
 
 	/**
@@ -428,7 +456,7 @@ export class Eventified implements IEventEmitter {
 			}
 		}
 
-		if (event === "error") {
+		if (event === this._errorEvent) {
 			const error =
 				arguments_[0] instanceof Error
 					? arguments_[0]
@@ -436,6 +464,13 @@ export class Eventified implements IEventEmitter {
 
 			if (this._throwOnEmitError && !result) {
 				throw error;
+			} else {
+				if (
+					this.listeners(this._errorEvent).length === 0 &&
+					this._throwOnEmptyListeners === true
+				) {
+					throw error;
+				}
 			}
 		}
 

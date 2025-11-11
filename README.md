@@ -51,6 +51,7 @@
   - [.clearHooks(eventName)](#clearhookeventname)
 - [API - Events](#api---events)
   - [.throwOnEmitError](#throwonemitterror)
+  - [.throwOnEmptyListeners](#throwonemptylisteners)
   - [.on(eventName, handler)](#oneventname-handler)
   - [.off(eventName, handler)](#offeventname-handler)
   - [.emit(eventName, ...args)](#emiteventname-args)
@@ -911,6 +912,48 @@ class MyClass extends Hookified {
 }
 ```
 
+## .throwOnEmptyListeners
+
+If set to true, errors will be thrown when emitting an `error` event with no listeners. This follows the standard Node.js EventEmitter behavior. Default is false. In version 2, this will be set to true by default.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ throwOnEmptyListeners: true });
+  }
+}
+
+const myClass = new MyClass();
+
+console.log(myClass.throwOnEmptyListeners); // true
+
+// This will throw because there are no error listeners
+try {
+  myClass.emit('error', new Error('Something went wrong'));
+} catch (error) {
+  console.log(error.message); // Something went wrong
+}
+
+// Add an error listener - now it won't throw
+myClass.on('error', (error) => {
+  console.log('Error caught:', error.message);
+});
+
+myClass.emit('error', new Error('This will be caught')); // No throw, listener handles it
+
+// You can also change it dynamically
+myClass.throwOnEmptyListeners = false;
+console.log(myClass.throwOnEmptyListeners); // false
+```
+
+**Difference between `throwOnEmitError` and `throwOnEmptyListeners`:**
+- `throwOnEmitError`: Throws when emitting 'error' event every time.
+- `throwOnEmptyListeners`: Throws only when there are NO error listeners registered
+
+When both are set to `true`, `throwOnEmitError` takes precedence.
+
 ## .on(eventName, handler)
 
 Subscribe to an event.
@@ -1204,8 +1247,8 @@ We are doing very simple benchmarking to see how this compares to other librarie
 
 |         name          |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
 |-----------------------|:---------:|----------:|----------:|:--------:|----------:|
-|  Hookified (v1.12.1)  |    🥇     |       5M  |    243ns  |  ±0.89%  |       4M  |
-|  Hookable (v5.5.3)    |   -69%    |       1M  |    835ns  |  ±2.23%  |       1M  |
+|  Hookified (v1.13.0)  |    🥇     |       5M  |    238ns  |  ±1.06%  |       4M  |
+|  Hookable (v5.5.3)    |   -68%    |       1M  |    826ns  |  ±2.25%  |       1M  |
 
 ## Emits
 
@@ -1213,10 +1256,10 @@ This shows how on par `hookified` is to the native `EventEmitter` and popular `e
 
 |           name            |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
 |---------------------------|:---------:|----------:|----------:|:--------:|----------:|
-|  Hookified (v1.12.1)      |    🥇     |      12M  |     89ns  |  ±2.56%  |      11M  |
-|  EventEmitter3 (v5.0.1)   |   -1.7%   |      12M  |     91ns  |  ±3.31%  |      11M  |
-|  EventEmitter (v20.17.0)  |    -4%    |      11M  |     92ns  |  ±0.38%  |      11M  |
-|  Emittery (v1.2.0)        |   -91%    |       1M  |      1µs  |  ±1.59%  |     993K  |
+|  Hookified (v1.13.0)      |    🥇     |      12M  |     90ns  |  ±3.17%  |      11M  |
+|  EventEmitter3 (v5.0.1)   |  -0.52%   |      12M  |     89ns  |  ±1.66%  |      11M  |
+|  EventEmitter (v20.17.0)  |   -3.5%   |      12M  |     91ns  |  ±0.42%  |      11M  |
+|  Emittery (v1.2.0)        |   -91%    |       1M  |      1µs  |  ±3.33%  |     959K  |
 
 _Note: the `EventEmitter` version is Nodejs versioning._
 
