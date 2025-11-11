@@ -52,7 +52,10 @@ export class Hookified extends Eventified {
 	private _allowDeprecated = true;
 
 	constructor(options?: HookifiedOptions) {
-		super({ logger: options?.logger });
+		super({
+			logger: options?.logger,
+			throwOnEmitError: options?.throwOnEmitError,
+		});
 		this._hooks = new Map();
 		this._deprecatedHooks = options?.deprecatedHooks
 			? new Map(options.deprecatedHooks)
