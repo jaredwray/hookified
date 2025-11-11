@@ -51,6 +51,7 @@
   - [.clearHooks(eventName)](#clearhookeventname)
 - [API - Events](#api---events)
   - [.throwOnEmitError](#throwonemitterror)
+  - [.throwOnEmptyListeners](#throwonemptylisteners)
   - [.on(eventName, handler)](#oneventname-handler)
   - [.off(eventName, handler)](#offeventname-handler)
   - [.emit(eventName, ...args)](#emiteventname-args)
@@ -910,6 +911,48 @@ class MyClass extends Hookified {
   }
 }
 ```
+
+## .throwOnEmptyListeners
+
+If set to true, errors will be thrown when emitting an `error` event with no listeners. This follows the standard Node.js EventEmitter behavior. Default is false. In version 2, this will be set to true by default.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ throwOnEmptyListeners: true });
+  }
+}
+
+const myClass = new MyClass();
+
+console.log(myClass.throwOnEmptyListeners); // true
+
+// This will throw because there are no error listeners
+try {
+  myClass.emit('error', new Error('Something went wrong'));
+} catch (error) {
+  console.log(error.message); // Something went wrong
+}
+
+// Add an error listener - now it won't throw
+myClass.on('error', (error) => {
+  console.log('Error caught:', error.message);
+});
+
+myClass.emit('error', new Error('This will be caught')); // No throw, listener handles it
+
+// You can also change it dynamically
+myClass.throwOnEmptyListeners = false;
+console.log(myClass.throwOnEmptyListeners); // false
+```
+
+**Difference between `throwOnEmitError` and `throwOnEmptyListeners`:**
+- `throwOnEmitError`: Throws when emitting 'error' event every time.
+- `throwOnEmptyListeners`: Throws only when there are NO error listeners registered
+
+When both are set to `true`, `throwOnEmitError` takes precedence.
 
 ## .on(eventName, handler)
 
