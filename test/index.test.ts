@@ -424,6 +424,53 @@ describe("Hookified", () => {
 		});
 	});
 
+	describe("throwOnEmitError", () => {
+		test("should be configurable via options", () => {
+			const hookified = new Hookified({ throwOnEmitError: true });
+			expect(hookified.throwOnEmitError).toBe(true);
+		});
+
+		test("should be settable via property", () => {
+			const hookified = new Hookified();
+			expect(hookified.throwOnEmitError).toBe(false);
+			hookified.throwOnEmitError = true;
+			expect(hookified.throwOnEmitError).toBe(true);
+			hookified.throwOnEmitError = false;
+			expect(hookified.throwOnEmitError).toBe(false);
+		});
+
+		test("should throw error when emitting 'error' event with no listeners and throwOnEmitError is true", () => {
+			const hookified = new Hookified({ throwOnEmitError: true });
+
+			expect(() => {
+				hookified.emit("error", new Error("test error"));
+			}).toThrow("test error");
+		});
+
+		test("should not throw error when emitting 'error' event with listeners", () => {
+			const hookified = new Hookified({ throwOnEmitError: true });
+			let errorCaught: Error | undefined;
+
+			hookified.on("error", (error: Error) => {
+				errorCaught = error;
+			});
+
+			expect(() => {
+				hookified.emit("error", new Error("test error"));
+			}).not.toThrow();
+
+			expect(errorCaught?.message).toBe("test error");
+		});
+
+		test("should not throw error when throwOnEmitError is false", () => {
+			const hookified = new Hookified({ throwOnEmitError: false });
+
+			expect(() => {
+				hookified.emit("error", new Error("test error"));
+			}).not.toThrow();
+		});
+	});
+
 	describe("logger", () => {
 		test("should set logger", async () => {
 			const hookified = new Hookified();
