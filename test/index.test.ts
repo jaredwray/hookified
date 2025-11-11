@@ -302,6 +302,128 @@ describe("Hookified", () => {
 		expect(errorMessage).toBe("event: error: this handler throws stuff");
 	});
 
+	describe("throwOnHookError", () => {
+		test("should be false by default", () => {
+			const hookified = new Hookified();
+			expect(hookified.throwOnHookError).toBe(false);
+		});
+
+		test("should be configurable via options", () => {
+			const hookified = new Hookified({ throwOnHookError: true });
+			expect(hookified.throwOnHookError).toBe(true);
+		});
+
+		test("should be settable via property", () => {
+			const hookified = new Hookified();
+			expect(hookified.throwOnHookError).toBe(false);
+			hookified.throwOnHookError = true;
+			expect(hookified.throwOnHookError).toBe(true);
+			hookified.throwOnHookError = false;
+			expect(hookified.throwOnHookError).toBe(false);
+		});
+
+		test("should throw error when throwOnHookError is true", async () => {
+			const hookified = new Hookified({ throwOnHookError: true });
+			const data = { key: "value" };
+			let errorMessage;
+
+			const handler = () => {
+				throw new Error("error: this handler throws stuff");
+			};
+
+			hookified.onHook("event", handler);
+
+			try {
+				await hookified.hook("event", data);
+			} catch (error) {
+				errorMessage = (error as Error).message;
+			}
+
+			expect(errorMessage).toBe("event: error: this handler throws stuff");
+		});
+
+		test("should emit error event when throwOnHookError is false", async () => {
+			const hookified = new Hookified({ throwOnHookError: false });
+			const data = { key: "value" };
+			let errorMessage;
+
+			hookified.on("error", (error: Error) => {
+				errorMessage = error.message;
+			});
+
+			const handler = () => {
+				throw new Error("error: hook error occurred");
+			};
+
+			hookified.onHook("event", handler);
+			await hookified.hook("event", data);
+
+			expect(errorMessage).toBe("event: error: hook error occurred");
+		});
+
+		test("should allow dynamically changing throwOnHookError setting", async () => {
+			const hookified = new Hookified({ throwOnHookError: false });
+			const data = { key: "value" };
+
+			const handler = () => {
+				throw new Error("error: test error");
+			};
+
+			hookified.onHook("event", handler);
+
+			// Should not throw when false
+			let errorMessage;
+			hookified.on("error", (error: Error) => {
+				errorMessage = error.message;
+			});
+
+			await hookified.hook("event", data);
+			expect(errorMessage).toBe("event: error: test error");
+
+			// Change to true - should now throw
+			hookified.throwOnHookError = true;
+
+			let thrownError;
+			try {
+				await hookified.hook("event", data);
+			} catch (error) {
+				thrownError = (error as Error).message;
+			}
+
+			expect(thrownError).toBe("event: error: test error");
+		});
+
+		test("should work with logger when throwOnHookError is true", async () => {
+			const logger = pino();
+			let loggerErrorMessage;
+			logger.error = (object: unknown, ...arguments_: unknown[]) => {
+				const message = typeof object === "string" ? object : arguments_[0];
+				loggerErrorMessage = message as string;
+			};
+
+			const hookified = new Hookified({ logger, throwOnHookError: true });
+			const data = { key: "value" };
+			let errorMessage;
+
+			const handler = () => {
+				throw new Error("error: this handler throws stuff");
+			};
+
+			hookified.onHook("event", handler);
+
+			try {
+				await hookified.hook("event", data);
+			} catch (error) {
+				errorMessage = (error as Error).message;
+			}
+
+			expect(errorMessage).toBe("event: error: this handler throws stuff");
+			expect(loggerErrorMessage).toBe(
+				"event: error: this handler throws stuff",
+			);
+		});
+	});
+
 	describe("logger", () => {
 		test("should set logger", async () => {
 			const hookified = new Hookified();
