@@ -17,8 +17,13 @@ export type HookEntry = {
 export type HookifiedOptions = {
 	/**
 	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
+	 * @deprecated - this will be deprecated in version 2. Please use throwOnHookError.
 	 */
 	throwHookErrors?: boolean;
+	/**
+	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
+	 */
+	throwOnHookError?: boolean;
 	/**
 	 * Whether to enforce that all hook names start with 'before' or 'after'. Default is false.
 	 * @type {boolean}
@@ -41,7 +46,7 @@ export type HookifiedOptions = {
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, Hook[]>;
-	private _throwHookErrors = false;
+	private _throwOnHookError = false;
 	private _enforceBeforeAfter = false;
 	private _deprecatedHooks: Map<string, string>;
 	private _allowDeprecated = true;
@@ -53,8 +58,10 @@ export class Hookified extends Eventified {
 			? new Map(options.deprecatedHooks)
 			: new Map();
 
-		if (options?.throwHookErrors !== undefined) {
-			this._throwHookErrors = options.throwHookErrors;
+		if (options?.throwOnHookError !== undefined) {
+			this._throwOnHookError = options.throwOnHookError;
+		} else if (options?.throwHookErrors !== undefined) {
+			this._throwOnHookError = options.throwHookErrors;
 		}
 
 		if (options?.enforceBeforeAfter !== undefined) {
@@ -77,17 +84,35 @@ export class Hookified extends Eventified {
 	/**
 	 * Gets whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
 	 * @returns {boolean}
+	 * @deprecated - this will be deprecated in version 2. Please use throwOnHookError.
 	 */
 	public get throwHookErrors() {
-		return this._throwHookErrors;
+		return this._throwOnHookError;
+	}
+
+	/**
+	 * Sets whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
+	 * @param {boolean} value
+	 * @deprecated - this will be deprecated in version 2. Please use throwOnHookError.
+	 */
+	public set throwHookErrors(value) {
+		this._throwOnHookError = value;
+	}
+
+	/**
+	 * Gets whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
+	 * @returns {boolean}
+	 */
+	public get throwOnHookError() {
+		return this._throwOnHookError;
 	}
 
 	/**
 	 * Sets whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
 	 * @param {boolean} value
 	 */
-	public set throwHookErrors(value) {
-		this._throwHookErrors = value;
+	public set throwOnHookError(value) {
+		this._throwOnHookError = value;
 	}
 
 	/**
@@ -340,7 +365,7 @@ export class Hookified extends Eventified {
 						this.logger.error(message);
 					}
 
-					if (this._throwHookErrors) {
+					if (this._throwOnHookError) {
 						throw new Error(message);
 					}
 				}

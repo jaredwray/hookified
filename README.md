@@ -28,7 +28,7 @@
 - [Usage](#usage)
 - [Using it in the Browser](#using-it-in-the-browser)
 - [API - Hooks](#api---hooks)
-  - [.throwHookErrors](#throwhookerrors)
+  - [.throwOnHookError](#throwhookerror)
   - [.logger](#logger)
   - [.enforceBeforeAfter](#enforcebeforeafter)
   - [.deprecatedHooks](#deprecatedhooks)
@@ -174,7 +174,7 @@ if you are not using ESM modules, you can use the following:
 
 # API - Hooks
 
-## .throwHookErrors
+## .throwOnHookError
 
 If set to true, errors thrown in hooks will be thrown. If set to false, errors will be only emitted.
 
@@ -183,13 +183,13 @@ import { Hookified } from 'hookified';
 
 class MyClass extends Hookified {
   constructor() {
-    super({ throwHookErrors: true });
+    super({ throwOnHookError: true });
   }
 }
 
 const myClass = new MyClass();
 
-console.log(myClass.throwHookErrors); // true. because it is set in super
+console.log(myClass.throwOnHookError); // true. because it is set in super
 
 try {
   myClass.onHook('error-event', async () => {
@@ -201,8 +201,8 @@ try {
   console.log(error.message); // error
 }
 
-myClass.throwHookErrors = false;
-console.log(myClass.throwHookErrors); // false
+myClass.throwOnHookError = false;
+console.log(myClass.throwOnHookError); // false
 ```
 
 ## .logger
