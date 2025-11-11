@@ -61,7 +61,7 @@
   },
   "homepage": "https://github.com/jaredwray/hookified#readme",
   "devDependencies": {
-    "@biomejs/biome": "^2.2.6",
+    "@biomejs/biome": "^2.3.5",
     "@monstermann/tinybench-pretty-printer": "^0.2.0",
     "@types/node": "^24.10.0",
     "@vitest/coverage-v8": "^4.0.8",
@@ -70,7 +70,7 @@
     "eventemitter3": "^5.0.1",
     "hookable": "^5.5.3",
     "pino": "^10.0.0",
-    "rimraf": "^6.0.1",
+    "rimraf": "^6.1.0",
     "tinybench": "^5.1.0",
     "tsup": "^8.5.0",
     "tsx": "^4.20.6",
