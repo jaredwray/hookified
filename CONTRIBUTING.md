@@ -22,6 +22,71 @@ You can contribute changes to this repo by opening a pull request:
 
 If you need more information on the steps to create a pull request, you can find a detailed walkthrough in the [Github documentation](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork)
 
+# Test / Verify Exports
+
+Hookified supports multiple module formats (ESM, CommonJS, and Browser) and it's important to verify that all export configurations work correctly. We have comprehensive export verification tests to ensure compatibility across all environments.
+
+## Running Export Tests
+
+To run the export verification tests:
+
+```bash
+pnpm vitest run test/exports.test.ts
+```
+
+Or run all tests including export verification:
+
+```bash
+pnpm test
+```
+
+## What Gets Tested
+
+Our export verification tests cover:
+
+### 1. **ESM Imports (Node.js)**
+- Verifies that `import { Hookified, Eventified } from 'hookified'` works correctly
+- Tests that all exported types and classes are accessible
+- Validates basic functionality in ESM environment
+
+### 2. **CommonJS Require**
+- Verifies that `require('hookified')` works correctly
+- Tests both Hookified and Eventified classes via CommonJS
+- Runs in a separate `.cjs` file to ensure true CommonJS compatibility
+
+### 3. **Browser Exports**
+- Tests the `hookified/browser` subpath export
+- Verifies both ESM (`dist/browser/index.js`) and IIFE (`dist/browser/index.global.js`) bundles exist
+- Confirms source maps are generated
+
+### 4. **TypeScript Definitions**
+- Validates ESM type definitions (`.d.ts`)
+- Validates CommonJS type definitions (`.d.cts`)
+- Ensures all types (`Hook`, `HookEntry`, `HookifiedOptions`, etc.) are exported
+
+### 5. **Build Output**
+- Confirms all distribution files are built correctly
+- Verifies bundle contents include expected exports
+
+## Testing CommonJS Separately
+
+The CommonJS test runs in isolation to ensure true compatibility. You can run it independently:
+
+```bash
+node test/helpers/cjs-test.cjs
+```
+
+This executes a standalone CommonJS file that uses `require()` to import and test the package.
+
+## Before Submitting Changes
+
+If you modify the build configuration, export structure, or public API:
+
+1. **Run the build**: `pnpm build`
+2. **Run export tests**: `pnpm vitest run test/exports.test.ts`
+3. **Run all tests**: `pnpm test`
+
+This ensures your changes don't break compatibility with any supported module format.
 
 # Code of Conduct
 Please refer to our [Code of Conduct](CODE_OF_CONDUCT.md) readme for how to contribute to this open source project and work within the community. 

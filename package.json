@@ -3,19 +3,26 @@
   "version": "1.13.0",
   "description": "Event Emitting and Middleware Hooks",
   "type": "module",
-  "main": "dist/node/index.cjs",
-  "module": "dist/node/index.js",
+  "main": "./dist/node/index.js",
+  "module": "./dist/node/index.js",
+  "types": "./dist/node/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/node/index.js",
-      "require": "./dist/node/index.cjs"
+      "import": {
+        "types": "./dist/node/index.d.ts",
+        "default": "./dist/node/index.js"
+      },
+      "require": {
+        "types": "./dist/node/index.d.cts",
+        "default": "./dist/node/index.cjs"
+      },
+      "default": "./dist/node/index.js"
     },
     "./browser": {
       "import": "./dist/browser/index.js",
       "default": "./dist/browser/index.global.js"
     }
   },
-  "types": "dist/node/index.d.ts",
   "scripts": {
     "lint": "biome check --write --error-on-warnings",
     "test": "pnpm lint && vitest run --coverage",
