@@ -68,29 +68,24 @@
   },
   "homepage": "https://github.com/jaredwray/hookified#readme",
   "devDependencies": {
-    "@biomejs/biome": "^2.3.5",
-    "@monstermann/tinybench-pretty-printer": "^0.2.0",
-    "@types/node": "^24.10.0",
-    "@vitest/coverage-v8": "^4.0.8",
-    "docula": "^0.31.0",
-    "emittery": "^1.2.0",
-    "eventemitter3": "^5.0.1",
-    "hookable": "^5.5.3",
-    "pino": "^10.1.0",
-    "rimraf": "^6.1.0",
-    "tinybench": "^5.1.0",
-    "tsup": "^8.5.0",
-    "tsx": "^4.20.6",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.8"
+    "@biomejs/biome": "2.3.5",
+    "@monstermann/tinybench-pretty-printer": "0.2.0",
+    "@types/node": "24.10.0",
+    "@vitest/coverage-v8": "4.0.8",
+    "docula": "0.31.0",
+    "emittery": "1.2.0",
+    "eventemitter3": "5.0.1",
+    "hookable": "5.5.3",
+    "pino": "10.1.0",
+    "rimraf": "6.1.0",
+    "tinybench": "5.1.0",
+    "tsup": "8.5.0",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vitest": "4.0.8"
   },
   "files": [
     "dist",
     "LICENSE"
-  ],
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "unrs-resolver"
-    ]
-  }
+  ]
 }
