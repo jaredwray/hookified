@@ -23,10 +23,12 @@ describe("Eventified", () => {
 	test("get / set logger", (t) => {
 		const emitter = new Eventified();
 		const logger = {
-			info() {},
-			error() {},
-			warn() {},
+			trace() {},
 			debug() {},
+			info() {},
+			warn() {},
+			error() {},
+			fatal() {},
 		};
 		emitter.logger = logger;
 		t.expect(emitter.logger).toBe(logger);
