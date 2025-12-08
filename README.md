@@ -64,6 +64,7 @@
   - [.eventNames()](#eventnames)
   - [.listenerCount(eventName?)](#listenercounteventname)
   - [.rawListeners(eventName?)](#rawlistenerseventname)
+- [Logging](#logging)
 - [Benchmarks](#benchmarks)
 - [How to Contribute](#how-to-contribute)
 - [License and Copyright](#license-and-copyright)
@@ -1237,6 +1238,88 @@ myClass.on('message', (message) => {
 });
 
 console.log(myClass.rawListeners('message'));
+```
+
+# Logging
+
+Hookified integrates logging directly into the event system. When a logger is configured, all emitted events are automatically logged to the appropriate log level based on the event name.
+
+## How It Works
+
+When you emit an event, Hookified automatically sends the event data to the configured logger using the appropriate log method:
+
+| Event Name | Logger Method |
+|------------|---------------|
+| `error`    | `logger.error()` |
+| `warn`     | `logger.warn()` |
+| `debug`    | `logger.debug()` |
+| `trace`    | `logger.trace()` |
+| `fatal`    | `logger.fatal()` |
+| Any other  | `logger.info()` |
+
+The logger receives two arguments:
+1. **message**: A string extracted from the event data (error messages, object messages, or JSON stringified data)
+2. **context**: An object containing `{ event: eventName, data: originalData }`
+
+## Setting Up a Logger
+
+Any logger that implements the `Logger` interface is compatible. This includes popular loggers like [Pino](https://github.com/pinojs/pino), [Winston](https://github.com/winstonjs/winston), [Bunyan](https://github.com/trentm/node-bunyan), and others.
+
+```typescript
+type Logger = {
+  trace: (message: string, ...args: unknown[]) => void;
+  debug: (message: string, ...args: unknown[]) => void;
+  info: (message: string, ...args: unknown[]) => void;
+  warn: (message: string, ...args: unknown[]) => void;
+  error: (message: string, ...args: unknown[]) => void;
+  fatal: (message: string, ...args: unknown[]) => void;
+};
+```
+
+## Usage Example with Pino
+
+```javascript
+import { Hookified } from 'hookified';
+import pino from 'pino';
+
+const logger = pino();
+
+class MyService extends Hookified {
+  constructor() {
+    super({ logger });
+  }
+
+  async processData(data) {
+    // This will log to logger.info with the data
+    this.emit('info', { action: 'processing', data });
+
+    try {
+      // ... process data
+      this.emit('debug', { action: 'completed', result: 'success' });
+    } catch (err) {
+      // This will log to logger.error with the error message
+      this.emit('error', err);
+    }
+  }
+}
+
+const service = new MyService();
+
+// All events are automatically logged
+service.emit('info', 'Service started');        // -> logger.info()
+service.emit('warn', { message: 'Low memory' }); // -> logger.warn()
+service.emit('error', new Error('Failed'));      // -> logger.error()
+service.emit('custom-event', { foo: 'bar' });    // -> logger.info() (default)
+```
+
+You can also set or change the logger after instantiation:
+
+```javascript
+const service = new MyService();
+service.logger = pino({ level: 'debug' });
+
+// Or remove the logger
+service.logger = undefined;
 ```
 
 # Benchmarks
