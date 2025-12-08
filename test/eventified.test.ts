@@ -1,6 +1,6 @@
 // biome-ignore-all lint/suspicious/noExplicitAny: this is a test file
 // biome-ignore-all lint/suspicious/noImplicitAnyLet: this is a test file
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { Eventified } from "../src/eventified.js";
 
 describe("Eventified", () => {
@@ -433,5 +433,121 @@ describe("Eventified", () => {
 		expect(() => {
 			emitter.emit("error", new Error("Test error"));
 		}).toThrow("Test error");
+	});
+
+	describe("sendLog via emit", () => {
+		test("should not call logger when logger is not set", () => {
+			const emitter = new Eventified();
+			// Should not throw when emitting without logger
+			expect(() => emitter.emit("info", "test")).not.toThrow();
+		});
+
+		test("should log trace events", () => {
+			const logger = {
+				trace: vi.fn(),
+				debug: vi.fn(),
+				info: vi.fn(),
+				warn: vi.fn(),
+				error: vi.fn(),
+				fatal: vi.fn(),
+			};
+			const emitter = new Eventified({ logger });
+			emitter.emit("trace", "trace message");
+			expect(logger.trace).toHaveBeenCalled();
+		});
+
+		test("should log debug events", () => {
+			const logger = {
+				trace: vi.fn(),
+				debug: vi.fn(),
+				info: vi.fn(),
+				warn: vi.fn(),
+				error: vi.fn(),
+				fatal: vi.fn(),
+			};
+			const emitter = new Eventified({ logger });
+			emitter.emit("debug", "debug message");
+			expect(logger.debug).toHaveBeenCalled();
+		});
+
+		test("should log fatal events", () => {
+			const logger = {
+				trace: vi.fn(),
+				debug: vi.fn(),
+				info: vi.fn(),
+				warn: vi.fn(),
+				error: vi.fn(),
+				fatal: vi.fn(),
+			};
+			const emitter = new Eventified({ logger });
+			emitter.emit("fatal", "fatal message");
+			expect(logger.fatal).toHaveBeenCalled();
+		});
+
+		test("should log info for default/unknown events", () => {
+			const logger = {
+				trace: vi.fn(),
+				debug: vi.fn(),
+				info: vi.fn(),
+				warn: vi.fn(),
+				error: vi.fn(),
+				fatal: vi.fn(),
+			};
+			const emitter = new Eventified({ logger });
+			emitter.emit("custom-event", "custom message");
+			expect(logger.info).toHaveBeenCalled();
+		});
+
+		test("should handle string data in array", () => {
+			const logger = {
+				trace: vi.fn(),
+				debug: vi.fn(),
+				info: vi.fn(),
+				warn: vi.fn(),
+				error: vi.fn(),
+				fatal: vi.fn(),
+			};
+			const emitter = new Eventified({ logger });
+			emitter.emit("info", "string message");
+			expect(logger.info).toHaveBeenCalledWith(
+				'["string message"]',
+				expect.objectContaining({ event: "info" }),
+			);
+		});
+
+		test("should handle Error object directly", () => {
+			const logger = {
+				trace: vi.fn(),
+				debug: vi.fn(),
+				info: vi.fn(),
+				warn: vi.fn(),
+				error: vi.fn(),
+				fatal: vi.fn(),
+			};
+			const emitter = new Eventified({ logger });
+			emitter.on("error", () => {}); // Add listener to prevent throw
+			emitter.emit("error", new Error("direct error"));
+			expect(logger.error).toHaveBeenCalledWith(
+				"direct error",
+				expect.objectContaining({ event: "error" }),
+			);
+		});
+
+		test("should JSON stringify objects without message property", () => {
+			const logger = {
+				trace: vi.fn(),
+				debug: vi.fn(),
+				info: vi.fn(),
+				warn: vi.fn(),
+				error: vi.fn(),
+				fatal: vi.fn(),
+			};
+			const emitter = new Eventified({ logger });
+			emitter.emit("info", { key: "value" });
+			expect(logger.info).toHaveBeenCalledWith(
+				'[{"key":"value"}]',
+				expect.objectContaining({ event: "info" }),
+			);
+		});
 	});
 });

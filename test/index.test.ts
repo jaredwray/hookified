@@ -1024,6 +1024,15 @@ describe("Hookified", () => {
 
 			expect(logger.warn).toHaveBeenCalledWith(
 				'Hook "oldHook" is deprecated: Use newHook instead',
+				{
+					event: "warn",
+					data: [
+						{
+							hook: "oldHook",
+							message: 'Hook "oldHook" is deprecated: Use newHook instead',
+						},
+					],
+				},
 			);
 		});
 
@@ -1592,6 +1601,15 @@ describe("Hookified", () => {
 
 			expect(logger.warn).toHaveBeenCalledWith(
 				'Hook "oldHook" is deprecated: Use newHook instead',
+				{
+					event: "warn",
+					data: [
+						{
+							hook: "oldHook",
+							message: 'Hook "oldHook" is deprecated: Use newHook instead',
+						},
+					],
+				},
 			);
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
