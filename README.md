@@ -19,7 +19,7 @@
 - Enforce consistent hook naming conventions with `enforceBeforeAfter`
 - Deprecation warnings for hooks with `deprecatedHooks`
 - Control deprecated hook execution with `allowDeprecated`
-- No package dependencies and only 100KB in size
+- No package dependencies and only 200KB in size
 - Fast and Efficient with [Benchmarks](#benchmarks)
 - Maintained on a regular basis!
 
