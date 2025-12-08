@@ -1,48 +1,7 @@
-import { type EventEmitterOptions, Eventified } from "./eventified.js";
+import { Eventified } from "./eventified.js";
+import type { Hook, HookEntry, HookifiedOptions } from "./types.js";
 
-// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
-export type Hook = (...arguments_: any[]) => Promise<void> | void;
-
-export type HookEntry = {
-	/**
-	 * The event name for the hook
-	 */
-	event: string;
-	/**
-	 * The handler function for the hook
-	 */
-	handler: Hook;
-};
-
-export type HookifiedOptions = {
-	/**
-	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
-	 * @deprecated - this will be deprecated in version 2. Please use throwOnHookError.
-	 */
-	throwHookErrors?: boolean;
-	/**
-	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
-	 */
-	throwOnHookError?: boolean;
-	/**
-	 * Whether to enforce that all hook names start with 'before' or 'after'. Default is false.
-	 * @type {boolean}
-	 * @default false
-	 */
-	enforceBeforeAfter?: boolean;
-	/**
-	 * Map of deprecated hook names to deprecation messages. When a deprecated hook is used, a warning will be emitted.
-	 * @type {Map<string, string>}
-	 * @default new Map()
-	 */
-	deprecatedHooks?: Map<string, string>;
-	/**
-	 * Whether to allow deprecated hooks to be registered and executed. Default is true.
-	 * @type {boolean}
-	 * @default true
-	 */
-	allowDeprecated?: boolean;
-} & EventEmitterOptions;
+export type { Hook, HookEntry, HookifiedOptions };
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, Hook[]>;
@@ -428,5 +387,10 @@ export class Hookified extends Eventified {
 	}
 }
 
-export { Eventified, type EventListener } from "./eventified.js";
-export type { Logger } from "./logger.js";
+export { Eventified } from "./eventified.js";
+export type {
+	EventEmitterOptions,
+	EventListener,
+	IEventEmitter,
+	Logger,
+} from "./types.js";
