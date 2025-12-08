@@ -282,6 +282,9 @@ export class Eventified implements IEventEmitter {
 			}
 		}
 
+		// send it to the logger
+		this.sendLog(event, arguments_);
+
 		return result;
 	}
 
@@ -334,5 +337,71 @@ export class Eventified implements IEventEmitter {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Sends a log message using the configured logger based on the event name
+	 * @param {string | symbol} eventName - The event name that determines the log level
+	 * @param {unknown} data - The data to log
+	 */
+	private sendLog(eventName: string | symbol, data: any): void {
+		if (!this._logger) {
+			return;
+		}
+
+		let message: string;
+		/* v8 ignore next -- @preserve */
+		if (typeof data === "string") {
+			message = data;
+		} else if (
+			Array.isArray(data) &&
+			data.length > 0 &&
+			data[0] instanceof Error
+		) {
+			message = data[0].message;
+			/* v8 ignore next -- @preserve */
+		} else if (data instanceof Error) {
+			message = data.message;
+		} else if (
+			Array.isArray(data) &&
+			data.length > 0 &&
+			typeof data[0]?.message === "string"
+		) {
+			message = data[0].message;
+		} else {
+			message = JSON.stringify(data);
+		}
+
+		switch (eventName) {
+			case "error": {
+				this._logger.error?.(message, { event: eventName, data });
+				break;
+			}
+
+			case "warn": {
+				this._logger.warn?.(message, { event: eventName, data });
+				break;
+			}
+
+			case "trace": {
+				this._logger.trace?.(message, { event: eventName, data });
+				break;
+			}
+
+			case "debug": {
+				this._logger.debug?.(message, { event: eventName, data });
+				break;
+			}
+
+			case "fatal": {
+				this._logger.fatal?.(message, { event: eventName, data });
+				break;
+			}
+
+			default: {
+				this._logger.info?.(message, { event: eventName, data });
+				break;
+			}
+		}
 	}
 }

@@ -1010,10 +1010,12 @@ describe("Hookified", () => {
 		test("should log deprecation warning to logger if available", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const logger = {
+				trace: vi.fn(),
+				debug: vi.fn(),
+				info: vi.fn(),
 				warn: vi.fn(),
 				error: vi.fn(),
-				info: vi.fn(),
-				debug: vi.fn(),
+				fatal: vi.fn(),
 			};
 			const hookified = new Hookified({ deprecatedHooks, logger });
 			const handler = () => {};
@@ -1022,6 +1024,15 @@ describe("Hookified", () => {
 
 			expect(logger.warn).toHaveBeenCalledWith(
 				'Hook "oldHook" is deprecated: Use newHook instead',
+				{
+					event: "warn",
+					data: [
+						{
+							hook: "oldHook",
+							message: 'Hook "oldHook" is deprecated: Use newHook instead',
+						},
+					],
+				},
 			);
 		});
 
@@ -1298,10 +1309,12 @@ describe("Hookified", () => {
 		test("should handle logger.warn not being available", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const logger = {
-				error: vi.fn(),
-				info: vi.fn(),
+				trace: vi.fn(),
 				debug: vi.fn(),
-				// no warn method
+				info: vi.fn(),
+				warn: undefined as unknown as () => void,
+				error: vi.fn(),
+				fatal: vi.fn(),
 			};
 			const hookified = new Hookified({ deprecatedHooks, logger });
 			const handler = () => {};
@@ -1570,10 +1583,12 @@ describe("Hookified", () => {
 		test("should work with logger when allowDeprecated is false", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const logger = {
+				trace: vi.fn(),
+				debug: vi.fn(),
+				info: vi.fn(),
 				warn: vi.fn(),
 				error: vi.fn(),
-				info: vi.fn(),
-				debug: vi.fn(),
+				fatal: vi.fn(),
 			};
 			const hookified = new Hookified({
 				deprecatedHooks,
@@ -1586,6 +1601,15 @@ describe("Hookified", () => {
 
 			expect(logger.warn).toHaveBeenCalledWith(
 				'Hook "oldHook" is deprecated: Use newHook instead',
+				{
+					event: "warn",
+					data: [
+						{
+							hook: "oldHook",
+							message: 'Hook "oldHook" is deprecated: Use newHook instead',
+						},
+					],
+				},
 			);
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});

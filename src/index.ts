@@ -156,11 +156,6 @@ export class Hookified extends Eventified {
 			// Emit deprecation warning event
 			this.emit("warn", { hook: event, message: warningMessage });
 
-			// Log to logger if available
-			if (this.logger?.warn) {
-				this.logger.warn(warningMessage);
-			}
-
 			// Return false if deprecated hooks are not allowed
 			return this._allowDeprecated;
 		}
@@ -324,9 +319,6 @@ export class Hookified extends Eventified {
 				} catch (error) {
 					const message = `${event}: ${(error as Error).message}`;
 					this.emit("error", new Error(message));
-					if (this.logger) {
-						this.logger.error(message);
-					}
 
 					if (this._throwOnHookError) {
 						throw new Error(message);
