@@ -1678,4 +1678,339 @@ describe("Hookified", () => {
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
 	});
+
+	describe("hookSync", () => {
+		test("should execute synchronous handlers", () => {
+			const hookified = new Hookified();
+			const data = { key: "value" };
+
+			const handler = (data: any) => {
+				data.key = "modified";
+			};
+
+			hookified.onHook("event", handler);
+			hookified.hookSync("event", data);
+			expect(data.key).toBe("modified");
+		});
+
+		test("should skip async handlers silently", () => {
+			const hookified = new Hookified();
+			const executionOrder: string[] = [];
+
+			const syncHandler = () => {
+				executionOrder.push("sync");
+			};
+
+			const asyncHandler = async () => {
+				executionOrder.push("async");
+			};
+
+			hookified.onHook("event", syncHandler);
+			hookified.onHook("event", asyncHandler);
+			hookified.onHook("event", syncHandler);
+
+			hookified.hookSync("event");
+
+			// Only sync handlers should execute
+			expect(executionOrder).toEqual(["sync", "sync"]);
+		});
+
+		test("should execute handlers in order", () => {
+			const hookified = new Hookified();
+			const executionOrder: number[] = [];
+
+			hookified.onHook("event", () => executionOrder.push(1));
+			hookified.onHook("event", () => executionOrder.push(2));
+			hookified.onHook("event", () => executionOrder.push(3));
+
+			hookified.hookSync("event");
+
+			expect(executionOrder).toEqual([1, 2, 3]);
+		});
+
+		test("should emit error event on handler error", () => {
+			const hookified = new Hookified();
+			let errorMessage: string | undefined;
+
+			hookified.on("error", (error: Error) => {
+				errorMessage = error.message;
+			});
+
+			const handler = () => {
+				throw new Error("sync error");
+			};
+
+			hookified.onHook("event", handler);
+			hookified.hookSync("event");
+
+			expect(errorMessage).toBe("event: sync error");
+		});
+
+		test("should throw error when throwOnHookError is true", () => {
+			const hookified = new Hookified({ throwOnHookError: true });
+
+			const handler = () => {
+				throw new Error("sync error");
+			};
+
+			hookified.onHook("event", handler);
+
+			expect(() => hookified.hookSync("event")).toThrow("event: sync error");
+		});
+
+		test("should validate hook name when enforceBeforeAfter is true", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+
+			expect(() => hookified.hookSync("invalidName")).toThrow(
+				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
+			);
+		});
+
+		test("should respect deprecated hooks setting", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const handler = vi.fn();
+
+			hookified.onHook("oldHook", handler);
+			hookified.hookSync("oldHook");
+
+			expect(handler).not.toHaveBeenCalled();
+		});
+
+		test("should pass multiple arguments to handlers", () => {
+			const hookified = new Hookified();
+			const data1 = { key: "value1" };
+			const data2 = { key: "value2" };
+			let capturedArgs: any[] = [];
+
+			const handler = (...args: any[]) => {
+				capturedArgs = args;
+			};
+
+			hookified.onHook("event", handler);
+			hookified.hookSync("event", data1, data2);
+
+			expect(capturedArgs).toEqual([data1, data2]);
+		});
+
+		test("should handle no handlers gracefully", () => {
+			const hookified = new Hookified();
+
+			// Should not throw
+			expect(() => hookified.hookSync("nonexistent")).not.toThrow();
+		});
+
+		test("should detect async function correctly", () => {
+			const hookified = new Hookified();
+			const results: string[] = [];
+
+			// Regular function - should execute
+			hookified.onHook("event", () => {
+				results.push("regular");
+			});
+
+			// Arrow function - should execute
+			hookified.onHook("event", () => {
+				results.push("arrow");
+			});
+
+			// Async function - should skip
+			hookified.onHook("event", async () => {
+				results.push("async-regular");
+			});
+
+			// Async arrow function - should skip
+			hookified.onHook("event", async () => {
+				results.push("async-arrow");
+			});
+
+			hookified.hookSync("event");
+
+			expect(results).toEqual(["regular", "arrow"]);
+		});
+
+		test("should handle function that returns Promise synchronously", () => {
+			const hookified = new Hookified();
+			const results: string[] = [];
+
+			// This is a sync function that returns a Promise
+			// hookSync will call it, but won't await the Promise
+			const promiseReturningHandler = () => {
+				results.push("sync-part");
+				return Promise.resolve().then(() => results.push("async-part"));
+			};
+
+			hookified.onHook("event", promiseReturningHandler);
+			hookified.hookSync("event");
+
+			// Only the sync part executes immediately
+			expect(results).toEqual(["sync-part"]);
+		});
+	});
+
+	describe("beforeHookSync", () => {
+		test("should call before:event hooks synchronously", () => {
+			const hookified = new Hookified();
+			const handlerData: string[] = [];
+
+			const handler = () => {
+				handlerData.push("before");
+			};
+
+			hookified.onHook("before:test", handler);
+			hookified.beforeHookSync("test");
+
+			expect(handlerData).toEqual(["before"]);
+		});
+
+		test("should skip async handlers", () => {
+			const hookified = new Hookified();
+			const handlerData: string[] = [];
+
+			hookified.onHook("before:test", () => handlerData.push("sync"));
+			hookified.onHook("before:test", async () => handlerData.push("async"));
+
+			hookified.beforeHookSync("test");
+
+			expect(handlerData).toEqual(["sync"]);
+		});
+
+		test("should pass arguments to handlers", () => {
+			const hookified = new Hookified();
+			const data = { key: "value" };
+
+			const handler = (data: any) => {
+				data.key = "modified";
+			};
+
+			hookified.onHook("before:test", handler);
+			hookified.beforeHookSync("test", data);
+
+			expect(data.key).toBe("modified");
+		});
+	});
+
+	describe("afterHookSync", () => {
+		test("should call after:event hooks synchronously", () => {
+			const hookified = new Hookified();
+			const handlerData: string[] = [];
+
+			const handler = () => {
+				handlerData.push("after");
+			};
+
+			hookified.onHook("after:test", handler);
+			hookified.afterHookSync("test");
+
+			expect(handlerData).toEqual(["after"]);
+		});
+
+		test("should skip async handlers", () => {
+			const hookified = new Hookified();
+			const handlerData: string[] = [];
+
+			hookified.onHook("after:test", () => handlerData.push("sync"));
+			hookified.onHook("after:test", async () => handlerData.push("async"));
+
+			hookified.afterHookSync("test");
+
+			expect(handlerData).toEqual(["sync"]);
+		});
+
+		test("should pass arguments to handlers", () => {
+			const hookified = new Hookified();
+			const data = { key: "value" };
+
+			const handler = (data: any) => {
+				data.key = "modified";
+			};
+
+			hookified.onHook("after:test", handler);
+			hookified.afterHookSync("test", data);
+
+			expect(data.key).toBe("modified");
+		});
+	});
+
+	describe("callHookSync", () => {
+		test("should be an alias for hookSync", () => {
+			const hookified = new Hookified();
+			const data = { key: "value" };
+
+			const handler = (data: any) => {
+				data.key = "modified";
+			};
+
+			hookified.onHook("event", handler);
+			hookified.callHookSync("event", data);
+
+			expect(data.key).toBe("modified");
+		});
+
+		test("should skip async handlers", () => {
+			const hookified = new Hookified();
+			const executionOrder: string[] = [];
+
+			hookified.onHook("event", () => executionOrder.push("sync"));
+			hookified.onHook("event", async () => executionOrder.push("async"));
+
+			hookified.callHookSync("event");
+
+			expect(executionOrder).toEqual(["sync"]);
+		});
+	});
+
+	describe("hookSync and async hook integration", () => {
+		test("should work with before and after sync hooks together", () => {
+			const hookified = new Hookified();
+			const executionOrder: string[] = [];
+
+			const beforeHandler = () => {
+				executionOrder.push("before");
+			};
+
+			const mainHandler = () => {
+				executionOrder.push("main");
+			};
+
+			const afterHandler = () => {
+				executionOrder.push("after");
+			};
+
+			hookified.onHook("before:operation", beforeHandler);
+			hookified.onHook("operation", mainHandler);
+			hookified.onHook("after:operation", afterHandler);
+
+			hookified.beforeHookSync("operation");
+			hookified.hookSync("operation");
+			hookified.afterHookSync("operation");
+
+			expect(executionOrder).toEqual(["before", "main", "after"]);
+		});
+
+		test("should maintain data integrity across sync hooks", () => {
+			const hookified = new Hookified();
+			const data = { value: 0 };
+
+			const beforeHandler = (data: any) => {
+				data.value = 10;
+			};
+
+			const afterHandler = (data: any) => {
+				data.value = data.value * 2;
+			};
+
+			hookified.onHook("before:transform", beforeHandler);
+			hookified.onHook("after:transform", afterHandler);
+
+			hookified.beforeHookSync("transform", data);
+			expect(data.value).toBe(10);
+
+			hookified.afterHookSync("transform", data);
+			expect(data.value).toBe(20);
+		});
+	});
 });

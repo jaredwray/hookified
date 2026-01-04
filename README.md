@@ -46,6 +46,10 @@
   - [.callHook(eventName, ...args)](#callhookeventname-args)
   - [.beforeHook(eventName, ...args)](#beforehookeventname-args)
   - [.afterHook(eventName, ...args)](#afterhookeventname-args)
+  - [.hookSync(eventName, ...args)](#hooksync-eventname-args)
+  - [.callHookSync(eventName, ...args)](#callhooksync-eventname-args)
+  - [.beforeHookSync(eventName, ...args)](#beforehooksync-eventname-args)
+  - [.afterHookSync(eventName, ...args)](#afterhooksync-eventname-args)
   - [.hooks](#hooks)
   - [.getHooks(eventName)](#gethookseventname)
   - [.clearHooks(eventName)](#clearhookeventname)
@@ -795,6 +799,90 @@ class MyClass extends Hookified {
     let data = { some: 'data' };
     // the event name will be `after:myMethod2`
     await this.afterHook('myMethod2', data);
+
+    return data;
+  }
+}
+```
+
+## .hookSync(eventName, ...args)
+
+Run a hook event synchronously. Async handlers (functions declared with `async` keyword) are silently skipped and only synchronous handlers are executed.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  myMethodWithSyncHooks() {
+    let data = { some: 'data' };
+    // Only synchronous handlers will execute
+    this.hookSync('before:myMethod', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+
+// This sync handler will execute
+myClass.onHook('before:myMethod', (data) => {
+  data.some = 'modified';
+});
+
+// This async handler will be silently skipped
+myClass.onHook('before:myMethod', async (data) => {
+  data.some = 'will not run';
+});
+
+myClass.myMethodWithSyncHooks(); // Only sync handler runs
+```
+
+## .callHookSync(eventName, ...args)
+
+This is an alias for `.hookSync(eventName, ...args)` for backwards compatibility.
+
+## .beforeHookSync(eventName, ...args)
+
+This is a helper function that will prepend a hook name with `before:` and execute synchronously. Async handlers are silently skipped.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  myMethodWithSyncHooks() {
+    let data = { some: 'data' };
+    // the event name will be `before:myMethod2`
+    this.beforeHookSync('myMethod2', data);
+
+    return data;
+  }
+}
+```
+
+## .afterHookSync(eventName, ...args)
+
+This is a helper function that will prepend a hook name with `after:` and execute synchronously. Async handlers are silently skipped.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  myMethodWithSyncHooks() {
+    let data = { some: 'data' };
+    // the event name will be `after:myMethod2`
+    this.afterHookSync('myMethod2', data);
 
     return data;
   }

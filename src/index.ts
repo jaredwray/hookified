@@ -329,12 +329,62 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Calls all synchronous handlers for a specific event.
+	 * Async handlers (declared with `async` keyword) are silently skipped.
+	 *
+	 * Note: The `hook` method is preferred as it executes both sync and async functions.
+	 * Use `hookSync` only when you specifically need synchronous execution.
+	 * @param {string} event
+	 * @param {T[]} arguments_
+	 * @returns {void}
+	 */
+	public hookSync<T>(event: string, ...arguments_: T[]): void {
+		this.validateHookName(event);
+		if (!this.checkDeprecatedHook(event)) {
+			return;
+		}
+
+		const eventHandlers = this._hooks.get(event);
+		if (eventHandlers) {
+			for (const handler of eventHandlers) {
+				// Skip async functions silently
+				if (handler.constructor.name === "AsyncFunction") {
+					continue;
+				}
+
+				try {
+					handler(...arguments_);
+				} catch (error) {
+					const message = `${event}: ${(error as Error).message}`;
+					this.emit("error", new Error(message));
+
+					if (this._throwOnHookError) {
+						throw new Error(message);
+					}
+				}
+			}
+		}
+	}
+
+	/**
 	 * Prepends the word `before` to your hook. Example is event is `test`, the before hook is `before:test`.
 	 * @param {string} event - The event name
 	 * @param {T[]} arguments_ - The arguments to pass to the hook
 	 */
 	public async beforeHook<T>(event: string, ...arguments_: T[]) {
 		await this.hook(`before:${event}`, ...arguments_);
+	}
+
+	/**
+	 * Prepends the word `before` to your hook and executes synchronously.
+	 * Async handlers are silently skipped.
+	 *
+	 * Note: The `beforeHook` method is preferred as it executes both sync and async functions.
+	 * @param {string} event - The event name
+	 * @param {T[]} arguments_ - The arguments to pass to the hook
+	 */
+	public beforeHookSync<T>(event: string, ...arguments_: T[]): void {
+		this.hookSync(`before:${event}`, ...arguments_);
 	}
 
 	/**
@@ -347,6 +397,18 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Prepends the word `after` to your hook and executes synchronously.
+	 * Async handlers are silently skipped.
+	 *
+	 * Note: The `afterHook` method is preferred as it executes both sync and async functions.
+	 * @param {string} event - The event name
+	 * @param {T[]} arguments_ - The arguments to pass to the hook
+	 */
+	public afterHookSync<T>(event: string, ...arguments_: T[]): void {
+		this.hookSync(`after:${event}`, ...arguments_);
+	}
+
+	/**
 	 * Calls all handlers for a specific event. This is an alias for `hook` and is provided for
 	 * compatibility with other libraries that use the `callHook` method.
 	 * @param {string} event
@@ -355,6 +417,20 @@ export class Hookified extends Eventified {
 	 */
 	public async callHook<T>(event: string, ...arguments_: T[]) {
 		await this.hook(event, ...arguments_);
+	}
+
+	/**
+	 * Calls all synchronous handlers for a specific event. This is an alias for `hookSync`
+	 * and is provided for compatibility with other libraries that use the `callHook` method.
+	 * Async handlers are silently skipped.
+	 *
+	 * Note: The `callHook` method is preferred as it executes both sync and async functions.
+	 * @param {string} event
+	 * @param {T[]} arguments_
+	 * @returns {void}
+	 */
+	public callHookSync<T>(event: string, ...arguments_: T[]): void {
+		this.hookSync(event, ...arguments_);
 	}
 
 	/**
