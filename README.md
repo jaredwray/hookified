@@ -1330,8 +1330,8 @@ We are doing very simple benchmarking to see how this compares to other librarie
 
 |         name          |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
 |-----------------------|:---------:|----------:|----------:|:--------:|----------:|
-|  Hookified (v1.13.0)  |    🥇     |       5M  |    238ns  |  ±1.06%  |       4M  |
-|  Hookable (v5.5.3)    |   -68%    |       1M  |    826ns  |  ±2.25%  |       1M  |
+|  Hookified (v1.14.0)  |    🥇     |       3M  |    318ns  |  ±0.01%  |       3M  |
+|  Hookable (v6.0.1)    |   -57%    |       1M  |    834ns  |  ±0.01%  |       1M  |
 
 ## Emits
 
