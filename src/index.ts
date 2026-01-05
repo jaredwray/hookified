@@ -376,36 +376,12 @@ export class Hookified extends Eventified {
 	}
 
 	/**
-	 * Prepends the word `before` to your hook and executes synchronously.
-	 * Async handlers are silently skipped.
-	 *
-	 * Note: The `beforeHook` method is preferred as it executes both sync and async functions.
-	 * @param {string} event - The event name
-	 * @param {T[]} arguments_ - The arguments to pass to the hook
-	 */
-	public beforeHookSync<T>(event: string, ...arguments_: T[]): void {
-		this.hookSync(`before:${event}`, ...arguments_);
-	}
-
-	/**
 	 * Prepends the word `after` to your hook. Example is event is `test`, the after hook is `after:test`.
 	 * @param {string} event - The event name
 	 * @param {T[]} arguments_ - The arguments to pass to the hook
 	 */
 	public async afterHook<T>(event: string, ...arguments_: T[]) {
 		await this.hook(`after:${event}`, ...arguments_);
-	}
-
-	/**
-	 * Prepends the word `after` to your hook and executes synchronously.
-	 * Async handlers are silently skipped.
-	 *
-	 * Note: The `afterHook` method is preferred as it executes both sync and async functions.
-	 * @param {string} event - The event name
-	 * @param {T[]} arguments_ - The arguments to pass to the hook
-	 */
-	public afterHookSync<T>(event: string, ...arguments_: T[]): void {
-		this.hookSync(`after:${event}`, ...arguments_);
 	}
 
 	/**
@@ -417,20 +393,6 @@ export class Hookified extends Eventified {
 	 */
 	public async callHook<T>(event: string, ...arguments_: T[]) {
 		await this.hook(event, ...arguments_);
-	}
-
-	/**
-	 * Calls all synchronous handlers for a specific event. This is an alias for `hookSync`
-	 * and is provided for compatibility with other libraries that use the `callHook` method.
-	 * Async handlers are silently skipped.
-	 *
-	 * Note: The `callHook` method is preferred as it executes both sync and async functions.
-	 * @param {string} event
-	 * @param {T[]} arguments_
-	 * @returns {void}
-	 */
-	public callHookSync<T>(event: string, ...arguments_: T[]): void {
-		this.hookSync(event, ...arguments_);
 	}
 
 	/**
