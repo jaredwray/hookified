@@ -169,25 +169,25 @@ export class Hookified extends Eventified {
 	 * @returns {void}
 	 */
 	public onHook(event: string, handler: Hook) {
-		this.validateHookName(event);
-		if (!this.checkDeprecatedHook(event)) {
-			return; // Skip registration if deprecated hooks are not allowed
-		}
-		const eventHandlers = this._hooks.get(event);
-		if (eventHandlers) {
-			eventHandlers.push(handler);
-		} else {
-			this._hooks.set(event, [handler]);
-		}
+		this.onHookEntry({ event, handler });
 	}
 
 	/**
-	 * Adds a handler function for a specific event that runs before all other handlers
+	 * Adds a handler function for a specific event
 	 * @param {HookEntry} hookEntry
 	 * @returns {void}
 	 */
 	public onHookEntry(hookEntry: HookEntry) {
-		this.onHook(hookEntry.event, hookEntry.handler);
+		this.validateHookName(hookEntry.event);
+		if (!this.checkDeprecatedHook(hookEntry.event)) {
+			return; // Skip registration if deprecated hooks are not allowed
+		}
+		const eventHandlers = this._hooks.get(hookEntry.event);
+		if (eventHandlers) {
+			eventHandlers.push(hookEntry.handler);
+		} else {
+			this._hooks.set(hookEntry.event, [hookEntry.handler]);
+		}
 	}
 
 	/**
@@ -197,8 +197,7 @@ export class Hookified extends Eventified {
 	 * @returns {void}
 	 */
 	public addHook(event: string, handler: Hook) {
-		// Alias for onHook
-		this.onHook(event, handler);
+		this.onHookEntry({ event, handler });
 	}
 
 	/**
