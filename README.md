@@ -46,6 +46,7 @@
   - [.callHook(eventName, ...args)](#callhookeventname-args)
   - [.beforeHook(eventName, ...args)](#beforehookeventname-args)
   - [.afterHook(eventName, ...args)](#afterhookeventname-args)
+  - [.hookSync(eventName, ...args)](#hooksync-eventname-args)
   - [.hooks](#hooks)
   - [.getHooks(eventName)](#gethookseventname)
   - [.clearHooks(eventName)](#clearhookeventname)
@@ -799,6 +800,44 @@ class MyClass extends Hookified {
     return data;
   }
 }
+```
+
+## .hookSync(eventName, ...args)
+
+Run a hook event synchronously. Async handlers (functions declared with `async` keyword) are silently skipped and only synchronous handlers are executed.
+
+> **Note:** The `.hook()` method is preferred as it executes both sync and async functions. Use `.hookSync()` only when you specifically need synchronous execution.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  myMethodWithSyncHooks() {
+    let data = { some: 'data' };
+    // Only synchronous handlers will execute
+    this.hookSync('before:myMethod', data);
+
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+
+// This sync handler will execute
+myClass.onHook('before:myMethod', (data) => {
+  data.some = 'modified';
+});
+
+// This async handler will be silently skipped
+myClass.onHook('before:myMethod', async (data) => {
+  data.some = 'will not run';
+});
+
+myClass.myMethodWithSyncHooks(); // Only sync handler runs
 ```
 
 ## .hooks

@@ -329,6 +329,44 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Calls all synchronous handlers for a specific event.
+	 * Async handlers (declared with `async` keyword) are silently skipped.
+	 *
+	 * Note: The `hook` method is preferred as it executes both sync and async functions.
+	 * Use `hookSync` only when you specifically need synchronous execution.
+	 * @param {string} event
+	 * @param {T[]} arguments_
+	 * @returns {void}
+	 */
+	public hookSync<T>(event: string, ...arguments_: T[]): void {
+		this.validateHookName(event);
+		if (!this.checkDeprecatedHook(event)) {
+			return;
+		}
+
+		const eventHandlers = this._hooks.get(event);
+		if (eventHandlers) {
+			for (const handler of eventHandlers) {
+				// Skip async functions silently
+				if (handler.constructor.name === "AsyncFunction") {
+					continue;
+				}
+
+				try {
+					handler(...arguments_);
+				} catch (error) {
+					const message = `${event}: ${(error as Error).message}`;
+					this.emit("error", new Error(message));
+
+					if (this._throwOnHookError) {
+						throw new Error(message);
+					}
+				}
+			}
+		}
+	}
+
+	/**
 	 * Prepends the word `before` to your hook. Example is event is `test`, the before hook is `before:test`.
 	 * @param {string} event - The event name
 	 * @param {T[]} arguments_ - The arguments to pass to the hook
