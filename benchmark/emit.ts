@@ -12,7 +12,6 @@ import { cleanVersion } from "./utils.js";
 const bench = new Bench({ name: "emit", iterations: 10_000 });
 
 const hookified = new Hookified();
-const _hookifiedVersion = cleanVersion(pkg.version);
 const eventEmitter = new EventEmitter();
 const emittery = new Emittery();
 const emitteryVersion = cleanVersion(pkg.devDependencies.emittery);

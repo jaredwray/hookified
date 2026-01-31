@@ -1701,7 +1701,7 @@ describe("Hookified", () => {
 				executionOrder.push("sync");
 			};
 
-			const asyncHandler = async () => {
+			const asyncHandler = async (): Promise<void> => {
 				executionOrder.push("async");
 			};
 
@@ -1719,9 +1719,15 @@ describe("Hookified", () => {
 			const hookified = new Hookified();
 			const executionOrder: number[] = [];
 
-			hookified.onHook("event", () => executionOrder.push(1));
-			hookified.onHook("event", () => executionOrder.push(2));
-			hookified.onHook("event", () => executionOrder.push(3));
+			hookified.onHook("event", () => {
+				executionOrder.push(1);
+			});
+			hookified.onHook("event", () => {
+				executionOrder.push(2);
+			});
+			hookified.onHook("event", () => {
+				executionOrder.push(3);
+			});
 
 			hookified.hookSync("event");
 
@@ -1838,9 +1844,11 @@ describe("Hookified", () => {
 
 			// This is a sync function that returns a Promise
 			// hookSync will call it, but won't await the Promise
-			const promiseReturningHandler = () => {
+			const promiseReturningHandler = (): Promise<void> => {
 				results.push("sync-part");
-				return Promise.resolve().then(() => results.push("async-part"));
+				return Promise.resolve().then(() => {
+					results.push("async-part");
+				});
 			};
 
 			hookified.onHook("event", promiseReturningHandler);
