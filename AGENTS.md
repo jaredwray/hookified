@@ -38,10 +38,10 @@ Hookified is an event emitting and middleware hooks library for Node.js and the 
 
 ### Hookified Class
 The main class that extends Eventified and provides:
-- Hook registration: `onHook()`, `addHook()`, `onHookEntry()`, `onHooks()`
+- Hook registration: `onHook()`, `addHook()`, `onHookEntry()`, `onHooks()`, `prependHook()`
 - Hook execution: `hook()`, `callHook()`, `hookSync()`, `beforeHook()`, `afterHook()`
 - Hook management: `getHooks()`, `removeHook()`, `removeHooks()`, `clearHooks()`
-- Once hooks: `onceHook()`, `prependHook()`, `prependOnceHook()`
+- Once hooks: `onceHook()`, `prependOnceHook()`
 
 ### Eventified Class
 Base class providing EventEmitter-like functionality:
