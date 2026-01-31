@@ -1369,8 +1369,8 @@ We are doing very simple benchmarking to see how this compares to other librarie
 
 |         name          |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
 |-----------------------|:---------:|----------:|----------:|:--------:|----------:|
-|  Hookified (v1.14.0)  |    🥇     |       3M  |    318ns  |  ±0.01%  |       3M  |
-|  Hookable (v6.0.1)    |   -57%    |       1M  |    834ns  |  ±0.01%  |       1M  |
+|  Hookified (v1.15.1)  |    🥇     |       5M  |    199ns  |  ±0.01%  |       5M  |
+|  Hookable (v6.0.1)    |   -62%    |       2M  |    578ns  |  ±0.01%  |       2M  |
 
 ## Emits
 
@@ -1378,10 +1378,10 @@ This shows how on par `hookified` is to the native `EventEmitter` and popular `e
 
 |           name            |  summary  |  ops/sec  |  time/op  |  margin  |  samples  |
 |---------------------------|:---------:|----------:|----------:|:--------:|----------:|
-|  Hookified (v1.13.0)      |    🥇     |      12M  |     90ns  |  ±3.17%  |      11M  |
-|  EventEmitter3 (v5.0.1)   |  -0.52%   |      12M  |     89ns  |  ±1.66%  |      11M  |
-|  EventEmitter (v20.17.0)  |   -3.5%   |      12M  |     91ns  |  ±0.42%  |      11M  |
-|  Emittery (v1.2.0)        |   -91%    |       1M  |      1µs  |  ±3.33%  |     959K  |
+|  EventEmitter3 (v5.0.4)   |    🥇     |      14M  |     85ns  |  ±0.02%  |      12M  |
+|  Hookified (v1.15.1)      |   -6.9%   |      13M  |     88ns  |  ±0.02%  |      11M  |
+|  EventEmitter (v24.11.1)  |   -9.5%   |      13M  |     89ns  |  ±0.02%  |      11M  |
+|  Emittery (v1.2.0)        |   -92%    |       1M  |    993ns  |  ±0.01%  |       1M  |
 
 _Note: the `EventEmitter` version is Nodejs versioning._
 
