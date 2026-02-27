@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const rootDir = join(__dirname, "..");
@@ -140,46 +140,42 @@ describe("Export Verification Tests", () => {
 	});
 
 	describe("TypeScript Definition Files", () => {
-		test("should have ESM type definitions", () => {
-			const dtsPath = join(rootDir, "dist/node/index.d.ts");
-			expect(existsSync(dtsPath)).toBe(true);
+		let esmContent: string;
+		let cjsContent: string;
 
-			const content = readFileSync(dtsPath, "utf-8");
-			expect(content).toContain("Hookified");
-			expect(content).toContain("Eventified");
+		beforeAll(() => {
+			const dtsPath = join(rootDir, "dist/node/index.d.ts");
+			const dctsPath = join(rootDir, "dist/node/index.d.cts");
+			esmContent = readFileSync(dtsPath, "utf-8");
+			cjsContent = readFileSync(dctsPath, "utf-8");
+		});
+
+		test("should have ESM type definitions", () => {
+			expect(existsSync(join(rootDir, "dist/node/index.d.ts"))).toBe(true);
+			expect(esmContent).toContain("Hookified");
+			expect(esmContent).toContain("Eventified");
 		});
 
 		test("should have CommonJS type definitions", () => {
-			const dctsPath = join(rootDir, "dist/node/index.d.cts");
-			expect(existsSync(dctsPath)).toBe(true);
-
-			const content = readFileSync(dctsPath, "utf-8");
-			expect(content).toContain("Hookified");
-			expect(content).toContain("Eventified");
+			expect(existsSync(join(rootDir, "dist/node/index.d.cts"))).toBe(true);
+			expect(cjsContent).toContain("Hookified");
+			expect(cjsContent).toContain("Eventified");
 		});
 
 		test("should export HookFn type", () => {
-			const dtsPath = join(rootDir, "dist/node/index.d.ts");
-			const content = readFileSync(dtsPath, "utf-8");
-			expect(content).toContain("HookFn");
+			expect(esmContent).toContain("HookFn");
 		});
 
 		test("should export IHook interface", () => {
-			const dtsPath = join(rootDir, "dist/node/index.d.ts");
-			const content = readFileSync(dtsPath, "utf-8");
-			expect(content).toContain("IHook");
+			expect(esmContent).toContain("IHook");
 		});
 
 		test("should export Hook class", () => {
-			const dtsPath = join(rootDir, "dist/node/index.d.ts");
-			const content = readFileSync(dtsPath, "utf-8");
-			expect(content).toContain("Hook");
+			expect(esmContent).toContain("Hook");
 		});
 
 		test("should export HookifiedOptions type", () => {
-			const dtsPath = join(rootDir, "dist/node/index.d.ts");
-			const content = readFileSync(dtsPath, "utf-8");
-			expect(content).toContain("HookifiedOptions");
+			expect(esmContent).toContain("HookifiedOptions");
 		});
 	});
 
