@@ -29,7 +29,7 @@
 - [Using it in the Browser](#using-it-in-the-browser)
 - [API - Hooks](#api---hooks)
   - [.throwOnHookError](#throwhookerror)
-  - [.logger](#logger)
+  - [.eventLogger](#eventlogger)
   - [.enforceBeforeAfter](#enforcebeforeafter)
   - [.deprecatedHooks](#deprecatedhooks)
   - [.allowDeprecated](#allowdeprecated)
@@ -208,7 +208,7 @@ myClass.throwOnHookError = false;
 console.log(myClass.throwOnHookError); // false
 ```
 
-## .logger
+## .eventLogger
 If set, errors thrown in hooks will be logged to the logger. If not set, errors will be only emitted.
 
 ```javascript
@@ -219,7 +219,7 @@ const logger = pino(); // create a logger instance that is compatible with Logge
 
 class MyClass extends Hookified {
   constructor() {
-    super({ logger });
+    super({ eventLogger: logger });
   }
 
   async myMethodWithHooks() Promise<any> {
@@ -344,9 +344,9 @@ myClass.deprecatedHooks.set('anotherOldHook', 'Please migrate to the new API');
 import pino from 'pino';
 const logger = pino();
 
-const myClassWithLogger = new Hookified({ 
+const myClassWithLogger = new Hookified({
   deprecatedHooks,
-  logger 
+  eventLogger: logger
 });
 
 // Deprecation warnings will be logged to logger.warn
@@ -359,7 +359,7 @@ The deprecation warning system applies to all hook-related methods:
 
 Deprecation warnings are emitted in two ways:
 1. **Event**: A 'warn' event is emitted with `{ hook: string, message: string }`
-2. **Logger**: Logged to `logger.warn()` if a logger is configured and has a `warn` method
+2. **Logger**: Logged to `eventLogger.warn()` if an `eventLogger` is configured and has a `warn` method
 
 ## .allowDeprecated
 
@@ -1281,20 +1281,20 @@ console.log(myClass.rawListeners('message'));
 
 # Logging
 
-Hookified integrates logging directly into the event system. When a logger is configured, all emitted events are automatically logged to the appropriate log level based on the event name.
+Hookified integrates logging directly into the event system. When an `eventLogger` is configured, all emitted events are automatically logged to the appropriate log level based on the event name.
 
 ## How It Works
 
-When you emit an event, Hookified automatically sends the event data to the configured logger using the appropriate log method:
+When you emit an event, Hookified automatically sends the event data to the configured `eventLogger` using the appropriate log method:
 
 | Event Name | Logger Method |
 |------------|---------------|
-| `error`    | `logger.error()` |
-| `warn`     | `logger.warn()` |
-| `debug`    | `logger.debug()` |
-| `trace`    | `logger.trace()` |
-| `fatal`    | `logger.fatal()` |
-| Any other  | `logger.info()` |
+| `error`    | `eventLogger.error()` |
+| `warn`     | `eventLogger.warn()` |
+| `debug`    | `eventLogger.debug()` |
+| `trace`    | `eventLogger.trace()` |
+| `fatal`    | `eventLogger.fatal()` |
+| Any other  | `eventLogger.info()` |
 
 The logger receives two arguments:
 1. **message**: A string extracted from the event data (error messages, object messages, or JSON stringified data)
@@ -1325,7 +1325,7 @@ const logger = pino();
 
 class MyService extends Hookified {
   constructor() {
-    super({ logger });
+    super({ eventLogger: logger });
   }
 
   async processData(data) {
@@ -1351,14 +1351,14 @@ service.emit('error', new Error('Failed'));      // -> logger.error()
 service.emit('custom-event', { foo: 'bar' });    // -> logger.info() (default)
 ```
 
-You can also set or change the logger after instantiation:
+You can also set or change the eventLogger after instantiation:
 
 ```javascript
 const service = new MyService();
-service.logger = pino({ level: 'debug' });
+service.eventLogger = pino({ level: 'debug' });
 
-// Or remove the logger
-service.logger = undefined;
+// Or remove the eventLogger
+service.eventLogger = undefined;
 ```
 
 # Benchmarks
@@ -1384,6 +1384,52 @@ This shows how on par `hookified` is to the native `EventEmitter` and popular `e
 |  Emittery (v1.2.0)        |   -92%    |       1M  |    993ns  |  ±0.01%  |       1M  |
 
 _Note: the `EventEmitter` version is Nodejs versioning._
+
+# Migrating from v1 to v2
+
+## Breaking Changes
+
+### `logger` renamed to `eventLogger`
+
+The `logger` option and property has been renamed to `eventLogger` to avoid conflicts with other logger properties in your classes.
+
+**Before (v1):**
+
+```javascript
+import { Hookified } from 'hookified';
+import pino from 'pino';
+
+const logger = pino();
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ logger });
+  }
+}
+
+const myClass = new MyClass();
+myClass.logger = pino({ level: 'debug' });
+console.log(myClass.logger);
+```
+
+**After (v2):**
+
+```javascript
+import { Hookified } from 'hookified';
+import pino from 'pino';
+
+const logger = pino();
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ eventLogger: logger });
+  }
+}
+
+const myClass = new MyClass();
+myClass.eventLogger = pino({ level: 'debug' });
+console.log(myClass.eventLogger);
+```
 
 # How to Contribute
 

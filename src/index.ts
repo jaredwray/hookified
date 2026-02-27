@@ -12,7 +12,7 @@ export class Hookified extends Eventified {
 
 	constructor(options?: HookifiedOptions) {
 		super({
-			logger: options?.logger,
+			eventLogger: options?.eventLogger,
 			throwOnEmitError: options?.throwOnEmitError,
 			throwOnEmptyListeners: options?.throwOnEmptyListeners,
 		});
