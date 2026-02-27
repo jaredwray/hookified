@@ -210,7 +210,7 @@ export type EventListener = (...arguments_: any[]) => void;
 
 export type HookFn = (...arguments_: any[]) => Promise<void> | void;
 
-export type HookEntry = {
+export interface IHook {
 	/**
 	 * The event name for the hook
 	 */
@@ -219,7 +219,12 @@ export type HookEntry = {
 	 * The handler function for the hook
 	 */
 	handler: HookFn;
-};
+}
+
+/**
+ * @deprecated Use `IHook` instead. This alias will be removed in a future version.
+ */
+export type HookEntry = IHook;
 
 export type HookifiedOptions = {
 	/**

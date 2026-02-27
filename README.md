@@ -460,10 +460,10 @@ myClass.onHook('before:myMethod2', async (data) => {
 
 ## .onHookEntry(hookEntry)
 
-This allows you to create a hook with the `HookEntry` type which includes the event and handler. This is useful for creating hooks with a single object.
+This allows you to create a hook with the `IHook` interface which includes the event and handler. This is useful for creating hooks with a single object.
 
 ```javascript
-import { Hookified, HookEntry } from 'hookified';
+import { Hookified, IHook } from 'hookified';
 
 class MyClass extends Hookified {
   constructor() {
@@ -1429,6 +1429,26 @@ class MyClass extends Hookified {
 const myClass = new MyClass();
 myClass.eventLogger = pino({ level: 'debug' });
 console.log(myClass.eventLogger);
+```
+
+### `HookEntry` type renamed to `IHook` interface
+
+The exported `HookEntry` type has been converted to an `IHook` interface.
+
+**Before (v1):**
+
+```typescript
+import type { HookEntry } from 'hookified';
+
+const hook: HookEntry = { event: 'before:save', handler: async () => {} };
+```
+
+**After (v2):**
+
+```typescript
+import type { IHook } from 'hookified';
+
+const hook: IHook = { event: 'before:save', handler: async () => {} };
 ```
 
 ### `Hook` type renamed to `HookFn`

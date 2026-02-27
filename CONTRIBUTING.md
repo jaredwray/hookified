@@ -62,7 +62,7 @@ Our export verification tests cover:
 ### 4. **TypeScript Definitions**
 - Validates ESM type definitions (`.d.ts`)
 - Validates CommonJS type definitions (`.d.cts`)
-- Ensures all types (`Hook`, `HookEntry`, `HookifiedOptions`, etc.) are exported
+- Ensures all types (`HookFn`, `IHook`, `HookifiedOptions`, etc.) are exported
 
 ### 5. **Build Output**
 - Confirms all distribution files are built correctly

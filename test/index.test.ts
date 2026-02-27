@@ -2,7 +2,7 @@
 // biome-ignore-all lint/suspicious/noImplicitAnyLet: this is a test file
 import pino from "pino";
 import { describe, expect, test, vi } from "vitest";
-import { type HookEntry, Hookified } from "../src/index.js";
+import { Hookified, type IHook } from "../src/index.js";
 
 describe("Hookified", () => {
 	test("initialization", () => {
@@ -43,7 +43,7 @@ describe("Hookified", () => {
 		const handler1 = () => {};
 
 		const handler2 = () => {};
-		const hooks: HookEntry[] = [];
+		const hooks: IHook[] = [];
 		hooks.push(
 			{ event: eventName, handler: handler1 },
 			{ event: eventName, handler: handler2 },
@@ -140,7 +140,7 @@ describe("Hookified", () => {
 		expect(handlerData.key).toBe("modified");
 	});
 
-	test("execute hook with HookEntryand manipulate data", async () => {
+	test("execute hook with IHook and manipulate data", async () => {
 		const hookified = new Hookified();
 		const data = { key: "value" };
 		let handlerData: any;
