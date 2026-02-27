@@ -1431,6 +1431,30 @@ myClass.eventLogger = pino({ level: 'debug' });
 console.log(myClass.eventLogger);
 ```
 
+### `Hook` type renamed to `HookFn`
+
+The exported `Hook` type has been renamed to `HookFn` to clarify that it represents a function type.
+
+**Before (v1):**
+
+```typescript
+import type { Hook } from 'hookified';
+
+const myHook: Hook = async (data) => {
+  // ...
+};
+```
+
+**After (v2):**
+
+```typescript
+import type { HookFn } from 'hookified';
+
+const myHook: HookFn = async (data) => {
+  // ...
+};
+```
+
 # How to Contribute
 
 Hookified is written in TypeScript and tests are written in `vitest`. To run the tests, use the following command:

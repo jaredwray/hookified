@@ -1,10 +1,10 @@
 import { Eventified } from "./eventified.js";
-import type { Hook, HookEntry, HookifiedOptions } from "./types.js";
+import type { HookEntry, HookFn, HookifiedOptions } from "./types.js";
 
-export type { Hook, HookEntry, HookifiedOptions };
+export type { HookFn, HookEntry, HookifiedOptions };
 
 export class Hookified extends Eventified {
-	private readonly _hooks: Map<string, Hook[]>;
+	private readonly _hooks: Map<string, HookFn[]>;
 	private _throwOnHookError = false;
 	private _enforceBeforeAfter = false;
 	private _deprecatedHooks: Map<string, string>;
@@ -38,7 +38,7 @@ export class Hookified extends Eventified {
 
 	/**
 	 * Gets all hooks
-	 * @returns {Map<string, Hook[]>}
+	 * @returns {Map<string, HookFn[]>}
 	 */
 	public get hooks() {
 		return this._hooks;
@@ -165,10 +165,10 @@ export class Hookified extends Eventified {
 	/**
 	 * Adds a handler function for a specific event
 	 * @param {string} event
-	 * @param {Hook} handler - this can be async or sync
+	 * @param {HookFn} handler - this can be async or sync
 	 * @returns {void}
 	 */
-	public onHook(event: string, handler: Hook) {
+	public onHook(event: string, handler: HookFn) {
 		this.onHookEntry({ event, handler });
 	}
 
@@ -193,10 +193,10 @@ export class Hookified extends Eventified {
 	/**
 	 * Alias for onHook. This is provided for compatibility with other libraries that use the `addHook` method.
 	 * @param {string} event
-	 * @param {Hook} handler - this can be async or sync
+	 * @param {HookFn} handler - this can be async or sync
 	 * @returns {void}
 	 */
-	public addHook(event: string, handler: Hook) {
+	public addHook(event: string, handler: HookFn) {
 		this.onHookEntry({ event, handler });
 	}
 
@@ -214,10 +214,10 @@ export class Hookified extends Eventified {
 	/**
 	 * Adds a handler function for a specific event that runs before all other handlers
 	 * @param {string} event
-	 * @param {Hook} handler - this can be async or sync
+	 * @param {HookFn} handler - this can be async or sync
 	 * @returns {void}
 	 */
-	public prependHook(event: string, handler: Hook) {
+	public prependHook(event: string, handler: HookFn) {
 		this.validateHookName(event);
 		if (!this.checkDeprecatedHook(event)) {
 			return; // Skip registration if deprecated hooks are not allowed
@@ -235,7 +235,7 @@ export class Hookified extends Eventified {
 	 * @param event
 	 * @param handler
 	 */
-	public prependOnceHook(event: string, handler: Hook) {
+	public prependOnceHook(event: string, handler: HookFn) {
 		this.validateHookName(event);
 		if (!this.checkDeprecatedHook(event)) {
 			return; // Skip registration if deprecated hooks are not allowed
@@ -254,7 +254,7 @@ export class Hookified extends Eventified {
 	 * @param event
 	 * @param handler
 	 */
-	public onceHook(event: string, handler: Hook) {
+	public onceHook(event: string, handler: HookFn) {
 		this.validateHookName(event);
 		if (!this.checkDeprecatedHook(event)) {
 			return; // Skip registration if deprecated hooks are not allowed
@@ -271,10 +271,10 @@ export class Hookified extends Eventified {
 	/**
 	 * Removes a handler function for a specific event
 	 * @param {string} event
-	 * @param {Hook} handler
+	 * @param {HookFn} handler
 	 * @returns {void}
 	 */
-	public removeHook(event: string, handler: Hook) {
+	public removeHook(event: string, handler: HookFn) {
 		this.validateHookName(event);
 		if (!this.checkDeprecatedHook(event)) {
 			return; // Skip removal if deprecated hooks are not allowed
@@ -397,7 +397,7 @@ export class Hookified extends Eventified {
 	/**
 	 * Gets all hooks for a specific event
 	 * @param {string} event
-	 * @returns {Hook[]}
+	 * @returns {HookFn[]}
 	 */
 	public getHooks(event: string) {
 		this.validateHookName(event);

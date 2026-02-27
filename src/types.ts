@@ -208,7 +208,7 @@ export type IEventEmitter = {
 
 export type EventListener = (...arguments_: any[]) => void;
 
-export type Hook = (...arguments_: any[]) => Promise<void> | void;
+export type HookFn = (...arguments_: any[]) => Promise<void> | void;
 
 export type HookEntry = {
 	/**
@@ -218,7 +218,7 @@ export type HookEntry = {
 	/**
 	 * The handler function for the hook
 	 */
-	handler: Hook;
+	handler: HookFn;
 };
 
 export type HookifiedOptions = {
