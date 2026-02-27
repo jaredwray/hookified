@@ -35,6 +35,7 @@
   - [.allowDeprecated](#allowdeprecated)
   - [.onHook(eventName, handler)](#onhookeventname-handler)
   - [.onHookEntry(hookEntry)](#onhookentryhookentry)
+  - [Hook class](#hook-class)
   - [.addHook(eventName, handler)](#addhookeventname-handler)
   - [.onHooks(Array)](#onhooksarray)
   - [.onceHook(eventName, handler)](#oncehookeventname-handler)
@@ -486,6 +487,52 @@ myClass.onHookEntry({
     data.some = 'new data';
   },
 });
+```
+
+## Hook class
+
+The `Hook` class provides a convenient way to create hook entries. It implements the `IHook` interface.
+
+**Using the `Hook` class:**
+
+```javascript
+import { Hook, Hookified } from 'hookified';
+
+const hookified = new Hookified();
+
+const hook = new Hook('before:save', async (data) => {
+  data.validated = true;
+});
+
+// Register with onHookEntry
+hookified.onHookEntry(hook);
+
+// Or register multiple hooks with onHooks
+const hooks = [
+  new Hook('before:save', async (data) => { data.validated = true; }),
+  new Hook('after:save', async (data) => { console.log('saved'); }),
+];
+hookified.onHooks(hooks);
+
+// Remove hooks
+hookified.removeHooks(hooks);
+```
+
+**Using plain TypeScript with the `IHook` interface:**
+
+```typescript
+import { Hookified, type IHook } from 'hookified';
+
+const hookified = new Hookified();
+
+const hook: IHook = {
+  event: 'before:save',
+  handler: async (data) => {
+    data.validated = true;
+  },
+};
+
+hookified.onHookEntry(hook);
 ```
 
 ## .addHook(eventName, handler)
@@ -1473,6 +1520,20 @@ import type { HookFn } from 'hookified';
 const myHook: HookFn = async (data) => {
   // ...
 };
+```
+
+## New Features
+
+### `Hook` class
+
+A new `Hook` class is available for creating hook entries. It implements the `IHook` interface and can be used anywhere `IHook` is accepted.
+
+```typescript
+import { Hook } from 'hookified';
+
+const hook = new Hook('before:save', async (data) => {
+  data.validated = true;
+});
 ```
 
 # How to Contribute

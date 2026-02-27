@@ -417,6 +417,7 @@ export class Hookified extends Eventified {
 }
 
 export { Eventified } from "./eventified.js";
+export { Hook } from "./hooks/hook.js";
 export type {
 	EventEmitterOptions,
 	EventListener,

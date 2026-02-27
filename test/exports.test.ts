@@ -170,6 +170,12 @@ describe("Export Verification Tests", () => {
 			expect(content).toContain("IHook");
 		});
 
+		test("should export Hook class", () => {
+			const dtsPath = join(rootDir, "dist/node/index.d.ts");
+			const content = readFileSync(dtsPath, "utf-8");
+			expect(content).toContain("Hook");
+		});
+
 		test("should export HookifiedOptions type", () => {
 			const dtsPath = join(rootDir, "dist/node/index.d.ts");
 			const content = readFileSync(dtsPath, "utf-8");
