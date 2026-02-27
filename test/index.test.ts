@@ -140,7 +140,7 @@ describe("Hookified", () => {
 		expect(handlerData.key).toBe("modified");
 	});
 
-	test("execute hook with IHookand manipulate data", async () => {
+	test("execute hook with IHook and manipulate data", async () => {
 		const hookified = new Hookified();
 		const data = { key: "value" };
 		let handlerData: any;
