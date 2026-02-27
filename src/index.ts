@@ -1,7 +1,7 @@
 import { Eventified } from "./eventified.js";
 import type { HookEntry, HookFn, HookifiedOptions } from "./types.js";
 
-export type { HookFn, HookEntry, HookifiedOptions };
+export type { HookEntry, HookFn, HookifiedOptions };
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, HookFn[]>;
