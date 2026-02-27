@@ -158,10 +158,10 @@ describe("Export Verification Tests", () => {
 			expect(content).toContain("Eventified");
 		});
 
-		test("should export Hook type", () => {
+		test("should export HookFn type", () => {
 			const dtsPath = join(rootDir, "dist/node/index.d.ts");
 			const content = readFileSync(dtsPath, "utf-8");
-			expect(content).toContain("Hook");
+			expect(content).toContain("HookFn");
 		});
 
 		test("should export HookEntry type", () => {
