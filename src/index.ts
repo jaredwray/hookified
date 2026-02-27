@@ -169,7 +169,7 @@ export class Hookified extends Eventified {
 	 * @returns {void}
 	 */
 	public onHook(event: string, handler: HookFn) {
-		this.onIHook({ event, handler });
+		this.onHookEntry({ event, handler });
 	}
 
 	/**
@@ -177,7 +177,7 @@ export class Hookified extends Eventified {
 	 * @param {IHook} hookEntry
 	 * @returns {void}
 	 */
-	public onIHook(hookEntry: IHook) {
+	public onHookEntry(hookEntry: IHook) {
 		this.validateHookName(hookEntry.event);
 		if (!this.checkDeprecatedHook(hookEntry.event)) {
 			return; // Skip registration if deprecated hooks are not allowed
@@ -197,7 +197,7 @@ export class Hookified extends Eventified {
 	 * @returns {void}
 	 */
 	public addHook(event: string, handler: HookFn) {
-		this.onIHook({ event, handler });
+		this.onHookEntry({ event, handler });
 	}
 
 	/**

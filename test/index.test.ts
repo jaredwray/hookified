@@ -151,7 +151,7 @@ describe("Hookified", () => {
 			handlerData = data;
 		};
 
-		hookified.onIHook({ event: "event", handler });
+		hookified.onHookEntry({ event: "event", handler });
 		await hookified.hook("event", data);
 		expect(handlerData.key).toBe("modified");
 	});
@@ -856,18 +856,18 @@ describe("Hookified", () => {
 			);
 		});
 
-		test("should validate hook names in onIHook", () => {
+		test("should validate hook names in onHookEntry", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			const handler = () => {};
 
 			expect(() =>
-				hookified.onIHook({ event: "beforeTest", handler }),
+				hookified.onHookEntry({ event: "beforeTest", handler }),
 			).not.toThrow();
 			expect(() =>
-				hookified.onIHook({ event: "afterTest", handler }),
+				hookified.onHookEntry({ event: "afterTest", handler }),
 			).not.toThrow();
 			expect(() =>
-				hookified.onIHook({ event: "invalidName", handler }),
+				hookified.onHookEntry({ event: "invalidName", handler }),
 			).toThrow(
 				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
@@ -1183,7 +1183,7 @@ describe("Hookified", () => {
 			});
 		});
 
-		test("should check for deprecated hooks in onIHook", () => {
+		test("should check for deprecated hooks in onHookEntry", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const hookified = new Hookified({ deprecatedHooks });
 			const handler = () => {};
@@ -1193,7 +1193,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.onIHook({ event: "oldHook", handler });
+			hookified.onHookEntry({ event: "oldHook", handler });
 
 			expect(warnEvent).toEqual({
 				hook: "oldHook",
@@ -1436,7 +1436,7 @@ describe("Hookified", () => {
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
 
-		test("should prevent deprecated hook registration in onIHook when allowDeprecated is false", () => {
+		test("should prevent deprecated hook registration in onHookEntry when allowDeprecated is false", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const hookified = new Hookified({
 				deprecatedHooks,
@@ -1444,7 +1444,7 @@ describe("Hookified", () => {
 			});
 			const handler = () => {};
 
-			hookified.onIHook({ event: "oldHook", handler });
+			hookified.onHookEntry({ event: "oldHook", handler });
 
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
