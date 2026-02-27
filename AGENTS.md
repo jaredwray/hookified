@@ -56,7 +56,7 @@ Base class providing EventEmitter-like functionality:
 - `enforceBeforeAfter` - Require hook names to start with 'before' or 'after'
 - `deprecatedHooks` - Map of deprecated hook names to warning messages
 - `allowDeprecated` - Control whether deprecated hooks can execute
-- `logger` - Logger instance for error and event logging
+- `eventLogger` - Logger instance for error and event logging
 
 ## Key Considerations
 

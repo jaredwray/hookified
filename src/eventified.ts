@@ -11,7 +11,7 @@ export type { EventEmitterOptions, EventListener, IEventEmitter };
 export class Eventified implements IEventEmitter {
 	private readonly _eventListeners: Map<string | symbol, EventListener[]>;
 	private _maxListeners: number;
-	private _logger?: Logger;
+	private _eventLogger?: Logger;
 	private _throwOnEmitError = false;
 	private _throwOnEmptyListeners = false;
 	private _errorEvent = "error";
@@ -20,7 +20,7 @@ export class Eventified implements IEventEmitter {
 		this._eventListeners = new Map<string | symbol, EventListener[]>();
 		this._maxListeners = 100; // Default maximum number of listeners
 
-		this._logger = options?.logger;
+		this._eventLogger = options?.eventLogger;
 
 		if (options?.throwOnEmitError !== undefined) {
 			this._throwOnEmitError = options.throwOnEmitError;
@@ -32,19 +32,19 @@ export class Eventified implements IEventEmitter {
 	}
 
 	/**
-	 * Gets the logger
+	 * Gets the event logger
 	 * @returns {Logger}
 	 */
-	public get logger(): Logger | undefined {
-		return this._logger;
+	public get eventLogger(): Logger | undefined {
+		return this._eventLogger;
 	}
 
 	/**
-	 * Sets the logger
-	 * @param {Logger} logger
+	 * Sets the event logger
+	 * @param {Logger} eventLogger
 	 */
-	public set logger(logger: Logger | undefined) {
-		this._logger = logger;
+	public set eventLogger(eventLogger: Logger | undefined) {
+		this._eventLogger = eventLogger;
 	}
 
 	/**
@@ -283,7 +283,7 @@ export class Eventified implements IEventEmitter {
 		}
 
 		// send it to the logger
-		this.sendLog(event, arguments_);
+		this.sendToEventLogger(event, arguments_);
 
 		return result;
 	}
@@ -344,8 +344,8 @@ export class Eventified implements IEventEmitter {
 	 * @param {string | symbol} eventName - The event name that determines the log level
 	 * @param {unknown} data - The data to log
 	 */
-	private sendLog(eventName: string | symbol, data: any): void {
-		if (!this._logger) {
+	private sendToEventLogger(eventName: string | symbol, data: any): void {
+		if (!this._eventLogger) {
 			return;
 		}
 
@@ -374,32 +374,32 @@ export class Eventified implements IEventEmitter {
 
 		switch (eventName) {
 			case "error": {
-				this._logger.error?.(message, { event: eventName, data });
+				this._eventLogger.error?.(message, { event: eventName, data });
 				break;
 			}
 
 			case "warn": {
-				this._logger.warn?.(message, { event: eventName, data });
+				this._eventLogger.warn?.(message, { event: eventName, data });
 				break;
 			}
 
 			case "trace": {
-				this._logger.trace?.(message, { event: eventName, data });
+				this._eventLogger.trace?.(message, { event: eventName, data });
 				break;
 			}
 
 			case "debug": {
-				this._logger.debug?.(message, { event: eventName, data });
+				this._eventLogger.debug?.(message, { event: eventName, data });
 				break;
 			}
 
 			case "fatal": {
-				this._logger.fatal?.(message, { event: eventName, data });
+				this._eventLogger.fatal?.(message, { event: eventName, data });
 				break;
 			}
 
 			default: {
-				this._logger.info?.(message, { event: eventName, data });
+				this._eventLogger.info?.(message, { event: eventName, data });
 				break;
 			}
 		}

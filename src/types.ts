@@ -11,9 +11,9 @@ export type Logger = {
 
 export type EventEmitterOptions = {
 	/**
-	 * Logger instance for logging errors.
+	 * Logger instance for logging events.
 	 */
-	logger?: Logger;
+	eventLogger?: Logger;
 	/**
 	 * Whether to throw an error when emit 'error' and there are no listeners. Default is false and only emits an error event.
 	 */

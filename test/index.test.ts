@@ -401,7 +401,10 @@ describe("Hookified", () => {
 				loggerErrorMessage = message as string;
 			};
 
-			const hookified = new Hookified({ logger, throwOnHookError: true });
+			const hookified = new Hookified({
+				eventLogger: logger,
+				throwOnHookError: true,
+			});
 			const data = { key: "value" };
 			let errorMessage;
 
@@ -471,18 +474,18 @@ describe("Hookified", () => {
 		});
 	});
 
-	describe("logger", () => {
-		test("should set logger", async () => {
+	describe("eventLogger", () => {
+		test("should set eventLogger", async () => {
 			const hookified = new Hookified();
 			const logger = pino();
-			hookified.logger = logger;
-			expect(hookified.logger).toBe(logger);
+			hookified.eventLogger = logger;
+			expect(hookified.eventLogger).toBe(logger);
 		});
 
-		test("should set logger to undefined", async () => {
+		test("should set eventLogger to undefined", async () => {
 			const hookified = new Hookified();
-			hookified.logger = undefined;
-			expect(hookified.logger).toBe(undefined);
+			hookified.eventLogger = undefined;
+			expect(hookified.eventLogger).toBe(undefined);
 		});
 
 		test("should log error", async () => {
@@ -494,7 +497,10 @@ describe("Hookified", () => {
 				loggerErrorMessage = message as string;
 			};
 
-			const hookified = new Hookified({ logger, throwHookErrors: true });
+			const hookified = new Hookified({
+				eventLogger: logger,
+				throwHookErrors: true,
+			});
 			const data = { key: "value" };
 			let errorMessage;
 
@@ -1017,7 +1023,7 @@ describe("Hookified", () => {
 				error: vi.fn(),
 				fatal: vi.fn(),
 			};
-			const hookified = new Hookified({ deprecatedHooks, logger });
+			const hookified = new Hookified({ deprecatedHooks, eventLogger: logger });
 			const handler = () => {};
 
 			hookified.onHook("oldHook", handler);
@@ -1316,7 +1322,7 @@ describe("Hookified", () => {
 				error: vi.fn(),
 				fatal: vi.fn(),
 			};
-			const hookified = new Hookified({ deprecatedHooks, logger });
+			const hookified = new Hookified({ deprecatedHooks, eventLogger: logger });
 			const handler = () => {};
 
 			// Should not throw even without logger.warn
@@ -1593,7 +1599,7 @@ describe("Hookified", () => {
 			const hookified = new Hookified({
 				deprecatedHooks,
 				allowDeprecated: false,
-				logger,
+				eventLogger: logger,
 			});
 			const handler = () => {};
 

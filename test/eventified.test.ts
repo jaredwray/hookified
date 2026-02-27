@@ -20,7 +20,7 @@ describe("Eventified", () => {
 		t.expect(dataReceived).toBe(1);
 	});
 
-	test("get / set logger", (t) => {
+	test("get / set eventLogger", (t) => {
 		const emitter = new Eventified();
 		const logger = {
 			trace() {},
@@ -30,10 +30,10 @@ describe("Eventified", () => {
 			error() {},
 			fatal() {},
 		};
-		emitter.logger = logger;
-		t.expect(emitter.logger).toBe(logger);
-		emitter.logger = undefined;
-		t.expect(emitter.logger).toBeUndefined();
+		emitter.eventLogger = logger;
+		t.expect(emitter.eventLogger).toBe(logger);
+		emitter.eventLogger = undefined;
+		t.expect(emitter.eventLogger).toBeUndefined();
 	});
 
 	test("get / set throwOnEmitError", (t) => {
@@ -451,7 +451,7 @@ describe("Eventified", () => {
 				error: vi.fn(),
 				fatal: vi.fn(),
 			};
-			const emitter = new Eventified({ logger });
+			const emitter = new Eventified({ eventLogger: logger });
 			emitter.emit("trace", "trace message");
 			expect(logger.trace).toHaveBeenCalled();
 		});
@@ -465,7 +465,7 @@ describe("Eventified", () => {
 				error: vi.fn(),
 				fatal: vi.fn(),
 			};
-			const emitter = new Eventified({ logger });
+			const emitter = new Eventified({ eventLogger: logger });
 			emitter.emit("debug", "debug message");
 			expect(logger.debug).toHaveBeenCalled();
 		});
@@ -479,7 +479,7 @@ describe("Eventified", () => {
 				error: vi.fn(),
 				fatal: vi.fn(),
 			};
-			const emitter = new Eventified({ logger });
+			const emitter = new Eventified({ eventLogger: logger });
 			emitter.emit("fatal", "fatal message");
 			expect(logger.fatal).toHaveBeenCalled();
 		});
@@ -493,7 +493,7 @@ describe("Eventified", () => {
 				error: vi.fn(),
 				fatal: vi.fn(),
 			};
-			const emitter = new Eventified({ logger });
+			const emitter = new Eventified({ eventLogger: logger });
 			emitter.emit("custom-event", "custom message");
 			expect(logger.info).toHaveBeenCalled();
 		});
@@ -507,7 +507,7 @@ describe("Eventified", () => {
 				error: vi.fn(),
 				fatal: vi.fn(),
 			};
-			const emitter = new Eventified({ logger });
+			const emitter = new Eventified({ eventLogger: logger });
 			emitter.emit("info", "string message");
 			expect(logger.info).toHaveBeenCalledWith(
 				'["string message"]',
@@ -524,7 +524,7 @@ describe("Eventified", () => {
 				error: vi.fn(),
 				fatal: vi.fn(),
 			};
-			const emitter = new Eventified({ logger });
+			const emitter = new Eventified({ eventLogger: logger });
 			emitter.on("error", () => {}); // Add listener to prevent throw
 			emitter.emit("error", new Error("direct error"));
 			expect(logger.error).toHaveBeenCalledWith(
@@ -542,7 +542,7 @@ describe("Eventified", () => {
 				error: vi.fn(),
 				fatal: vi.fn(),
 			};
-			const emitter = new Eventified({ logger });
+			const emitter = new Eventified({ eventLogger: logger });
 			emitter.emit("info", { key: "value" });
 			expect(logger.info).toHaveBeenCalledWith(
 				'[{"key":"value"}]',
