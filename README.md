@@ -4,7 +4,7 @@
 
 [![tests](https://github.com/jaredwray/hookified/actions/workflows/tests.yaml/badge.svg)](https://github.com/jaredwray/hookified/actions/workflows/tests.yaml)
 [![GitHub license](https://img.shields.io/github/license/jaredwray/hookified)](https://github.com/jaredwray/hookified/blob/master/LICENSE)
-[![codecov](https://codecov.io/gh/jaredwray/hookified/graph/badge.svg?token=nKkVklTFdA)](https://codecov.io/gh/jaredwray/hookified)
+[![codecov](https://codecov.io/gh/jaredwray/hookified/branch/main/graph/badge.svg?token=nKkVklTFdA)](https://codecov.io/gh/jaredwray/hookified)
 [![npm](https://img.shields.io/npm/dm/hookified)](https://npmjs.com/package/hookified)
 [![jsDelivr](https://data.jsdelivr.com/v1/package/npm/hookified/badge)](https://www.jsdelivr.com/package/npm/hookified)
 [![npm](https://img.shields.io/npm/v/hookified)](https://npmjs.com/package/hookified)
