@@ -210,7 +210,7 @@ export type EventListener = (...arguments_: any[]) => void;
 
 export type HookFn = (...arguments_: any[]) => Promise<void> | void;
 
-export type HookEntry = {
+export interface IHook {
 	/**
 	 * The event name for the hook
 	 */
@@ -219,7 +219,7 @@ export type HookEntry = {
 	 * The handler function for the hook
 	 */
 	handler: HookFn;
-};
+}
 
 export type HookifiedOptions = {
 	/**

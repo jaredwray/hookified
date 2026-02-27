@@ -2,7 +2,7 @@
 // biome-ignore-all lint/suspicious/noImplicitAnyLet: this is a test file
 import pino from "pino";
 import { describe, expect, test, vi } from "vitest";
-import { type HookEntry, Hookified } from "../src/index.js";
+import { Hookified, type IHook } from "../src/index.js";
 
 describe("Hookified", () => {
 	test("initialization", () => {
@@ -43,7 +43,7 @@ describe("Hookified", () => {
 		const handler1 = () => {};
 
 		const handler2 = () => {};
-		const hooks: HookEntry[] = [];
+		const hooks: IHook[] = [];
 		hooks.push(
 			{ event: eventName, handler: handler1 },
 			{ event: eventName, handler: handler2 },
@@ -140,7 +140,7 @@ describe("Hookified", () => {
 		expect(handlerData.key).toBe("modified");
 	});
 
-	test("execute hook with HookEntryand manipulate data", async () => {
+	test("execute hook with IHookand manipulate data", async () => {
 		const hookified = new Hookified();
 		const data = { key: "value" };
 		let handlerData: any;
@@ -151,7 +151,7 @@ describe("Hookified", () => {
 			handlerData = data;
 		};
 
-		hookified.onHookEntry({ event: "event", handler });
+		hookified.onIHook({ event: "event", handler });
 		await hookified.hook("event", data);
 		expect(handlerData.key).toBe("modified");
 	});
@@ -856,18 +856,18 @@ describe("Hookified", () => {
 			);
 		});
 
-		test("should validate hook names in onHookEntry", () => {
+		test("should validate hook names in onIHook", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			const handler = () => {};
 
 			expect(() =>
-				hookified.onHookEntry({ event: "beforeTest", handler }),
+				hookified.onIHook({ event: "beforeTest", handler }),
 			).not.toThrow();
 			expect(() =>
-				hookified.onHookEntry({ event: "afterTest", handler }),
+				hookified.onIHook({ event: "afterTest", handler }),
 			).not.toThrow();
 			expect(() =>
-				hookified.onHookEntry({ event: "invalidName", handler }),
+				hookified.onIHook({ event: "invalidName", handler }),
 			).toThrow(
 				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
@@ -1183,7 +1183,7 @@ describe("Hookified", () => {
 			});
 		});
 
-		test("should check for deprecated hooks in onHookEntry", () => {
+		test("should check for deprecated hooks in onIHook", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const hookified = new Hookified({ deprecatedHooks });
 			const handler = () => {};
@@ -1193,7 +1193,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.onHookEntry({ event: "oldHook", handler });
+			hookified.onIHook({ event: "oldHook", handler });
 
 			expect(warnEvent).toEqual({
 				hook: "oldHook",
@@ -1436,7 +1436,7 @@ describe("Hookified", () => {
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
 
-		test("should prevent deprecated hook registration in onHookEntry when allowDeprecated is false", () => {
+		test("should prevent deprecated hook registration in onIHook when allowDeprecated is false", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const hookified = new Hookified({
 				deprecatedHooks,
@@ -1444,7 +1444,7 @@ describe("Hookified", () => {
 			});
 			const handler = () => {};
 
-			hookified.onHookEntry({ event: "oldHook", handler });
+			hookified.onIHook({ event: "oldHook", handler });
 
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});

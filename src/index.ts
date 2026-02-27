@@ -1,7 +1,7 @@
 import { Eventified } from "./eventified.js";
-import type { HookEntry, HookFn, HookifiedOptions } from "./types.js";
+import type { HookFn, HookifiedOptions, IHook } from "./types.js";
 
-export type { HookEntry, HookFn, HookifiedOptions };
+export type { IHook, HookFn, HookifiedOptions };
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, HookFn[]>;
@@ -169,15 +169,15 @@ export class Hookified extends Eventified {
 	 * @returns {void}
 	 */
 	public onHook(event: string, handler: HookFn) {
-		this.onHookEntry({ event, handler });
+		this.onIHook({ event, handler });
 	}
 
 	/**
 	 * Adds a handler function for a specific event
-	 * @param {HookEntry} hookEntry
+	 * @param {IHook} hookEntry
 	 * @returns {void}
 	 */
-	public onHookEntry(hookEntry: HookEntry) {
+	public onIHook(hookEntry: IHook) {
 		this.validateHookName(hookEntry.event);
 		if (!this.checkDeprecatedHook(hookEntry.event)) {
 			return; // Skip registration if deprecated hooks are not allowed
@@ -197,15 +197,15 @@ export class Hookified extends Eventified {
 	 * @returns {void}
 	 */
 	public addHook(event: string, handler: HookFn) {
-		this.onHookEntry({ event, handler });
+		this.onIHook({ event, handler });
 	}
 
 	/**
 	 * Adds a handler function for a specific event
-	 * @param {Array<HookEntry>} hooks
+	 * @param {Array<IHook>} hooks
 	 * @returns {void}
 	 */
-	public onHooks(hooks: HookEntry[]) {
+	public onHooks(hooks: IHook[]) {
 		for (const hook of hooks) {
 			this.onHook(hook.event, hook.handler);
 		}
@@ -290,10 +290,10 @@ export class Hookified extends Eventified {
 
 	/**
 	 * Removes all handlers for a specific event
-	 * @param {Array<HookEntry>} hooks
+	 * @param {Array<IHook>} hooks
 	 * @returns {void}
 	 */
-	public removeHooks(hooks: HookEntry[]) {
+	public removeHooks(hooks: IHook[]) {
 		for (const hook of hooks) {
 			this.removeHook(hook.event, hook.handler);
 		}
