@@ -281,6 +281,10 @@ export class Hookified extends Eventified {
 			const index = eventHandlers.indexOf(handler);
 			if (index !== -1) {
 				eventHandlers.splice(index, 1);
+				if (eventHandlers.length === 0) {
+					this._hooks.delete(event);
+				}
+
 				return { event, handler };
 			}
 		}

@@ -80,7 +80,7 @@ describe("Hookified", () => {
 		hookified.onceHook("event", handler);
 		expect(hookified.getHooks("event")?.length).toEqual(1);
 		await hookified.hook("event");
-		expect(hookified.getHooks("event")?.length).toEqual(0);
+		expect(hookified.getHooks("event")).toBeUndefined();
 	});
 
 	test("onHook with Clear", async () => {
@@ -301,7 +301,7 @@ describe("Hookified", () => {
 
 		hookified.prependOnceHook("event20", handler);
 		await hookified.hook("event20");
-		expect(hookified.hooks.get("event20")?.length).toBe(0);
+		expect(hookified.hooks.get("event20")).toBeUndefined();
 	});
 
 	test("should set throwErrorOnHook to true", async () => {
@@ -1581,7 +1581,7 @@ describe("Hookified", () => {
 			// Should still be able to remove the hook
 			const removed = hookified.removeHook("oldHook", handler);
 			expect(removed).toEqual({ event: "oldHook", handler });
-			expect(hookified.getHooks("oldHook")).toEqual([]);
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
 
 		test("should allow removeHooks for deprecated hooks when allowDeprecated is false", () => {
@@ -1601,7 +1601,7 @@ describe("Hookified", () => {
 			// Should still be able to remove the hook
 			const removed = hookified.removeHooks([{ event: "oldHook", handler }]);
 			expect(removed).toEqual([{ event: "oldHook", handler }]);
-			expect(hookified.getHooks("oldHook")).toEqual([]);
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
 
 		test("should still emit warnings for deprecated hooks even when allowDeprecated is false", async () => {
