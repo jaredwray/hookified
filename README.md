@@ -39,7 +39,7 @@
   - [.useHookClone](#usehookclone)
   - [.onHook(hook, options?)](#onhookhook-options)
   - [.addHook(event, handler)](#addhookevent-handler)
-  - [.onHooks(Array)](#onhooksarray)
+  - [.onHooks(Array, options?)](#onhooksarray-options)
   - [.onceHook(hook)](#oncehookhook)
   - [.prependHook(hook)](#prependhookhook)
   - [.prependOnceHook(hook)](#prependoncehookhook)
@@ -569,9 +569,9 @@ myClass.addHook('before:myMethod2', async (data) => {
 });
 ```
 
-## .onHooks(Array)
+## .onHooks(Array, options?)
 
-Subscribe to multiple hook events at once
+Subscribe to multiple hook events at once. Takes an array of `IHook` objects and an optional `OnHookOptions` object that is applied to each hook.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -584,7 +584,7 @@ class MyClass extends Hookified {
   async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     await this.hook('before:myMethodWithHooks', data);
-    
+
     // do something here with the data
     data.some = 'new data';
 
@@ -610,6 +610,12 @@ const hooks = [
   },
 ];
 myClass.onHooks(hooks);
+
+// With options — insert all hooks at the top
+myClass.onHooks(hooks, { position: 'Top' });
+
+// With options — skip cloning for all hooks in this batch
+myClass.onHooks(hooks, { useHookClone: false });
 ```
 
 ## .onceHook(hook)
