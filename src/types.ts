@@ -224,11 +224,6 @@ export interface IHook {
 export type HookifiedOptions = {
 	/**
 	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
-	 * @deprecated - this will be deprecated in version 2. Please use throwOnHookError.
-	 */
-	throwHookErrors?: boolean;
-	/**
-	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
 	 */
 	throwOnHookError?: boolean;
 	/**

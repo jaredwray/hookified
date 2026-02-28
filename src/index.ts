@@ -23,8 +23,6 @@ export class Hookified extends Eventified {
 
 		if (options?.throwOnHookError !== undefined) {
 			this._throwOnHookError = options.throwOnHookError;
-		} else if (options?.throwHookErrors !== undefined) {
-			this._throwOnHookError = options.throwHookErrors;
 		}
 
 		if (options?.enforceBeforeAfter !== undefined) {
@@ -42,24 +40,6 @@ export class Hookified extends Eventified {
 	 */
 	public get hooks() {
 		return this._hooks;
-	}
-
-	/**
-	 * Gets whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
-	 * @returns {boolean}
-	 * @deprecated - this will be deprecated in version 2. Please use throwOnHookError.
-	 */
-	public get throwHookErrors() {
-		return this._throwOnHookError;
-	}
-
-	/**
-	 * Sets whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
-	 * @param {boolean} value
-	 * @deprecated - this will be deprecated in version 2. Please use throwOnHookError.
-	 */
-	public set throwHookErrors(value) {
-		this._throwOnHookError = value;
 	}
 
 	/**

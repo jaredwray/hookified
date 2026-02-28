@@ -304,33 +304,6 @@ describe("Hookified", () => {
 		expect(hookified.hooks.get("event20")).toBeUndefined();
 	});
 
-	test("should set throwErrorOnHook to true", async () => {
-		const hookified = new Hookified({ throwHookErrors: true });
-		expect(hookified.throwHookErrors).toBe(true);
-		hookified.throwHookErrors = false;
-		expect(hookified.throwHookErrors).toBe(false);
-	});
-
-	test("should throw error when throwErrorOnHook is true", async () => {
-		const hookified = new Hookified({ throwHookErrors: true });
-		const data = { key: "value" };
-		let errorMessage;
-
-		const handler = () => {
-			throw new Error("error: this handler throws stuff");
-		};
-
-		hookified.onHook({ event: "event", handler });
-
-		try {
-			await hookified.hook("event", data);
-		} catch (error) {
-			errorMessage = (error as Error).message;
-		}
-
-		expect(errorMessage).toBe("event: error: this handler throws stuff");
-	});
-
 	describe("throwOnHookError", () => {
 		test("should be false by default", () => {
 			const hookified = new Hookified();
@@ -528,7 +501,7 @@ describe("Hookified", () => {
 
 			const hookified = new Hookified({
 				eventLogger: logger,
-				throwHookErrors: true,
+				throwOnHookError: true,
 			});
 			const data = { key: "value" };
 			let errorMessage;
