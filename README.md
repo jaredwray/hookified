@@ -36,13 +36,14 @@
   - [.enforceBeforeAfter](#enforcebeforeafter)
   - [.deprecatedHooks](#deprecatedhooks)
   - [.allowDeprecated](#allowdeprecated)
+  - [.useHookClone](#usehookclone)
   - [.onHook(hook)](#onhookhook)
   - [.addHook(event, handler)](#addhookevent-handler)
   - [.onHooks(Array)](#onhooksarray)
-  - [.onceHook(eventName, handler)](#oncehookeventname-handler)
-  - [.prependHook(eventName, handler)](#prependhookeventname-handler)
-  - [.prependOnceHook(eventName, handler)](#prependoncehookeventname-handler)
-  - [.removeHook(eventName, handler)](#removehookeventname-handler)
+  - [.onceHook(hook)](#oncehookhook)
+  - [.prependHook(hook)](#prependhookhook)
+  - [.prependOnceHook(hook)](#prependoncehookhook)
+  - [.removeHook(hook)](#removehookhook)
   - [.removeHooks(Array)](#removehooksarray)
   - [.hook(eventName, ...args)](#hookeventname-args)
   - [.callHook(eventName, ...args)](#callhookeventname-args)
@@ -482,9 +483,35 @@ console.log(myClass.getHooks('oldHook')); // [handler function]
 - **Migration**: Gradually disable deprecated hooks during API transitions
 - **Production**: Disable deprecated hooks to prevent legacy code execution
 
+## .useHookClone
+
+Controls whether hook objects are cloned before storing internally. Default is `true`. When `true`, a shallow copy of the `IHook` object is stored, preventing external mutation from affecting registered hooks. When `false`, the original reference is stored directly.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ useHookClone: false });
+  }
+}
+
+const myClass = new MyClass();
+
+const hook = { event: 'before:save', handler: async (data) => {} };
+myClass.onHook(hook);
+
+// With useHookClone: false, the stored hook is the same reference
+const storedHooks = myClass.getHooks('before:save');
+console.log(storedHooks[0] === hook); // true
+
+// You can dynamically change the setting
+myClass.useHookClone = true;
+```
+
 ## .onHook(hook)
 
-Subscribe to a hook event. Takes an `IHook` object or an array of `IHook` objects.
+Subscribe to a hook event. Takes an `IHook` object or an array of `IHook` objects. Returns the stored `IHook` (or `IHook[]` for arrays), or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` — especially when `useHookClone` is `true`.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -505,16 +532,19 @@ class MyClass extends Hookified {
 
 const myClass = new MyClass();
 
-// Single hook
-myClass.onHook({
+// Single hook — returns the stored IHook
+const stored = myClass.onHook({
   event: 'before:myMethod2',
   handler: async (data) => {
     data.some = 'new data';
   },
 });
 
-// Array of hooks
-myClass.onHook([
+// Use the returned reference to remove the hook later
+myClass.removeHook(stored);
+
+// Array of hooks — returns IHook[] of those registered
+const storedHooks = myClass.onHook([
   { event: 'before:myMethod2', handler: async (data) => { data.validated = true; } },
   { event: 'after:myMethod2', handler: async (data) => { console.log('done'); } },
 ]);
@@ -573,9 +603,9 @@ const hooks = [
 myClass.onHooks(hooks);
 ```
 
-## .onceHook(eventName, handler)
+## .onceHook(hook)
 
-Subscribe to a hook event once.
+Subscribe to a hook event once. Takes an `IHook` object with `event` and `handler` properties. After the handler is called once, it is automatically removed.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -596,18 +626,18 @@ class MyClass extends Hookified {
 
 const myClass = new MyClass();
 
-myClass.onceHook('before:myMethod2', async (data) => {
+myClass.onceHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
-});
+}});
 
 myClass.myMethodWithHooks();
 
-console.log(myClass.hooks.length); // 0
+console.log(myClass.hooks.size); // 0
 ```
 
-## .prependHook(eventName, handler)
+## .prependHook(hook)
 
-Subscribe to a hook event before all other hooks.
+Subscribe to a hook event before all other hooks. Takes an `IHook` object with `event` and `handler` properties.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -630,14 +660,14 @@ const myClass = new MyClass();
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
-myClass.prependHook('before:myMethod2', async (data) => {
+myClass.prependHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'will run before new data';
-});
+}});
 ```
 
-## .prependOnceHook(eventName, handler)
+## .prependOnceHook(hook)
 
-Subscribe to a hook event before all other hooks. After it is used once it will be removed.
+Subscribe to a hook event before all other hooks. Takes an `IHook` object with `event` and `handler` properties. After the handler is called once, it is automatically removed.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -660,14 +690,14 @@ const myClass = new MyClass();
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
-myClass.prependHook('before:myMethod2', async (data) => {
+myClass.prependOnceHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'will run before new data';
-});
+}});
 ```
 
-## .removeHook(eventName, handler)
+## .removeHook(hook)
 
-Unsubscribe a handler from a hook event. Returns the removed hook as an `IHook` object, or `undefined` if the handler was not found.
+Unsubscribe a handler from a hook event. Takes an `IHook` object with `event` and `handler` properties. Returns the removed hook as an `IHook` object, or `undefined` if the handler was not found.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -693,7 +723,7 @@ const handler = async (data) => {
 
 myClass.onHook({ event: 'before:myMethod2', handler });
 
-const removed = myClass.removeHook('before:myMethod2', handler);
+const removed = myClass.removeHook({ event: 'before:myMethod2', handler });
 console.log(removed); // { event: 'before:myMethod2', handler: [Function] }
 ```
 
@@ -884,7 +914,7 @@ myClass.myMethodWithSyncHooks(); // Only sync handler runs
 
 ## .hooks
 
-Get all hooks.
+Get all hooks. Returns a `Map<string, IHook[]>` where each key is an event name and the value is an array of `IHook` objects.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -908,12 +938,12 @@ myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
 
-console.log(myClass.hooks);
+console.log(myClass.hooks); // Map { 'before:myMethod2' => [{ event: 'before:myMethod2', handler: [Function] }] }
 ```
 
 ## .getHooks(eventName)
 
-Get all hooks for an event.
+Get all hooks for an event. Returns an `IHook[]` array, or `undefined` if no hooks are registered for the event.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -937,7 +967,7 @@ myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
 
-console.log(myClass.getHooks('before:myMethod2'));
+console.log(myClass.getHooks('before:myMethod2')); // [{ event: 'before:myMethod2', handler: [Function] }]
 ```
 
 ## .clearHooks(eventName)
@@ -1647,13 +1677,71 @@ hookified.removeHooks(hooks); // void
 **After (v2):**
 
 ```typescript
-const removed = hookified.removeHook('before:save', handler); // IHook | undefined
+const removed = hookified.removeHook({ event: 'before:save', handler }); // IHook | undefined
 const removedHooks = hookified.removeHooks(hooks); // IHook[]
 ```
 
 ### `removeHook`, `removeHooks`, and `getHooks` no longer check for deprecated hooks
 
 Previously, `removeHook`, `removeHooks`, and `getHooks` would skip their operation and emit a deprecation warning when called with a deprecated hook name and `allowDeprecated` was `false`. This made it impossible to clean up or inspect deprecated hooks. These methods now always operate regardless of deprecation status.
+
+### Internal hook storage now uses `IHook` objects
+
+The internal `_hooks` map now stores full `IHook` objects (`Map<string, IHook[]>`) instead of raw handler functions (`Map<string, HookFn[]>`). This means `.hooks` returns `Map<string, IHook[]>` and `.getHooks()` returns `IHook[] | undefined`.
+
+**Before (v1):**
+
+```typescript
+const hooks = myClass.getHooks('before:save'); // HookFn[]
+hooks[0](data); // direct function call
+```
+
+**After (v2):**
+
+```typescript
+const hooks = myClass.getHooks('before:save'); // IHook[]
+hooks[0].handler(data); // access .handler property
+hooks[0].event; // 'before:save'
+```
+
+### `onceHook`, `prependHook`, `prependOnceHook`, and `removeHook` now take `IHook`
+
+These methods now accept an `IHook` object instead of separate `(event, handler)` arguments.
+
+**Before (v1):**
+
+```typescript
+hookified.onceHook('before:save', async (data) => {});
+hookified.prependHook('before:save', async (data) => {});
+hookified.prependOnceHook('before:save', async (data) => {});
+hookified.removeHook('before:save', handler);
+```
+
+**After (v2):**
+
+```typescript
+hookified.onceHook({ event: 'before:save', handler: async (data) => {} });
+hookified.prependHook({ event: 'before:save', handler: async (data) => {} });
+hookified.prependOnceHook({ event: 'before:save', handler: async (data) => {} });
+hookified.removeHook({ event: 'before:save', handler });
+```
+
+### `onHook` now returns the stored hook
+
+`onHook` now returns the stored `IHook` object (or `IHook[]` for arrays, or `undefined` if blocked by deprecation). Previously it returned `void`. The returned reference is the exact object stored internally, making it easy to later remove with `removeHook()`.
+
+**Before (v1):**
+
+```typescript
+hookified.onHook({ event: 'before:save', handler }); // void
+```
+
+**After (v2):**
+
+```typescript
+const stored = hookified.onHook({ event: 'before:save', handler }); // IHook | undefined
+hookified.removeHook(stored); // exact reference match
+```
 
 ## New Features
 
@@ -1680,6 +1768,14 @@ hookified.onHook([
   { event: 'before:save', handler: async (data) => { data.validated = true; } },
   { event: 'after:save', handler: async () => { console.log('saved'); } },
 ]);
+```
+
+### `useHookClone` option
+
+A new `useHookClone` option (default `true`) controls whether hook objects are shallow-cloned before storing. When enabled, external mutation of a registered hook object won't affect the internal state. Set to `false` to store the original reference for performance or when you need reference equality.
+
+```typescript
+const hookified = new Hookified({ useHookClone: false });
 ```
 
 # How to Contribute

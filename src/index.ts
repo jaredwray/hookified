@@ -4,11 +4,12 @@ import type { HookFn, HookifiedOptions, IHook } from "./types.js";
 export type { HookFn, HookifiedOptions, IHook };
 
 export class Hookified extends Eventified {
-	private readonly _hooks: Map<string, HookFn[]>;
+	private readonly _hooks: Map<string, IHook[]>;
 	private _throwOnHookError = false;
 	private _enforceBeforeAfter = false;
 	private _deprecatedHooks: Map<string, string>;
 	private _allowDeprecated = true;
+	private _useHookClone = true;
 
 	constructor(options?: HookifiedOptions) {
 		super({
@@ -32,11 +33,15 @@ export class Hookified extends Eventified {
 		if (options?.allowDeprecated !== undefined) {
 			this._allowDeprecated = options.allowDeprecated;
 		}
+
+		if (options?.useHookClone !== undefined) {
+			this._useHookClone = options.useHookClone;
+		}
 	}
 
 	/**
 	 * Gets all hooks
-	 * @returns {Map<string, HookFn[]>}
+	 * @returns {Map<string, IHook[]>}
 	 */
 	public get hooks() {
 		return this._hooks;
@@ -108,66 +113,57 @@ export class Hookified extends Eventified {
 	}
 
 	/**
-	 * Validates hook event name if enforceBeforeAfter is enabled
-	 * @param {string} event - The event name to validate
-	 * @throws {Error} If enforceBeforeAfter is true and event doesn't start with 'before' or 'after'
+	 * Gets whether hook objects are cloned before storing. Default is true.
+	 * @returns {boolean}
 	 */
-	private validateHookName(event: string): void {
-		if (this._enforceBeforeAfter) {
-			const eventValue = event.trim().toLocaleLowerCase();
-			if (!eventValue.startsWith("before") && !eventValue.startsWith("after")) {
-				throw new Error(
-					`Hook event "${event}" must start with "before" or "after" when enforceBeforeAfter is enabled`,
-				);
-			}
-		}
+	public get useHookClone() {
+		return this._useHookClone;
 	}
 
 	/**
-	 * Checks if a hook is deprecated and emits a warning if it is
-	 * @param {string} event - The event name to check
-	 * @returns {boolean} - Returns true if the hook should proceed, false if it should be blocked
+	 * Sets whether hook objects are cloned before storing. Default is true.
+	 * When false, the original IHook reference is stored directly.
+	 * @param {boolean} value
 	 */
-	private checkDeprecatedHook(event: string): boolean {
-		if (this._deprecatedHooks.has(event)) {
-			const message = this._deprecatedHooks.get(event);
-			const warningMessage = `Hook "${event}" is deprecated${message ? `: ${message}` : ""}`;
-
-			// Emit deprecation warning event
-			this.emit("warn", { hook: event, message: warningMessage });
-
-			// Return false if deprecated hooks are not allowed
-			return this._allowDeprecated;
-		}
-		return true;
+	public set useHookClone(value) {
+		this._useHookClone = value;
 	}
 
 	/**
 	 * Adds a handler function for a specific event. Accepts a single hook or an array of hooks.
 	 * If you prefer the legacy `(event, handler)` signature, use {@link addHook} instead.
 	 * @param {IHook | IHook[]} hook - the hook or array of hooks containing event name and handler
-	 * @returns {void}
+	 * @returns {IHook | IHook[] | undefined} the stored hook(s), or undefined if blocked by deprecation
 	 */
-	public onHook(hook: IHook | IHook[]) {
+	public onHook(hook: IHook | IHook[]): IHook | IHook[] | undefined {
 		if (Array.isArray(hook)) {
+			const results: IHook[] = [];
 			for (const h of hook) {
-				this.onHook(h);
+				const result = this.onHook(h);
+				if (result) {
+					results.push(result as IHook);
+				}
 			}
 
-			return;
+			return results;
 		}
 
 		this.validateHookName(hook.event);
 		if (!this.checkDeprecatedHook(hook.event)) {
-			return; // Skip registration if deprecated hooks are not allowed
+			return undefined; // Skip registration if deprecated hooks are not allowed
 		}
 
+		const entry: IHook = this._useHookClone
+			? { event: hook.event, handler: hook.handler }
+			: hook;
 		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			eventHandlers.push(hook.handler);
+			eventHandlers.push(entry);
 		} else {
-			this._hooks.set(hook.event, [hook.handler]);
+			this._hooks.set(hook.event, [entry]);
 		}
+
+		return entry;
 	}
 
 	/**
@@ -193,79 +189,78 @@ export class Hookified extends Eventified {
 
 	/**
 	 * Adds a handler function for a specific event that runs before all other handlers
-	 * @param {string} event
-	 * @param {HookFn} handler - this can be async or sync
+	 * @param {IHook} hook - the hook containing event name and handler
 	 * @returns {void}
 	 */
-	public prependHook(event: string, handler: HookFn) {
-		this.validateHookName(event);
-		if (!this.checkDeprecatedHook(event)) {
+	public prependHook(hook: IHook) {
+		this.validateHookName(hook.event);
+		if (!this.checkDeprecatedHook(hook.event)) {
 			return; // Skip registration if deprecated hooks are not allowed
 		}
-		const eventHandlers = this._hooks.get(event);
+		const entry: IHook = this._useHookClone
+			? { event: hook.event, handler: hook.handler }
+			: hook;
+		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			eventHandlers.unshift(handler);
+			eventHandlers.unshift(entry);
 		} else {
-			this._hooks.set(event, [handler]);
+			this._hooks.set(hook.event, [entry]);
 		}
 	}
 
 	/**
 	 * Adds a handler that only executes once for a specific event before all other handlers
-	 * @param event
-	 * @param handler
+	 * @param {IHook} hook - the hook containing event name and handler
 	 */
-	public prependOnceHook(event: string, handler: HookFn) {
-		this.validateHookName(event);
-		if (!this.checkDeprecatedHook(event)) {
+	public prependOnceHook(hook: IHook) {
+		this.validateHookName(hook.event);
+		if (!this.checkDeprecatedHook(hook.event)) {
 			return; // Skip registration if deprecated hooks are not allowed
 		}
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
-		const hook = async (...arguments_: any[]) => {
-			this.removeHook(event, hook);
-			return handler(...arguments_);
+		const wrappedHandler = async (...arguments_: any[]) => {
+			this.removeHook({ event: hook.event, handler: wrappedHandler });
+			return hook.handler(...arguments_);
 		};
 
-		this.prependHook(event, hook);
+		this.prependHook({ event: hook.event, handler: wrappedHandler });
 	}
 
 	/**
 	 * Adds a handler that only executes once for a specific event
-	 * @param event
-	 * @param handler
+	 * @param {IHook} hook - the hook containing event name and handler
 	 */
-	public onceHook(event: string, handler: HookFn) {
-		this.validateHookName(event);
-		if (!this.checkDeprecatedHook(event)) {
+	public onceHook(hook: IHook) {
+		this.validateHookName(hook.event);
+		if (!this.checkDeprecatedHook(hook.event)) {
 			return; // Skip registration if deprecated hooks are not allowed
 		}
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
-		const hook = async (...arguments_: any[]) => {
-			this.removeHook(event, hook);
-			return handler(...arguments_);
+		const wrappedHandler = async (...arguments_: any[]) => {
+			this.removeHook({ event: hook.event, handler: wrappedHandler });
+			return hook.handler(...arguments_);
 		};
 
-		this.onHook({ event, handler: hook });
+		this.onHook({ event: hook.event, handler: wrappedHandler });
 	}
 
 	/**
 	 * Removes a handler function for a specific event
-	 * @param {string} event
-	 * @param {HookFn} handler
+	 * @param {IHook} hook - the hook containing event name and handler to remove
 	 * @returns {IHook | undefined} the removed hook, or undefined if not found
 	 */
-	public removeHook(event: string, handler: HookFn): IHook | undefined {
-		this.validateHookName(event);
-		const eventHandlers = this._hooks.get(event);
+	public removeHook(hook: IHook): IHook | undefined {
+		this.validateHookName(hook.event);
+		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			const index = eventHandlers.indexOf(handler);
+			const index = eventHandlers.findIndex((h) => h.handler === hook.handler);
 			if (index !== -1) {
 				eventHandlers.splice(index, 1);
 				if (eventHandlers.length === 0) {
-					this._hooks.delete(event);
+					this._hooks.delete(hook.event);
 				}
 
-				return { event, handler };
+				return { event: hook.event, handler: hook.handler };
 			}
 		}
 
@@ -280,7 +275,7 @@ export class Hookified extends Eventified {
 	public removeHooks(hooks: IHook[]): IHook[] {
 		const removed: IHook[] = [];
 		for (const hook of hooks) {
-			const result = this.removeHook(hook.event, hook.handler);
+			const result = this.removeHook(hook);
 			if (result) {
 				removed.push(result);
 			}
@@ -302,9 +297,9 @@ export class Hookified extends Eventified {
 		}
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
-			for (const handler of eventHandlers) {
+			for (const hook of [...eventHandlers]) {
 				try {
-					await handler(...arguments_);
+					await hook.handler(...arguments_);
 				} catch (error) {
 					const message = `${event}: ${(error as Error).message}`;
 					this.emit("error", new Error(message));
@@ -335,14 +330,14 @@ export class Hookified extends Eventified {
 
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
-			for (const handler of eventHandlers) {
+			for (const hook of [...eventHandlers]) {
 				// Skip async functions silently
-				if (handler.constructor.name === "AsyncFunction") {
+				if (hook.handler.constructor.name === "AsyncFunction") {
 					continue;
 				}
 
 				try {
-					handler(...arguments_);
+					hook.handler(...arguments_);
 				} catch (error) {
 					const message = `${event}: ${(error as Error).message}`;
 					this.emit("error", new Error(message));
@@ -387,7 +382,7 @@ export class Hookified extends Eventified {
 	/**
 	 * Gets all hooks for a specific event
 	 * @param {string} event
-	 * @returns {HookFn[]}
+	 * @returns {IHook[]}
 	 */
 	public getHooks(event: string) {
 		this.validateHookName(event);
@@ -400,6 +395,41 @@ export class Hookified extends Eventified {
 	 */
 	public clearHooks() {
 		this._hooks.clear();
+	}
+
+	/**
+	 * Validates hook event name if enforceBeforeAfter is enabled
+	 * @param {string} event - The event name to validate
+	 * @throws {Error} If enforceBeforeAfter is true and event doesn't start with 'before' or 'after'
+	 */
+	private validateHookName(event: string): void {
+		if (this._enforceBeforeAfter) {
+			const eventValue = event.trim().toLocaleLowerCase();
+			if (!eventValue.startsWith("before") && !eventValue.startsWith("after")) {
+				throw new Error(
+					`Hook event "${event}" must start with "before" or "after" when enforceBeforeAfter is enabled`,
+				);
+			}
+		}
+	}
+
+	/**
+	 * Checks if a hook is deprecated and emits a warning if it is
+	 * @param {string} event - The event name to check
+	 * @returns {boolean} - Returns true if the hook should proceed, false if it should be blocked
+	 */
+	private checkDeprecatedHook(event: string): boolean {
+		if (this._deprecatedHooks.has(event)) {
+			const message = this._deprecatedHooks.get(event);
+			const warningMessage = `Hook "${event}" is deprecated${message ? `: ${message}` : ""}`;
+
+			// Emit deprecation warning event
+			this.emit("warn", { hook: event, message: warningMessage });
+
+			// Return false if deprecated hooks are not allowed
+			return this._allowDeprecated;
+		}
+		return true;
 	}
 }
 
