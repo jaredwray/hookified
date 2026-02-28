@@ -1704,7 +1704,7 @@ hooks[0].handler(data); // access .handler property
 hooks[0].event; // 'before:save'
 ```
 
-### `onceHook`, `prependHook`, and `prependOnceHook` now take `IHook`
+### `onceHook`, `prependHook`, `prependOnceHook`, and `removeHook` now take `IHook`
 
 These methods now accept an `IHook` object instead of separate `(event, handler)` arguments.
 
@@ -1714,6 +1714,7 @@ These methods now accept an `IHook` object instead of separate `(event, handler)
 hookified.onceHook('before:save', async (data) => {});
 hookified.prependHook('before:save', async (data) => {});
 hookified.prependOnceHook('before:save', async (data) => {});
+hookified.removeHook('before:save', handler);
 ```
 
 **After (v2):**
@@ -1722,6 +1723,24 @@ hookified.prependOnceHook('before:save', async (data) => {});
 hookified.onceHook({ event: 'before:save', handler: async (data) => {} });
 hookified.prependHook({ event: 'before:save', handler: async (data) => {} });
 hookified.prependOnceHook({ event: 'before:save', handler: async (data) => {} });
+hookified.removeHook({ event: 'before:save', handler });
+```
+
+### `onHook` now returns the stored hook
+
+`onHook` now returns the stored `IHook` object (or `IHook[]` for arrays, or `undefined` if blocked by deprecation). Previously it returned `void`. The returned reference is the exact object stored internally, making it easy to later remove with `removeHook()`.
+
+**Before (v1):**
+
+```typescript
+hookified.onHook({ event: 'before:save', handler }); // void
+```
+
+**After (v2):**
+
+```typescript
+const stored = hookified.onHook({ event: 'before:save', handler }); // IHook | undefined
+hookified.removeHook(stored); // exact reference match
 ```
 
 ## New Features
