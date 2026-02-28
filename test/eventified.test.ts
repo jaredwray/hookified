@@ -56,7 +56,7 @@ describe("Eventified", () => {
 
 	test("get max listeners", (t) => {
 		const emitter = new Eventified();
-		t.expect(emitter.maxListeners()).toBe(100);
+		t.expect(emitter.maxListeners()).toBe(0);
 	});
 
 	test("add event listener", (t) => {
@@ -135,7 +135,7 @@ describe("Eventified", () => {
 		t.expect(capturedWarning).toMatch(/MaxListenersExceededWarning/);
 	});
 
-	test("set max listeners and verify truncate", (t) => {
+	test("set max listeners should not truncate existing listeners", (t) => {
 		const emitter = new Eventified();
 
 		const listener = () => {};
@@ -146,7 +146,7 @@ describe("Eventified", () => {
 
 		t.expect(emitter.listeners("test-event").length).toBe(2);
 		emitter.setMaxListeners(1);
-		t.expect(emitter.listeners("test-event").length).toBe(1);
+		t.expect(emitter.listeners("test-event").length).toBe(2);
 	});
 
 	test("remove all listeners", (t) => {
