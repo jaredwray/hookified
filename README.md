@@ -1462,29 +1462,9 @@ myClass.eventLogger = pino({ level: 'debug' });
 console.log(myClass.eventLogger);
 ```
 
-### `HookEntry` type renamed to `IHook` interface
-
-The exported `HookEntry` type has been converted to an `IHook` interface.
-
-**Before (v1):**
-
-```typescript
-import type { HookEntry } from 'hookified';
-
-const hook: HookEntry = { event: 'before:save', handler: async () => {} };
-```
-
-**After (v2):**
-
-```typescript
-import type { IHook } from 'hookified';
-
-const hook: IHook = { event: 'before:save', handler: async () => {} };
-```
-
 ### `onHookEntry` removed — use `onHook` instead
 
-The `onHookEntry` method has been removed. Use `onHook` which now accepts an `IHook` object directly.
+The `onHookEntry` method has been removed. Use `onHook` which now accepts an `IHook` object (or array of `IHook`) directly.
 
 **Before (v1):**
 
@@ -1500,7 +1480,7 @@ hookified.onHook({ event: 'before:save', handler: async (data) => {} });
 
 ### `onHook` signature changed
 
-`onHook` no longer accepts positional `(event, handler)` arguments. It now requires an `IHook` object (or `Hook` class instance). Use `addHook(event, handler)` if you prefer positional arguments.
+`onHook` no longer accepts positional `(event, handler)` arguments. It now takes an `IHook` object, a `Hook` class instance, or an array of `IHook`. Use `addHook(event, handler)` if you prefer positional arguments.
 
 **Before (v1):**
 
@@ -1511,50 +1491,55 @@ hookified.onHook('before:save', async (data) => {});
 **After (v2):**
 
 ```typescript
+// Using IHook object
 hookified.onHook({ event: 'before:save', handler: async (data) => {} });
+
+// Using an array of IHook
+hookified.onHook([
+  { event: 'before:save', handler: async (data) => {} },
+  { event: 'after:save', handler: async (data) => {} },
+]);
 
 // Or use addHook for positional args
 hookified.addHook('before:save', async (data) => {});
 ```
 
-### `HookEntry` type removed
+### `addHook` signature changed
 
-The deprecated `HookEntry` type alias has been removed. Use the `IHook` interface instead.
+`addHook` now takes positional `(event, handler)` arguments instead of an `IHook` object.
 
 **Before (v1):**
 
 ```typescript
-import type { HookEntry } from 'hookified';
+hookified.addHook({ event: 'before:save', handler: async (data) => {} });
 ```
 
 **After (v2):**
 
 ```typescript
-import type { IHook } from 'hookified';
+hookified.addHook('before:save', async (data) => {});
 ```
 
-### `Hook` type renamed to `HookFn`
+### `HookEntry` type and `Hook` type removed
 
-The exported `Hook` type has been renamed to `HookFn` to clarify that it represents a function type.
+The `HookEntry` type has been removed and replaced with the `IHook` interface. The `Hook` type (function type) has been renamed to `HookFn`.
 
 **Before (v1):**
 
 ```typescript
-import type { Hook } from 'hookified';
+import type { HookEntry, Hook } from 'hookified';
 
-const myHook: Hook = async (data) => {
-  // ...
-};
+const hook: HookEntry = { event: 'before:save', handler: async () => {} };
+const myHook: Hook = async (data) => {};
 ```
 
 **After (v2):**
 
 ```typescript
-import type { HookFn } from 'hookified';
+import type { IHook, HookFn } from 'hookified';
 
-const myHook: HookFn = async (data) => {
-  // ...
-};
+const hook: IHook = { event: 'before:save', handler: async () => {} };
+const myHook: HookFn = async (data) => {};
 ```
 
 ## New Features
@@ -1569,6 +1554,19 @@ import { Hook } from 'hookified';
 const hook = new Hook('before:save', async (data) => {
   data.validated = true;
 });
+
+hookified.onHook(hook);
+```
+
+### `onHook` accepts arrays
+
+You can now pass an array of `IHook` objects to `onHook` to register multiple hooks at once.
+
+```typescript
+hookified.onHook([
+  { event: 'before:save', handler: async (data) => { data.validated = true; } },
+  { event: 'after:save', handler: async () => { console.log('saved'); } },
+]);
 ```
 
 # How to Contribute
