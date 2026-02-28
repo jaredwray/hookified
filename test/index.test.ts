@@ -406,6 +406,7 @@ describe("Hookified", () => {
 			const hookified = new Hookified({
 				eventLogger: logger,
 				throwOnHookError: true,
+				throwOnEmptyListeners: false,
 			});
 			const data = { key: "value" };
 			let errorMessage;
@@ -468,7 +469,10 @@ describe("Hookified", () => {
 		});
 
 		test("should not throw error when throwOnEmitError is false", () => {
-			const hookified = new Hookified({ throwOnEmitError: false });
+			const hookified = new Hookified({
+				throwOnEmitError: false,
+				throwOnEmptyListeners: false,
+			});
 
 			expect(() => {
 				hookified.emit("error", new Error("test error"));
@@ -502,6 +506,7 @@ describe("Hookified", () => {
 			const hookified = new Hookified({
 				eventLogger: logger,
 				throwOnHookError: true,
+				throwOnEmptyListeners: false,
 			});
 			const data = { key: "value" };
 			let errorMessage;

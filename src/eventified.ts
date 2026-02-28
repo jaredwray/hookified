@@ -13,7 +13,7 @@ export class Eventified implements IEventEmitter {
 	private _maxListeners: number;
 	private _eventLogger?: Logger;
 	private _throwOnEmitError = false;
-	private _throwOnEmptyListeners = false;
+	private _throwOnEmptyListeners = true;
 	private _errorEvent = "error";
 
 	constructor(options?: EventEmitterOptions) {
