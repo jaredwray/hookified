@@ -318,7 +318,7 @@ export class Eventified implements IEventEmitter {
 	 * @returns {void}
 	 */
 	public setMaxListeners(n: number): void {
-		this._maxListeners = n;
+		this._maxListeners = n < 0 ? 0 : n;
 	}
 
 	/**

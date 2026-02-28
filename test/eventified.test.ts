@@ -149,6 +149,12 @@ describe("Eventified", () => {
 		t.expect(emitter.listeners("test-event").length).toBe(2);
 	});
 
+	test("set max listeners should default to 0 on negative number", (t) => {
+		const emitter = new Eventified();
+		emitter.setMaxListeners(-1);
+		t.expect(emitter.maxListeners()).toBe(0);
+	});
+
 	test("remove all listeners", (t) => {
 		const emitter = new Eventified();
 		const listener = () => {};
