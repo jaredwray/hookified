@@ -31,7 +31,7 @@
 - [Hooks](#hooks)
   - [Hook class](#hook-class)
 - [API - Hooks](#api---hooks)
-  - [.throwOnHookError](#throwhookerror)
+  - [.throwOnHookError](#throwOnHookError)
   - [.eventLogger](#eventlogger)
   - [.enforceBeforeAfter](#enforcebeforeafter)
   - [.deprecatedHooks](#deprecatedhooks)
