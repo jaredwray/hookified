@@ -193,59 +193,56 @@ export class Hookified extends Eventified {
 
 	/**
 	 * Adds a handler function for a specific event that runs before all other handlers
-	 * @param {string} event
-	 * @param {HookFn} handler - this can be async or sync
+	 * @param {IHook} hook - the hook containing event name and handler
 	 * @returns {void}
 	 */
-	public prependHook(event: string, handler: HookFn) {
-		this.validateHookName(event);
-		if (!this.checkDeprecatedHook(event)) {
+	public prependHook(hook: IHook) {
+		this.validateHookName(hook.event);
+		if (!this.checkDeprecatedHook(hook.event)) {
 			return; // Skip registration if deprecated hooks are not allowed
 		}
-		const eventHandlers = this._hooks.get(event);
+		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			eventHandlers.unshift({ event, handler });
+			eventHandlers.unshift(hook);
 		} else {
-			this._hooks.set(event, [{ event, handler }]);
+			this._hooks.set(hook.event, [hook]);
 		}
 	}
 
 	/**
 	 * Adds a handler that only executes once for a specific event before all other handlers
-	 * @param event
-	 * @param handler
+	 * @param {IHook} hook - the hook containing event name and handler
 	 */
-	public prependOnceHook(event: string, handler: HookFn) {
-		this.validateHookName(event);
-		if (!this.checkDeprecatedHook(event)) {
+	public prependOnceHook(hook: IHook) {
+		this.validateHookName(hook.event);
+		if (!this.checkDeprecatedHook(hook.event)) {
 			return; // Skip registration if deprecated hooks are not allowed
 		}
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
-		const hook = async (...arguments_: any[]) => {
-			this.removeHook(event, hook);
-			return handler(...arguments_);
+		const wrappedHandler = async (...arguments_: any[]) => {
+			this.removeHook(hook.event, wrappedHandler);
+			return hook.handler(...arguments_);
 		};
 
-		this.prependHook(event, hook);
+		this.prependHook({ event: hook.event, handler: wrappedHandler });
 	}
 
 	/**
 	 * Adds a handler that only executes once for a specific event
-	 * @param event
-	 * @param handler
+	 * @param {IHook} hook - the hook containing event name and handler
 	 */
-	public onceHook(event: string, handler: HookFn) {
-		this.validateHookName(event);
-		if (!this.checkDeprecatedHook(event)) {
+	public onceHook(hook: IHook) {
+		this.validateHookName(hook.event);
+		if (!this.checkDeprecatedHook(hook.event)) {
 			return; // Skip registration if deprecated hooks are not allowed
 		}
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
-		const hook = async (...arguments_: any[]) => {
-			this.removeHook(event, hook);
-			return handler(...arguments_);
+		const wrappedHandler = async (...arguments_: any[]) => {
+			this.removeHook(hook.event, wrappedHandler);
+			return hook.handler(...arguments_);
 		};
 
-		this.onHook({ event, handler: hook });
+		this.onHook({ event: hook.event, handler: wrappedHandler });
 	}
 
 	/**

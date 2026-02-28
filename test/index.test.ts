@@ -88,7 +88,7 @@ describe("Hookified", () => {
 		const hookified = new Hookified();
 
 		const handler = () => {};
-		hookified.onceHook("event", handler);
+		hookified.onceHook({ event: "event", handler });
 		expect(hookified.getHooks("event")?.length).toEqual(1);
 		await hookified.hook("event");
 		expect(hookified.getHooks("event")).toBeUndefined();
@@ -292,7 +292,7 @@ describe("Hookified", () => {
 		};
 
 		hookified.onHook({ event: "event", handler });
-		hookified.prependHook("event", handler2);
+		hookified.prependHook({ event: "event", handler: handler2 });
 		await hookified.hook("event");
 		expect(handlerData[0]).toBe("modified1");
 		expect(handlerData[1]).toBe("modified2");
@@ -306,7 +306,7 @@ describe("Hookified", () => {
 			handlerData.push("modified1");
 		};
 
-		hookified.prependHook("event", handler);
+		hookified.prependHook({ event: "event", handler });
 		await hookified.hook("event");
 		expect(handlerData[0]).toBe("modified1");
 	});
@@ -319,7 +319,7 @@ describe("Hookified", () => {
 			handlerData.push("modified1");
 		};
 
-		hookified.prependOnceHook("event20", handler);
+		hookified.prependOnceHook({ event: "event20", handler });
 		await hookified.hook("event20");
 		expect(hookified.hooks.get("event20")).toBeUndefined();
 	});
@@ -825,9 +825,15 @@ describe("Hookified", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			const handler = () => {};
 
-			expect(() => hookified.prependHook("beforeTest", handler)).not.toThrow();
-			expect(() => hookified.prependHook("afterTest", handler)).not.toThrow();
-			expect(() => hookified.prependHook("invalidName", handler)).toThrow(
+			expect(() =>
+				hookified.prependHook({ event: "beforeTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.prependHook({ event: "afterTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.prependHook({ event: "invalidName", handler }),
+			).toThrow(
 				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
 		});
@@ -836,9 +842,15 @@ describe("Hookified", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			const handler = () => {};
 
-			expect(() => hookified.onceHook("beforeTest", handler)).not.toThrow();
-			expect(() => hookified.onceHook("afterTest", handler)).not.toThrow();
-			expect(() => hookified.onceHook("invalidName", handler)).toThrow(
+			expect(() =>
+				hookified.onceHook({ event: "beforeTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.onceHook({ event: "afterTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.onceHook({ event: "invalidName", handler }),
+			).toThrow(
 				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
 		});
@@ -848,12 +860,14 @@ describe("Hookified", () => {
 			const handler = () => {};
 
 			expect(() =>
-				hookified.prependOnceHook("beforeTest", handler),
+				hookified.prependOnceHook({ event: "beforeTest", handler }),
 			).not.toThrow();
 			expect(() =>
-				hookified.prependOnceHook("afterTest", handler),
+				hookified.prependOnceHook({ event: "afterTest", handler }),
 			).not.toThrow();
-			expect(() => hookified.prependOnceHook("invalidName", handler)).toThrow(
+			expect(() =>
+				hookified.prependOnceHook({ event: "invalidName", handler }),
+			).toThrow(
 				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
 		});
@@ -1119,7 +1133,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.prependHook("oldHook", handler);
+			hookified.prependHook({ event: "oldHook", handler });
 
 			expect(warnEvent).toEqual({
 				hook: "oldHook",
@@ -1137,7 +1151,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.onceHook("oldHook", handler);
+			hookified.onceHook({ event: "oldHook", handler });
 
 			expect(warnEvent).toEqual({
 				hook: "oldHook",
@@ -1155,7 +1169,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.prependOnceHook("oldHook", handler);
+			hookified.prependOnceHook({ event: "oldHook", handler });
 
 			expect(warnEvent).toEqual({
 				hook: "oldHook",
@@ -1450,7 +1464,7 @@ describe("Hookified", () => {
 			});
 			const handler = () => {};
 
-			hookified.prependHook("oldHook", handler);
+			hookified.prependHook({ event: "oldHook", handler });
 
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
@@ -1463,7 +1477,7 @@ describe("Hookified", () => {
 			});
 			const handler = () => {};
 
-			hookified.onceHook("oldHook", handler);
+			hookified.onceHook({ event: "oldHook", handler });
 
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
@@ -1476,7 +1490,7 @@ describe("Hookified", () => {
 			});
 			const handler = () => {};
 
-			hookified.prependOnceHook("oldHook", handler);
+			hookified.prependOnceHook({ event: "oldHook", handler });
 
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
