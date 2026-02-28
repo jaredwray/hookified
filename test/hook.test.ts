@@ -16,13 +16,13 @@ describe("Hook", () => {
 		expect(hook.handler).toBe(handler);
 	});
 
-	test("should satisfy IHook interface for onHookEntry", async () => {
+	test("should satisfy IHook interface for onHook", async () => {
 		const hookified = new Hookified();
 		let called = false;
 		const hook = new Hook("test", () => {
 			called = true;
 		});
-		hookified.onHookEntry(hook);
+		hookified.onHook(hook);
 		await hookified.hook("test");
 		expect(called).toBe(true);
 	});
@@ -49,7 +49,7 @@ describe("Hook", () => {
 		const hook = new Hook("test", () => {
 			called = true;
 		});
-		hookified.onHookEntry(hook);
+		hookified.onHook(hook);
 		hookified.removeHooks([hook]);
 		await hookified.hook("test");
 		expect(called).toBe(false);
@@ -61,7 +61,7 @@ describe("Hook", () => {
 		const hook = new Hook("test", (d: { value: number }) => {
 			d.value = 42;
 		});
-		hookified.onHookEntry(hook);
+		hookified.onHook(hook);
 		await hookified.hook("test", data);
 		expect(data.value).toBe(42);
 	});

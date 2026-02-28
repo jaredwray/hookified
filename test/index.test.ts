@@ -16,8 +16,8 @@ describe("Hookified", () => {
 		const handler = () => {};
 
 		const handler2 = () => {};
-		hookified.onHook("event", handler);
-		hookified.onHook("event2", handler2);
+		hookified.onHook({ event: "event", handler });
+		hookified.onHook({ event: "event2", handler: handler2 });
 		expect(hookified.getHooks("event")).toEqual([handler]);
 		expect(hookified.getHooks("event2")).toEqual([handler2]);
 		expect(hookified.hooks.size).toBe(2);
@@ -29,8 +29,8 @@ describe("Hookified", () => {
 		const handler = () => {};
 
 		const handler2 = () => {};
-		hookified.addHook("event", handler);
-		hookified.addHook("event2", handler2);
+		hookified.addHook({ event: "event", handler });
+		hookified.addHook({ event: "event2", handler: handler2 });
 		expect(hookified.getHooks("event")).toEqual([handler]);
 		expect(hookified.getHooks("event2")).toEqual([handler2]);
 		expect(hookified.hooks.size).toBe(2);
@@ -55,7 +55,7 @@ describe("Hookified", () => {
 		const eventName2 = "event-on-hooks2";
 
 		const handler3 = () => {};
-		hookified.onHook(eventName2, handler3);
+		hookified.onHook({ event: eventName2, handler: handler3 });
 		expect(hookified.getHooks(eventName2)).toEqual([handler3]);
 		expect(hookified.hooks.size).toBe(2);
 	});
@@ -76,8 +76,8 @@ describe("Hookified", () => {
 		const handler = () => {};
 
 		const handler2 = () => {};
-		hookified.onHook("event", handler);
-		hookified.onHook("event2", handler2);
+		hookified.onHook({ event: "event", handler });
+		hookified.onHook({ event: "event2", handler: handler2 });
 		expect(hookified.getHooks("event")).toEqual([handler]);
 		expect(hookified.getHooks("event2")).toEqual([handler2]);
 		hookified.clearHooks();
@@ -90,8 +90,8 @@ describe("Hookified", () => {
 		const handler = () => {};
 
 		const handler2 = () => {};
-		hookified.onHook("event", handler);
-		hookified.onHook("event", handler2);
+		hookified.onHook({ event: "event", handler });
+		hookified.onHook({ event: "event", handler: handler2 });
 		expect(hookified.hooks.get("event")).toEqual([handler, handler2]);
 		expect(hookified.hooks.size).toBe(1);
 	});
@@ -102,8 +102,8 @@ describe("Hookified", () => {
 		const handler = () => {};
 
 		const handler2 = () => {};
-		hookified.onHook("event", handler);
-		hookified.onHook("event", handler2);
+		hookified.onHook({ event: "event", handler });
+		hookified.onHook({ event: "event", handler: handler2 });
 		hookified.removeHook("event", handler);
 		expect(hookified.getHooks("event")).toEqual([handler2]);
 		expect(hookified.hooks.size).toBe(1);
@@ -116,8 +116,8 @@ describe("Hookified", () => {
 		const handler1 = () => {};
 
 		const handler2 = () => {};
-		hookified.onHook(eventName, handler1);
-		hookified.onHook(eventName, handler2);
+		hookified.onHook({ event: eventName, handler: handler1 });
+		hookified.onHook({ event: eventName, handler: handler2 });
 		const hooks = [{ event: eventName, handler: handler2 }];
 		hookified.removeHooks(hooks);
 		expect(hookified.getHooks(eventName)).toEqual([handler1]);
@@ -135,7 +135,7 @@ describe("Hookified", () => {
 			handlerData = data;
 		};
 
-		hookified.onHook("event", handler);
+		hookified.onHook({ event: "event", handler });
 		await hookified.hook("event", data);
 		expect(handlerData.key).toBe("modified");
 	});
@@ -151,7 +151,7 @@ describe("Hookified", () => {
 			handlerData = data;
 		};
 
-		hookified.onHookEntry({ event: "event", handler });
+		hookified.onHook({ event: "event", handler });
 		await hookified.hook("event", data);
 		expect(handlerData.key).toBe("modified");
 	});
@@ -167,7 +167,7 @@ describe("Hookified", () => {
 			handlerData = data;
 		};
 
-		hookified.onHook("event", handler);
+		hookified.onHook({ event: "event", handler });
 		await hookified.callHook("event", data);
 		expect(handlerData.key).toBe("modified");
 	});
@@ -191,7 +191,7 @@ describe("Hookified", () => {
 			handlerData.push(data, data2, data3);
 		};
 
-		hookified.onHook("event", handler);
+		hookified.onHook({ event: "event", handler });
 		await hookified.hook("event", data, data2, data3);
 		expect(handlerData[0].key).toBe("modified");
 		expect(handlerData[1].key).toBe("foo");
@@ -212,7 +212,7 @@ describe("Hookified", () => {
 			throw new Error("error");
 		};
 
-		hookified.onHook("event", handler);
+		hookified.onHook({ event: "event", handler });
 		await hookified.hook("event", data);
 		expect(errorMessage).toBe("event: error");
 	});
@@ -225,7 +225,7 @@ describe("Hookified", () => {
 			data.key = "modified";
 		};
 
-		hookified.onHook("event", handler);
+		hookified.onHook({ event: "event", handler });
 		await hookified.hook("event", data);
 		expect(data.key).toBe("modified");
 	});
@@ -242,7 +242,7 @@ describe("Hookified", () => {
 			handlerData.push("modified1");
 		};
 
-		hookified.onHook("event", handler);
+		hookified.onHook({ event: "event", handler });
 		hookified.prependHook("event", handler2);
 		await hookified.hook("event");
 		expect(handlerData[0]).toBe("modified1");
@@ -291,7 +291,7 @@ describe("Hookified", () => {
 			throw new Error("error: this handler throws stuff");
 		};
 
-		hookified.onHook("event", handler);
+		hookified.onHook({ event: "event", handler });
 
 		try {
 			await hookified.hook("event", data);
@@ -331,7 +331,7 @@ describe("Hookified", () => {
 				throw new Error("error: this handler throws stuff");
 			};
 
-			hookified.onHook("event", handler);
+			hookified.onHook({ event: "event", handler });
 
 			try {
 				await hookified.hook("event", data);
@@ -355,7 +355,7 @@ describe("Hookified", () => {
 				throw new Error("error: hook error occurred");
 			};
 
-			hookified.onHook("event", handler);
+			hookified.onHook({ event: "event", handler });
 			await hookified.hook("event", data);
 
 			expect(errorMessage).toBe("event: error: hook error occurred");
@@ -369,7 +369,7 @@ describe("Hookified", () => {
 				throw new Error("error: test error");
 			};
 
-			hookified.onHook("event", handler);
+			hookified.onHook({ event: "event", handler });
 
 			// Should not throw when false
 			let errorMessage;
@@ -412,7 +412,7 @@ describe("Hookified", () => {
 				throw new Error("error: this handler throws stuff");
 			};
 
-			hookified.onHook("event", handler);
+			hookified.onHook({ event: "event", handler });
 
 			try {
 				await hookified.hook("event", data);
@@ -508,7 +508,7 @@ describe("Hookified", () => {
 				throw new Error("error: this handler throws stuff");
 			};
 
-			hookified.onHook("event", handler);
+			hookified.onHook({ event: "event", handler });
 
 			try {
 				await hookified.hook("event", data);
@@ -532,7 +532,7 @@ describe("Hookified", () => {
 				handlerData.push("before");
 			};
 
-			hookified.onHook("before:test", handler);
+			hookified.onHook({ event: "before:test", handler });
 			await hookified.beforeHook("test");
 			expect(handlerData).toEqual(["before"]);
 		});
@@ -548,7 +548,7 @@ describe("Hookified", () => {
 			};
 
 			const data = { key: "value" };
-			hookified.onHook("before:process", handler);
+			hookified.onHook({ event: "before:process", handler });
 			await hookified.beforeHook("process", data, { key: "42" });
 			expect(capturedData).toEqual({ key: "value" });
 			expect(capturedCount).toEqual({ key: "42" });
@@ -566,8 +566,8 @@ describe("Hookified", () => {
 				handlerData.push("second");
 			};
 
-			hookified.onHook("before:action", handler1);
-			hookified.onHook("before:action", handler2);
+			hookified.onHook({ event: "before:action", handler: handler1 });
+			hookified.onHook({ event: "before:action", handler: handler2 });
 			await hookified.beforeHook("action");
 			expect(handlerData).toEqual(["first", "second"]);
 		});
@@ -584,7 +584,7 @@ describe("Hookified", () => {
 				throw new Error("before hook error");
 			};
 
-			hookified.onHook("before:task", handler);
+			hookified.onHook({ event: "before:task", handler });
 			await hookified.beforeHook("task");
 			expect(errorMessage).toBe("before:task: before hook error");
 		});
@@ -599,7 +599,7 @@ describe("Hookified", () => {
 				handlerData.push("after");
 			};
 
-			hookified.onHook("after:test", handler);
+			hookified.onHook({ event: "after:test", handler });
 			await hookified.afterHook("test");
 			expect(handlerData).toEqual(["after"]);
 		});
@@ -615,7 +615,7 @@ describe("Hookified", () => {
 			};
 
 			const data = { status: "complete" };
-			hookified.onHook("after:process", handler);
+			hookified.onHook({ event: "after:process", handler });
 			await hookified.afterHook("process", data, { status: "success" });
 			expect(capturedData).toEqual({ status: "complete" });
 			expect(capturedMessage).toEqual({ status: "success" });
@@ -633,8 +633,8 @@ describe("Hookified", () => {
 				handlerData.push("cleanup2");
 			};
 
-			hookified.onHook("after:action", handler1);
-			hookified.onHook("after:action", handler2);
+			hookified.onHook({ event: "after:action", handler: handler1 });
+			hookified.onHook({ event: "after:action", handler: handler2 });
 			await hookified.afterHook("action");
 			expect(handlerData).toEqual(["cleanup1", "cleanup2"]);
 		});
@@ -651,7 +651,7 @@ describe("Hookified", () => {
 				throw new Error("after hook error");
 			};
 
-			hookified.onHook("after:task", handler);
+			hookified.onHook({ event: "after:task", handler });
 			await hookified.afterHook("task");
 			expect(errorMessage).toBe("after:task: after hook error");
 		});
@@ -674,9 +674,9 @@ describe("Hookified", () => {
 				executionOrder.push("after");
 			};
 
-			hookified.onHook("before:operation", beforeHandler);
-			hookified.onHook("operation", mainHandler);
-			hookified.onHook("after:operation", afterHandler);
+			hookified.onHook({ event: "before:operation", handler: beforeHandler });
+			hookified.onHook({ event: "operation", handler: mainHandler });
+			hookified.onHook({ event: "after:operation", handler: afterHandler });
 
 			await hookified.beforeHook("operation");
 			await hookified.hook("operation");
@@ -697,8 +697,8 @@ describe("Hookified", () => {
 				data.value = data.value * 2;
 			};
 
-			hookified.onHook("before:transform", beforeHandler);
-			hookified.onHook("after:transform", afterHandler);
+			hookified.onHook({ event: "before:transform", handler: beforeHandler });
+			hookified.onHook({ event: "after:transform", handler: afterHandler });
 
 			await hookified.beforeHook("transform", data);
 			expect(data.value).toBe(10);
@@ -729,40 +729,56 @@ describe("Hookified", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: false });
 			const handler = () => {};
 
-			expect(() => hookified.onHook("customEvent", handler)).not.toThrow();
-			expect(() => hookified.onHook("randomName", handler)).not.toThrow();
-			expect(() => hookified.onHook("test", handler)).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "customEvent", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "randomName", handler }),
+			).not.toThrow();
+			expect(() => hookified.onHook({ event: "test", handler })).not.toThrow();
 		});
 
 		test("should allow hooks starting with 'before' when enforceBeforeAfter is true", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			const handler = () => {};
 
-			expect(() => hookified.onHook("beforeTest", handler)).not.toThrow();
-			expect(() => hookified.onHook("before:test", handler)).not.toThrow();
-			expect(() => hookified.onHook("beforeSomething", handler)).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "beforeTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "before:test", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "beforeSomething", handler }),
+			).not.toThrow();
 		});
 
 		test("should allow hooks starting with 'after' when enforceBeforeAfter is true", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			const handler = () => {};
 
-			expect(() => hookified.onHook("afterTest", handler)).not.toThrow();
-			expect(() => hookified.onHook("after:test", handler)).not.toThrow();
-			expect(() => hookified.onHook("afterSomething", handler)).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "afterTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "after:test", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "afterSomething", handler }),
+			).not.toThrow();
 		});
 
 		test("should throw error for invalid hook names when enforceBeforeAfter is true", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			const handler = () => {};
 
-			expect(() => hookified.onHook("customEvent", handler)).toThrow(
+			expect(() => hookified.onHook({ event: "customEvent", handler })).toThrow(
 				'Hook event "customEvent" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
-			expect(() => hookified.onHook("test", handler)).toThrow(
+			expect(() => hookified.onHook({ event: "test", handler })).toThrow(
 				'Hook event "test" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
-			expect(() => hookified.onHook("randomName", handler)).toThrow(
+			expect(() => hookified.onHook({ event: "randomName", handler })).toThrow(
 				'Hook event "randomName" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
 		});
@@ -771,9 +787,15 @@ describe("Hookified", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			const handler = () => {};
 
-			expect(() => hookified.addHook("beforeTest", handler)).not.toThrow();
-			expect(() => hookified.addHook("afterTest", handler)).not.toThrow();
-			expect(() => hookified.addHook("invalidName", handler)).toThrow(
+			expect(() =>
+				hookified.addHook({ event: "beforeTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.addHook({ event: "afterTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.addHook({ event: "invalidName", handler }),
+			).toThrow(
 				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
 		});
@@ -856,19 +878,17 @@ describe("Hookified", () => {
 			);
 		});
 
-		test("should validate hook names in onHookEntry", () => {
+		test("should validate hook names in onHook with IHook", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			const handler = () => {};
 
 			expect(() =>
-				hookified.onHookEntry({ event: "beforeTest", handler }),
+				hookified.onHook({ event: "beforeTest", handler }),
 			).not.toThrow();
 			expect(() =>
-				hookified.onHookEntry({ event: "afterTest", handler }),
+				hookified.onHook({ event: "afterTest", handler }),
 			).not.toThrow();
-			expect(() =>
-				hookified.onHookEntry({ event: "invalidName", handler }),
-			).toThrow(
+			expect(() => hookified.onHook({ event: "invalidName", handler })).toThrow(
 				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
 		});
@@ -925,8 +945,8 @@ describe("Hookified", () => {
 				handlerData.push("after");
 			};
 
-			hookified.onHook("before:test", beforeHandler);
-			hookified.onHook("after:test", afterHandler);
+			hookified.onHook({ event: "before:test", handler: beforeHandler });
+			hookified.onHook({ event: "after:test", handler: afterHandler });
 
 			await hookified.beforeHook("test");
 			await hookified.afterHook("test");
@@ -939,19 +959,27 @@ describe("Hookified", () => {
 			const handler = () => {};
 
 			// Should work when false
-			expect(() => hookified.onHook("customEvent", handler)).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "customEvent", handler }),
+			).not.toThrow();
 
 			// Change to true
 			hookified.enforceBeforeAfter = true;
 
 			// Should now throw
-			expect(() => hookified.onHook("anotherCustomEvent", handler)).toThrow(
+			expect(() =>
+				hookified.onHook({ event: "anotherCustomEvent", handler }),
+			).toThrow(
 				'Hook event "anotherCustomEvent" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
 
 			// Should work with valid names
-			expect(() => hookified.onHook("beforeSomething", handler)).not.toThrow();
-			expect(() => hookified.onHook("afterSomething", handler)).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "beforeSomething", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "afterSomething", handler }),
+			).not.toThrow();
 		});
 	});
 
@@ -987,7 +1015,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 
 			expect(warnEvent).toEqual({
 				hook: "oldHook",
@@ -1005,7 +1033,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 
 			expect(warnEvent).toEqual({
 				hook: "oldHook",
@@ -1026,7 +1054,7 @@ describe("Hookified", () => {
 			const hookified = new Hookified({ deprecatedHooks, eventLogger: logger });
 			const handler = () => {};
 
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 
 			expect(logger.warn).toHaveBeenCalledWith(
 				'Hook "oldHook" is deprecated: Use newHook instead',
@@ -1052,7 +1080,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.addHook("oldHook", handler);
+			hookified.addHook({ event: "oldHook", handler });
 
 			expect(warnEvent).toEqual({
 				hook: "oldHook",
@@ -1183,7 +1211,7 @@ describe("Hookified", () => {
 			});
 		});
 
-		test("should check for deprecated hooks in onHookEntry", () => {
+		test("should check for deprecated hooks in onHook with IHook", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const hookified = new Hookified({ deprecatedHooks });
 			const handler = () => {};
@@ -1193,7 +1221,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.onHookEntry({ event: "oldHook", handler });
+			hookified.onHook({ event: "oldHook", handler });
 
 			expect(warnEvent).toEqual({
 				hook: "oldHook",
@@ -1255,7 +1283,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.onHook("validHook", handler);
+			hookified.onHook({ event: "validHook", handler });
 
 			expect(warnEvent).toBeUndefined();
 		});
@@ -1276,7 +1304,7 @@ describe("Hookified", () => {
 			});
 
 			// Should work - valid name and deprecated
-			hookified.onHook("beforeOldHook", handler);
+			hookified.onHook({ event: "beforeOldHook", handler });
 			expect(warnEvent).toEqual({
 				hook: "beforeOldHook",
 				message:
@@ -1284,7 +1312,7 @@ describe("Hookified", () => {
 			});
 
 			// Should throw - invalid name for enforceBeforeAfter
-			expect(() => hookified.onHook("invalidHook", handler)).toThrow(
+			expect(() => hookified.onHook({ event: "invalidHook", handler })).toThrow(
 				'Hook event "invalidHook" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
 		});
@@ -1299,13 +1327,13 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.onHook("someHook", handler);
+			hookified.onHook({ event: "someHook", handler });
 			expect(warnEvent).toBeUndefined();
 
 			// Add deprecation
 			hookified.deprecatedHooks.set("someHook", "This hook is now deprecated");
 
-			hookified.onHook("someHook", handler);
+			hookified.onHook({ event: "someHook", handler });
 			expect(warnEvent).toEqual({
 				hook: "someHook",
 				message: 'Hook "someHook" is deprecated: This hook is now deprecated',
@@ -1326,7 +1354,9 @@ describe("Hookified", () => {
 			const handler = () => {};
 
 			// Should not throw even without logger.warn
-			expect(() => hookified.onHook("oldHook", handler)).not.toThrow();
+			expect(() =>
+				hookified.onHook({ event: "oldHook", handler }),
+			).not.toThrow();
 		});
 	});
 
@@ -1355,7 +1385,7 @@ describe("Hookified", () => {
 			});
 			const handler = () => {};
 
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 
 			expect(hookified.getHooks("oldHook")).toEqual([handler]);
 		});
@@ -1373,7 +1403,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 
 			// Hook should not be registered
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
@@ -1392,7 +1422,7 @@ describe("Hookified", () => {
 			});
 			const handler = () => {};
 
-			hookified.addHook("oldHook", handler);
+			hookified.addHook({ event: "oldHook", handler });
 
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
@@ -1436,7 +1466,7 @@ describe("Hookified", () => {
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
 
-		test("should prevent deprecated hook registration in onHookEntry when allowDeprecated is false", () => {
+		test("should prevent deprecated hook registration in onHook with IHook when allowDeprecated is false", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const hookified = new Hookified({
 				deprecatedHooks,
@@ -1444,7 +1474,7 @@ describe("Hookified", () => {
 			});
 			const handler = () => {};
 
-			hookified.onHookEntry({ event: "oldHook", handler });
+			hookified.onHook({ event: "oldHook", handler });
 
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
@@ -1475,7 +1505,7 @@ describe("Hookified", () => {
 			const handler = vi.fn();
 
 			// First register the hook when allowed
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 			expect(hookified.getHooks("oldHook")).toEqual([handler]);
 
 			// Then set allowDeprecated to false
@@ -1495,7 +1525,7 @@ describe("Hookified", () => {
 			const handler = vi.fn();
 
 			// First register the hook when allowed
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 
 			// Then set allowDeprecated to false
 			hookified.allowDeprecated = false;
@@ -1524,7 +1554,7 @@ describe("Hookified", () => {
 			const handler = () => {};
 
 			// Register hook first
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 			expect(hookified.getHooks("oldHook")).toEqual([handler]);
 
 			// Set allowDeprecated to false
@@ -1545,7 +1575,7 @@ describe("Hookified", () => {
 			const handler = () => {};
 
 			// Register hook first
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 
 			// Set allowDeprecated to false
 			hookified.allowDeprecated = false;
@@ -1569,7 +1599,7 @@ describe("Hookified", () => {
 			});
 
 			// Try to register (should fail but emit warning)
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 			expect(warnEvent).toEqual({
 				hook: "oldHook",
 				message: 'Hook "oldHook" is deprecated: Use newHook instead',
@@ -1603,7 +1633,7 @@ describe("Hookified", () => {
 			});
 			const handler = () => {};
 
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 
 			expect(logger.warn).toHaveBeenCalledWith(
 				'Hook "oldHook" is deprecated: Use newHook instead',
@@ -1628,7 +1658,7 @@ describe("Hookified", () => {
 			});
 			const handler = () => {};
 
-			hookified.onHook("validHook", handler);
+			hookified.onHook({ event: "validHook", handler });
 
 			expect(hookified.getHooks("validHook")).toEqual([handler]);
 		});
@@ -1645,16 +1675,16 @@ describe("Hookified", () => {
 			const handler = () => {};
 
 			// Should not register (deprecated + not allowed)
-			hookified.onHook("beforeOldHook", handler);
+			hookified.onHook({ event: "beforeOldHook", handler });
 			expect(hookified.getHooks("beforeOldHook")).toBeUndefined();
 
 			// Should throw (doesn't start with before/after)
-			expect(() => hookified.onHook("invalidHook", handler)).toThrow(
+			expect(() => hookified.onHook({ event: "invalidHook", handler })).toThrow(
 				'Hook event "invalidHook" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
 
 			// Should work (valid name + not deprecated)
-			hookified.onHook("beforeValidHook", handler);
+			hookified.onHook({ event: "beforeValidHook", handler });
 			expect(hookified.getHooks("beforeValidHook")).toEqual([handler]);
 		});
 
@@ -1667,7 +1697,7 @@ describe("Hookified", () => {
 			const handler = vi.fn();
 
 			// Should work when true
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 			expect(hookified.getHooks("oldHook")).toEqual([handler]);
 
 			await hookified.hook("oldHook");
@@ -1694,7 +1724,7 @@ describe("Hookified", () => {
 				data.key = "modified";
 			};
 
-			hookified.onHook("event", handler);
+			hookified.onHook({ event: "event", handler });
 			hookified.hookSync("event", data);
 			expect(data.key).toBe("modified");
 		});
@@ -1711,9 +1741,9 @@ describe("Hookified", () => {
 				executionOrder.push("async");
 			};
 
-			hookified.onHook("event", syncHandler);
-			hookified.onHook("event", asyncHandler);
-			hookified.onHook("event", syncHandler);
+			hookified.onHook({ event: "event", handler: syncHandler });
+			hookified.onHook({ event: "event", handler: asyncHandler });
+			hookified.onHook({ event: "event", handler: syncHandler });
 
 			hookified.hookSync("event");
 
@@ -1725,14 +1755,23 @@ describe("Hookified", () => {
 			const hookified = new Hookified();
 			const executionOrder: number[] = [];
 
-			hookified.onHook("event", () => {
-				executionOrder.push(1);
+			hookified.onHook({
+				event: "event",
+				handler: () => {
+					executionOrder.push(1);
+				},
 			});
-			hookified.onHook("event", () => {
-				executionOrder.push(2);
+			hookified.onHook({
+				event: "event",
+				handler: () => {
+					executionOrder.push(2);
+				},
 			});
-			hookified.onHook("event", () => {
-				executionOrder.push(3);
+			hookified.onHook({
+				event: "event",
+				handler: () => {
+					executionOrder.push(3);
+				},
 			});
 
 			hookified.hookSync("event");
@@ -1752,7 +1791,7 @@ describe("Hookified", () => {
 				throw new Error("sync error");
 			};
 
-			hookified.onHook("event", handler);
+			hookified.onHook({ event: "event", handler });
 			hookified.hookSync("event");
 
 			expect(errorMessage).toBe("event: sync error");
@@ -1765,7 +1804,7 @@ describe("Hookified", () => {
 				throw new Error("sync error");
 			};
 
-			hookified.onHook("event", handler);
+			hookified.onHook({ event: "event", handler });
 
 			expect(() => hookified.hookSync("event")).toThrow("event: sync error");
 		});
@@ -1786,7 +1825,7 @@ describe("Hookified", () => {
 			});
 			const handler = vi.fn();
 
-			hookified.onHook("oldHook", handler);
+			hookified.onHook({ event: "oldHook", handler });
 			hookified.hookSync("oldHook");
 
 			expect(handler).not.toHaveBeenCalled();
@@ -1802,7 +1841,7 @@ describe("Hookified", () => {
 				capturedArgs = args;
 			};
 
-			hookified.onHook("event", handler);
+			hookified.onHook({ event: "event", handler });
 			hookified.hookSync("event", data1, data2);
 
 			expect(capturedArgs).toEqual([data1, data2]);
@@ -1820,23 +1859,35 @@ describe("Hookified", () => {
 			const results: string[] = [];
 
 			// Regular function - should execute
-			hookified.onHook("event", () => {
-				results.push("regular");
+			hookified.onHook({
+				event: "event",
+				handler: () => {
+					results.push("regular");
+				},
 			});
 
 			// Arrow function - should execute
-			hookified.onHook("event", () => {
-				results.push("arrow");
+			hookified.onHook({
+				event: "event",
+				handler: () => {
+					results.push("arrow");
+				},
 			});
 
 			// Async function - should skip
-			hookified.onHook("event", async () => {
-				results.push("async-regular");
+			hookified.onHook({
+				event: "event",
+				handler: async () => {
+					results.push("async-regular");
+				},
 			});
 
 			// Async arrow function - should skip
-			hookified.onHook("event", async () => {
-				results.push("async-arrow");
+			hookified.onHook({
+				event: "event",
+				handler: async () => {
+					results.push("async-arrow");
+				},
 			});
 
 			hookified.hookSync("event");
@@ -1857,7 +1908,7 @@ describe("Hookified", () => {
 				});
 			};
 
-			hookified.onHook("event", promiseReturningHandler);
+			hookified.onHook({ event: "event", handler: promiseReturningHandler });
 			hookified.hookSync("event");
 
 			// Only the sync part executes immediately

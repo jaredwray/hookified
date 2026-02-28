@@ -33,10 +33,9 @@
   - [.enforceBeforeAfter](#enforcebeforeafter)
   - [.deprecatedHooks](#deprecatedhooks)
   - [.allowDeprecated](#allowdeprecated)
-  - [.onHook(eventName, handler)](#onhookeventname-handler)
-  - [.onHookEntry(hookEntry)](#onhookentryhookentry)
+  - [.onHook(hook)](#onhookhook)
   - [Hook class](#hook-class)
-  - [.addHook(eventName, handler)](#addhookeventname-handler)
+  - [.addHook(hook)](#addhookhook)
   - [.onHooks(Array)](#onhooksarray)
   - [.onceHook(eventName, handler)](#oncehookeventname-handler)
   - [.prependHook(eventName, handler)](#prependhookeventname-handler)
@@ -196,9 +195,9 @@ const myClass = new MyClass();
 console.log(myClass.throwOnHookError); // true. because it is set in super
 
 try {
-  myClass.onHook('error-event', async () => {
+  myClass.onHook({ event: 'error-event', handler: async () => {
     throw new Error('error');
-  });
+  }});
 
   await myClass.hook('error-event');
 } catch (error) {
@@ -233,9 +232,9 @@ class MyClass extends Hookified {
 }
 
 const myClass = new MyClass();
-myClass.onHook('before:myMethod2', async () => {
+myClass.onHook({ event: 'before:myMethod2', handler: async () => {
   throw new Error('error');
-});
+}});
 
 // when you call before:myMethod2 it will log the error to the logger
 await myClass.hook('before:myMethod2');
@@ -259,36 +258,36 @@ const myClass = new MyClass();
 console.log(myClass.enforceBeforeAfter); // true
 
 // These will work fine
-myClass.onHook('beforeSave', async () => {
+myClass.onHook({ event: 'beforeSave', handler: async () => {
   console.log('Before save hook');
-});
+}});
 
-myClass.onHook('afterSave', async () => {
+myClass.onHook({ event: 'afterSave', handler: async () => {
   console.log('After save hook');
-});
+}});
 
-myClass.onHook('before:validation', async () => {
+myClass.onHook({ event: 'before:validation', handler: async () => {
   console.log('Before validation hook');
-});
+}});
 
 // This will throw an error
 try {
-  myClass.onHook('customEvent', async () => {
+  myClass.onHook({ event: 'customEvent', handler: async () => {
     console.log('This will not work');
-  });
+  }});
 } catch (error) {
   console.log(error.message); // Hook event "customEvent" must start with "before" or "after" when enforceBeforeAfter is enabled
 }
 
 // You can also change it dynamically
 myClass.enforceBeforeAfter = false;
-myClass.onHook('customEvent', async () => {
+myClass.onHook({ event: 'customEvent', handler: async () => {
   console.log('This will work now');
-});
+}});
 ```
 
 The validation applies to all hook-related methods:
-- `onHook()`, `addHook()`, `onHookEntry()`, `onHooks()`
+- `onHook()`, `addHook()`, `onHooks()`
 - `prependHook()`, `onceHook()`, `prependOnceHook()`
 - `hook()`, `callHook()`
 - `getHooks()`, `removeHook()`, `removeHooks()`
@@ -327,15 +326,15 @@ myClass.on('warn', (event) => {
 });
 
 // Using a deprecated hook will emit warnings
-myClass.onHook('oldHook', () => {
+myClass.onHook({ event: 'oldHook', handler: () => {
   console.log('This hook is deprecated');
-});
+}});
 // Output: Hook "oldHook" is deprecated: Use newHook instead
 
 // Using a deprecated hook with empty message
-myClass.onHook('deprecatedFeature', () => {
+myClass.onHook({ event: 'deprecatedFeature', handler: () => {
   console.log('This hook is deprecated');
-});
+}});
 // Output: Hook "deprecatedFeature" is deprecated
 
 // You can also set deprecated hooks dynamically
@@ -354,7 +353,7 @@ const myClassWithLogger = new Hookified({
 ```
 
 The deprecation warning system applies to all hook-related methods:
-- Registration: `onHook()`, `addHook()`, `onHookEntry()`, `onHooks()`, `prependHook()`, `onceHook()`, `prependOnceHook()`
+- Registration: `onHook()`, `addHook()`, `onHooks()`, `prependHook()`, `onceHook()`, `prependOnceHook()`
 - Execution: `hook()`, `callHook()`
 - Management: `getHooks()`, `removeHook()`, `removeHooks()`
 
@@ -389,9 +388,9 @@ myClass.on('warn', (event) => {
 });
 
 // Try to register a deprecated hook - will emit warning but not register
-myClass.onHook('oldHook', () => {
+myClass.onHook({ event: 'oldHook', handler: () => {
   console.log('This will never execute');
-});
+}});
 // Output: Warning: Hook "oldHook" is deprecated: Use newHook instead
 
 // Verify hook was not registered
@@ -403,9 +402,9 @@ await myClass.hook('oldHook');
 // (but no handlers execute)
 
 // Non-deprecated hooks work normally
-myClass.onHook('validHook', () => {
+myClass.onHook({ event: 'validHook', handler: () => {
   console.log('This works fine');
-});
+}});
 
 console.log(myClass.getHooks('validHook')); // [handler function]
 
@@ -413,9 +412,9 @@ console.log(myClass.getHooks('validHook')); // [handler function]
 myClass.allowDeprecated = true;
 
 // Now deprecated hooks can be registered and executed
-myClass.onHook('oldHook', () => {
+myClass.onHook({ event: 'oldHook', handler: () => {
   console.log('Now this works');
-});
+}});
 
 console.log(myClass.getHooks('oldHook')); // [handler function]
 ```
@@ -432,9 +431,9 @@ console.log(myClass.getHooks('oldHook')); // [handler function]
 - **Migration**: Gradually disable deprecated hooks during API transitions
 - **Production**: Disable deprecated hooks to prevent legacy code execution
 
-## .onHook(eventName, handler)
+## .onHook(hook)
 
-Subscribe to a hook event.
+Subscribe to a hook event. Takes an `IHook` object with `event` and `handler` properties.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -454,34 +453,7 @@ class MyClass extends Hookified {
 }
 
 const myClass = new MyClass();
-myClass.onHook('before:myMethod2', async (data) => {
-  data.some = 'new data';
-});
-```
-
-## .onHookEntry(hookEntry)
-
-This allows you to create a hook with the `IHook` interface which includes the event and handler. This is useful for creating hooks with a single object.
-
-```javascript
-import { Hookified, IHook } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks() Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
-myClass.onHookEntry({
+myClass.onHook({
   event: 'before:myMethod2',
   handler: async (data) => {
     data.some = 'new data';
@@ -504,8 +476,8 @@ const hook = new Hook('before:save', async (data) => {
   data.validated = true;
 });
 
-// Register with onHookEntry
-hookified.onHookEntry(hook);
+// Register with onHook
+hookified.onHook(hook);
 
 // Or register multiple hooks with onHooks
 const hooks = [
@@ -532,12 +504,12 @@ const hook: IHook = {
   },
 };
 
-hookified.onHookEntry(hook);
+hookified.onHook(hook);
 ```
 
-## .addHook(eventName, handler)
+## .addHook(hook)
 
-This is an alias for `.onHook(eventName, handler)` for backwards compatibility.
+This is an alias for `.onHook(hook)` for backwards compatibility.
 
 ## .onHooks(Array)
 
@@ -635,9 +607,9 @@ class MyClass extends Hookified {
 }
 
 const myClass = new MyClass();
-myClass.onHook('before:myMethod2', async (data) => {
+myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
-});
+}});
 myClass.preHook('before:myMethod2', async (data) => {
   data.some = 'will run before new data';
 });
@@ -665,9 +637,9 @@ class MyClass extends Hookified {
 }
 
 const myClass = new MyClass();
-myClass.onHook('before:myMethod2', async (data) => {
+myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
-});
+}});
 myClass.preHook('before:myMethod2', async (data) => {
   data.some = 'will run before new data';
 });
@@ -699,7 +671,7 @@ const handler = async (data) => {
   data.some = 'new data';
 };
 
-myClass.onHook('before:myMethod2', handler);
+myClass.onHook({ event: 'before:myMethod2', handler });
 
 myClass.removeHook('before:myMethod2', handler);
 ```
@@ -793,10 +765,10 @@ class MyClass extends Hookified {
 
 const myClass = new MyClass();
 
-myClass.onHook('before:myMethod2', async (data, data2) => {
+myClass.onHook({ event: 'before:myMethod2', handler: async (data, data2) => {
   data.some = 'new data';
   data2.some = 'new data2';
-});
+}});
 
 await myClass.myMethodWithHooks();
 ```
@@ -875,14 +847,14 @@ class MyClass extends Hookified {
 const myClass = new MyClass();
 
 // This sync handler will execute
-myClass.onHook('before:myMethod', (data) => {
+myClass.onHook({ event: 'before:myMethod', handler: (data) => {
   data.some = 'modified';
-});
+}});
 
 // This async handler will be silently skipped
-myClass.onHook('before:myMethod', async (data) => {
+myClass.onHook({ event: 'before:myMethod', handler: async (data) => {
   data.some = 'will not run';
-});
+}});
 
 myClass.myMethodWithSyncHooks(); // Only sync handler runs
 ```
@@ -909,9 +881,9 @@ class MyClass extends Hookified {
 }
 
 const myClass = new MyClass();
-myClass.onHook('before:myMethod2', async (data) => {
+myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
-});
+}});
 
 console.log(myClass.hooks);
 ```
@@ -938,9 +910,9 @@ class MyClass extends Hookified {
 }
 
 const myClass = new MyClass();
-myClass.onHook('before:myMethod2', async (data) => {
+myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
-});
+}});
 
 console.log(myClass.getHooks('before:myMethod2'));
 ```
@@ -968,9 +940,9 @@ class MyClass extends Hookified {
 
 const myClass = new MyClass();
 
-myClass.onHook('before:myMethod2', async (data) => {
+myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
-});
+}});
 
 myClass.clearHooks('before:myMethod2');
 ```
@@ -1496,6 +1468,61 @@ const hook: HookEntry = { event: 'before:save', handler: async () => {} };
 import type { IHook } from 'hookified';
 
 const hook: IHook = { event: 'before:save', handler: async () => {} };
+```
+
+### `onHookEntry` removed — use `onHook` instead
+
+The `onHookEntry` method has been removed. Use `onHook` which now accepts an `IHook` object directly.
+
+**Before (v1):**
+
+```typescript
+hookified.onHookEntry({ event: 'before:save', handler: async (data) => {} });
+```
+
+**After (v2):**
+
+```typescript
+hookified.onHook({ event: 'before:save', handler: async (data) => {} });
+```
+
+### `onHook` and `addHook` signature changed
+
+`onHook` and `addHook` no longer accept positional `(event, handler)` arguments. They now require an `IHook` object (or `Hook` class instance).
+
+**Before (v1):**
+
+```typescript
+hookified.onHook('before:save', async (data) => {});
+hookified.addHook('before:save', async (data) => {});
+```
+
+**After (v2):**
+
+```typescript
+hookified.onHook({ event: 'before:save', handler: async (data) => {} });
+hookified.addHook({ event: 'before:save', handler: async (data) => {} });
+
+// Or using the Hook class:
+import { Hook } from 'hookified';
+const hook = new Hook('before:save', async (data) => {});
+hookified.onHook(hook);
+```
+
+### `HookEntry` type removed
+
+The deprecated `HookEntry` type alias has been removed. Use the `IHook` interface instead.
+
+**Before (v1):**
+
+```typescript
+import type { HookEntry } from 'hookified';
+```
+
+**After (v2):**
+
+```typescript
+import type { IHook } from 'hookified';
 ```
 
 ### `Hook` type renamed to `HookFn`

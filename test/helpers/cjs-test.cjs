@@ -32,8 +32,11 @@ async function runTests() {
 
 	// Test 4: Test basic Hookified functionality
 	let hookCalled = false;
-	hookified.onHook("test", () => {
-		hookCalled = true;
+	hookified.onHook({
+		event: "test",
+		handler: () => {
+			hookCalled = true;
+		},
 	});
 	await hookified.hook("test");
 	assert(hookCalled === true, "Hook should be called");

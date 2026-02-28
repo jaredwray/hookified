@@ -37,8 +37,11 @@ describe("Export Verification Tests", () => {
 
 			// Test basic hook functionality
 			let called = false;
-			hookified.onHook("test", () => {
-				called = true;
+			hookified.onHook({
+				event: "test",
+				handler: () => {
+					called = true;
+				},
 			});
 
 			await hookified.hook("test");
@@ -80,8 +83,11 @@ describe("Export Verification Tests", () => {
 
 			// Test basic functionality
 			let called = false;
-			hookified.onHook("test", () => {
-				called = true;
+			hookified.onHook({
+				event: "test",
+				handler: () => {
+					called = true;
+				},
 			});
 
 			await hookified.hook("test");
