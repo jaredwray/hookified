@@ -35,8 +35,8 @@
   - [.enforceBeforeAfter](#enforcebeforeafter)
   - [.deprecatedHooks](#deprecatedhooks)
   - [.allowDeprecated](#allowdeprecated)
-  - [.onHook(hook)](#onhookhook)
-  - [.addHook(hook)](#addhookhook)
+  - [.onHook(hook) / .onHook(event, handler)](#onhookhook--onhookevent-handler)
+  - [.addHook(hook) / .addHook(event, handler)](#addhookhook--addhookevent-handler)
   - [.onHooks(Array)](#onhooksarray)
   - [.onceHook(eventName, handler)](#oncehookeventname-handler)
   - [.prependHook(eventName, handler)](#prependhookeventname-handler)
@@ -480,9 +480,9 @@ console.log(myClass.getHooks('oldHook')); // [handler function]
 - **Migration**: Gradually disable deprecated hooks during API transitions
 - **Production**: Disable deprecated hooks to prevent legacy code execution
 
-## .onHook(hook)
+## .onHook(hook) / .onHook(event, handler)
 
-Subscribe to a hook event. Takes an `IHook` object with `event` and `handler` properties.
+Subscribe to a hook event. Accepts either an `IHook` object or positional `(event, handler)` arguments.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -502,17 +502,24 @@ class MyClass extends Hookified {
 }
 
 const myClass = new MyClass();
+
+// Using an IHook object
 myClass.onHook({
   event: 'before:myMethod2',
   handler: async (data) => {
     data.some = 'new data';
   },
 });
+
+// Using positional arguments
+myClass.onHook('before:myMethod2', async (data) => {
+  data.some = 'new data';
+});
 ```
 
-## .addHook(hook)
+## .addHook(hook) / .addHook(event, handler)
 
-This is an alias for `.onHook(hook)` for backwards compatibility.
+This is an alias for `.onHook()`. Accepts either an `IHook` object or positional `(event, handler)` arguments.
 
 ## .onHooks(Array)
 
@@ -1487,29 +1494,6 @@ hookified.onHookEntry({ event: 'before:save', handler: async (data) => {} });
 
 ```typescript
 hookified.onHook({ event: 'before:save', handler: async (data) => {} });
-```
-
-### `onHook` and `addHook` signature changed
-
-`onHook` and `addHook` no longer accept positional `(event, handler)` arguments. They now require an `IHook` object (or `Hook` class instance).
-
-**Before (v1):**
-
-```typescript
-hookified.onHook('before:save', async (data) => {});
-hookified.addHook('before:save', async (data) => {});
-```
-
-**After (v2):**
-
-```typescript
-hookified.onHook({ event: 'before:save', handler: async (data) => {} });
-hookified.addHook({ event: 'before:save', handler: async (data) => {} });
-
-// Or using the Hook class:
-import { Hook } from 'hookified';
-const hook = new Hook('before:save', async (data) => {});
-hookified.onHook(hook);
 ```
 
 ### `HookEntry` type removed

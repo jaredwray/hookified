@@ -23,6 +23,13 @@ describe("Hookified", () => {
 		expect(hookified.hooks.size).toBe(2);
 	});
 
+	test("onHook with positional args (event, handler)", async () => {
+		const hookified = new Hookified();
+		const handler = () => {};
+		hookified.onHook("event", handler);
+		expect(hookified.getHooks("event")).toEqual([handler]);
+	});
+
 	test("addHook", async () => {
 		const hookified = new Hookified();
 
@@ -34,6 +41,13 @@ describe("Hookified", () => {
 		expect(hookified.getHooks("event")).toEqual([handler]);
 		expect(hookified.getHooks("event2")).toEqual([handler2]);
 		expect(hookified.hooks.size).toBe(2);
+	});
+
+	test("addHook with positional args (event, handler)", async () => {
+		const hookified = new Hookified();
+		const handler = () => {};
+		hookified.addHook("event", handler);
+		expect(hookified.getHooks("event")).toEqual([handler]);
 	});
 
 	test("onHooks", async () => {

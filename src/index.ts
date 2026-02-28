@@ -164,29 +164,38 @@ export class Hookified extends Eventified {
 
 	/**
 	 * Adds a handler function for a specific event
-	 * @param {IHook} hook - the hook containing event name and handler
+	 * @param {string | IHook} eventOrHook - event name or IHook object
+	 * @param {HookFn} [handler] - handler function (required when first arg is a string)
 	 * @returns {void}
 	 */
-	public onHook(hook: IHook) {
-		this.validateHookName(hook.event);
-		if (!this.checkDeprecatedHook(hook.event)) {
+	public onHook(eventOrHook: string | IHook, handler?: HookFn) {
+		const event =
+			typeof eventOrHook === "string" ? eventOrHook : eventOrHook.event;
+		const fn =
+			typeof eventOrHook === "string"
+				? (handler as HookFn)
+				: eventOrHook.handler;
+		this.validateHookName(event);
+		if (!this.checkDeprecatedHook(event)) {
 			return; // Skip registration if deprecated hooks are not allowed
 		}
-		const eventHandlers = this._hooks.get(hook.event);
+
+		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
-			eventHandlers.push(hook.handler);
+			eventHandlers.push(fn);
 		} else {
-			this._hooks.set(hook.event, [hook.handler]);
+			this._hooks.set(event, [fn]);
 		}
 	}
 
 	/**
 	 * Alias for onHook. This is provided for compatibility with other libraries that use the `addHook` method.
-	 * @param {IHook} hook - the hook containing event name and handler
+	 * @param {string | IHook} eventOrHook - event name or IHook object
+	 * @param {HookFn} [handler] - handler function (required when first arg is a string)
 	 * @returns {void}
 	 */
-	public addHook(hook: IHook) {
-		this.onHook(hook);
+	public addHook(eventOrHook: string | IHook, handler?: HookFn) {
+		this.onHook(eventOrHook as string | IHook, handler);
 	}
 
 	/**
