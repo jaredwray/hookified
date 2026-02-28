@@ -1548,14 +1548,19 @@ describe("Hookified", () => {
 			expect(handler).not.toHaveBeenCalled();
 		});
 
-		test("should return undefined from getHooks for deprecated hooks when allowDeprecated is false", () => {
+		test("should return hooks from getHooks for deprecated hooks even when allowDeprecated is false", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const hookified = new Hookified({
 				deprecatedHooks,
-				allowDeprecated: false,
+				allowDeprecated: true,
 			});
+			const handler = () => {};
+			hookified.onHook({ event: "oldHook", handler });
 
-			expect(hookified.getHooks("oldHook")).toBeUndefined();
+			hookified.allowDeprecated = false;
+
+			// getHooks should still return hooks regardless of deprecation
+			expect(hookified.getHooks("oldHook")).toEqual([handler]);
 		});
 
 		test("should allow removeHook for deprecated hooks when allowDeprecated is false", () => {
