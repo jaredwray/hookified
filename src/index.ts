@@ -292,7 +292,7 @@ export class Hookified extends Eventified {
 		}
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
-			for (const hook of eventHandlers) {
+			for (const hook of [...eventHandlers]) {
 				try {
 					await hook.handler(...arguments_);
 				} catch (error) {
@@ -325,7 +325,7 @@ export class Hookified extends Eventified {
 
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
-			for (const hook of eventHandlers) {
+			for (const hook of [...eventHandlers]) {
 				// Skip async functions silently
 				if (hook.handler.constructor.name === "AsyncFunction") {
 					continue;
