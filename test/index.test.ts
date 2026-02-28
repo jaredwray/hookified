@@ -80,7 +80,7 @@ describe("Hookified", () => {
 		hookified.onceHook("event", handler);
 		expect(hookified.getHooks("event")?.length).toEqual(1);
 		await hookified.hook("event");
-		expect(hookified.getHooks("event")?.length).toEqual(0);
+		expect(hookified.getHooks("event")).toBeUndefined();
 	});
 
 	test("onHook with Clear", async () => {
@@ -117,9 +117,17 @@ describe("Hookified", () => {
 		const handler2 = () => {};
 		hookified.onHook({ event: "event", handler });
 		hookified.onHook({ event: "event", handler: handler2 });
-		hookified.removeHook("event", handler);
+		const removed = hookified.removeHook("event", handler);
+		expect(removed).toEqual({ event: "event", handler });
 		expect(hookified.getHooks("event")).toEqual([handler2]);
 		expect(hookified.hooks.size).toBe(1);
+	});
+
+	test("removeHook returns undefined when handler not found", () => {
+		const hookified = new Hookified();
+		const handler = () => {};
+		const result = hookified.removeHook("event", handler);
+		expect(result).toBeUndefined();
 	});
 
 	test("removeHooks", async () => {
@@ -132,9 +140,17 @@ describe("Hookified", () => {
 		hookified.onHook({ event: eventName, handler: handler1 });
 		hookified.onHook({ event: eventName, handler: handler2 });
 		const hooks = [{ event: eventName, handler: handler2 }];
-		hookified.removeHooks(hooks);
+		const removed = hookified.removeHooks(hooks);
+		expect(removed).toEqual([{ event: eventName, handler: handler2 }]);
 		expect(hookified.getHooks(eventName)).toEqual([handler1]);
 		expect(hookified.hooks.size).toBe(1);
+	});
+
+	test("removeHooks returns empty array when no hooks found", () => {
+		const hookified = new Hookified();
+		const handler = () => {};
+		const removed = hookified.removeHooks([{ event: "nope", handler }]);
+		expect(removed).toEqual([]);
 	});
 
 	test("execute hook and manipulate data", async () => {
@@ -285,7 +301,7 @@ describe("Hookified", () => {
 
 		hookified.prependOnceHook("event20", handler);
 		await hookified.hook("event20");
-		expect(hookified.hooks.get("event20")?.length).toBe(0);
+		expect(hookified.hooks.get("event20")).toBeUndefined();
 	});
 
 	test("should set throwErrorOnHook to true", async () => {
@@ -1183,39 +1199,35 @@ describe("Hookified", () => {
 			});
 		});
 
-		test("should check for deprecated hooks in getHooks", () => {
+		test("should not check for deprecated hooks in getHooks", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
-			const hookified = new Hookified({ deprecatedHooks });
-
-			let warnEvent;
-			hookified.on("warn", (event) => {
-				warnEvent = event;
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: true,
 			});
+			const handler = () => {};
+			hookified.onHook({ event: "oldHook", handler });
 
-			hookified.getHooks("oldHook");
+			hookified.allowDeprecated = false;
 
-			expect(warnEvent).toEqual({
-				hook: "oldHook",
-				message: 'Hook "oldHook" is deprecated: Use newHook instead',
-			});
+			// getHooks should still return hooks regardless of deprecation
+			expect(hookified.getHooks("oldHook")).toEqual([handler]);
 		});
 
-		test("should check for deprecated hooks in removeHook", () => {
+		test("should not check for deprecated hooks in removeHook", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
-			const hookified = new Hookified({ deprecatedHooks });
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: true,
+			});
 			const handler = () => {};
+			hookified.onHook({ event: "oldHook", handler });
 
-			let warnEvent;
-			hookified.on("warn", (event) => {
-				warnEvent = event;
-			});
+			hookified.allowDeprecated = false;
 
-			hookified.removeHook("oldHook", handler);
-
-			expect(warnEvent).toEqual({
-				hook: "oldHook",
-				message: 'Hook "oldHook" is deprecated: Use newHook instead',
-			});
+			// removeHook should still work regardless of deprecation
+			const removed = hookified.removeHook("oldHook", handler);
+			expect(removed).toEqual({ event: "oldHook", handler });
 		});
 
 		test("should check for deprecated hooks in onHook with IHook", () => {
@@ -1258,26 +1270,20 @@ describe("Hookified", () => {
 			});
 		});
 
-		test("should check for deprecated hooks in removeHooks", () => {
+		test("should not check for deprecated hooks in removeHooks", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
-			const hookified = new Hookified({ deprecatedHooks });
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: true,
+			});
 			const handler = () => {};
+			hookified.onHook({ event: "oldHook", handler });
 
-			const warnEvents: any[] = [];
-			hookified.on("warn", (event) => {
-				warnEvents.push(event);
-			});
+			hookified.allowDeprecated = false;
 
-			hookified.removeHooks([
-				{ event: "validHook", handler },
-				{ event: "oldHook", handler },
-			]);
-
-			expect(warnEvents).toHaveLength(1);
-			expect(warnEvents[0]).toEqual({
-				hook: "oldHook",
-				message: 'Hook "oldHook" is deprecated: Use newHook instead',
-			});
+			// removeHooks should still work regardless of deprecation
+			const removed = hookified.removeHooks([{ event: "oldHook", handler }]);
+			expect(removed).toEqual([{ event: "oldHook", handler }]);
 		});
 
 		test("should not emit deprecation warning for non-deprecated hooks", () => {
@@ -1542,17 +1548,22 @@ describe("Hookified", () => {
 			expect(handler).not.toHaveBeenCalled();
 		});
 
-		test("should return undefined from getHooks for deprecated hooks when allowDeprecated is false", () => {
+		test("should return hooks from getHooks for deprecated hooks even when allowDeprecated is false", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const hookified = new Hookified({
 				deprecatedHooks,
-				allowDeprecated: false,
+				allowDeprecated: true,
 			});
+			const handler = () => {};
+			hookified.onHook({ event: "oldHook", handler });
 
-			expect(hookified.getHooks("oldHook")).toBeUndefined();
+			hookified.allowDeprecated = false;
+
+			// getHooks should still return hooks regardless of deprecation
+			expect(hookified.getHooks("oldHook")).toEqual([handler]);
 		});
 
-		test("should prevent removeHook for deprecated hooks when allowDeprecated is false", () => {
+		test("should allow removeHook for deprecated hooks when allowDeprecated is false", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const hookified = new Hookified({
 				deprecatedHooks,
@@ -1567,13 +1578,13 @@ describe("Hookified", () => {
 			// Set allowDeprecated to false
 			hookified.allowDeprecated = false;
 
-			// Should not be able to remove the hook
-			hookified.removeHook("oldHook", handler);
-			// Since getHooks also respects allowDeprecated, it returns undefined
+			// Should still be able to remove the hook
+			const removed = hookified.removeHook("oldHook", handler);
+			expect(removed).toEqual({ event: "oldHook", handler });
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
 
-		test("should prevent removeHooks for deprecated hooks when allowDeprecated is false", () => {
+		test("should allow removeHooks for deprecated hooks when allowDeprecated is false", () => {
 			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
 			const hookified = new Hookified({
 				deprecatedHooks,
@@ -1587,8 +1598,9 @@ describe("Hookified", () => {
 			// Set allowDeprecated to false
 			hookified.allowDeprecated = false;
 
-			// Should not be able to remove the hook
-			hookified.removeHooks([{ event: "oldHook", handler }]);
+			// Should still be able to remove the hook
+			const removed = hookified.removeHooks([{ event: "oldHook", handler }]);
+			expect(removed).toEqual([{ event: "oldHook", handler }]);
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
 
@@ -1717,8 +1729,8 @@ describe("Hookified", () => {
 			await hookified.hook("oldHook");
 			expect(handler).toHaveBeenCalledTimes(1); // Still 1, not called again
 
-			// Should not return hooks
-			expect(hookified.getHooks("oldHook")).toBeUndefined();
+			// getHooks should still return hooks regardless of deprecation
+			expect(hookified.getHooks("oldHook")).toEqual([handler]);
 		});
 	});
 
