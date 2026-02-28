@@ -27,6 +27,8 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [Using it in the Browser](#using-it-in-the-browser)
+- [Hooks](#hooks)
+  - [Hook class](#hook-class)
 - [API - Hooks](#api---hooks)
   - [.throwOnHookError](#throwhookerror)
   - [.eventLogger](#eventlogger)
@@ -34,7 +36,6 @@
   - [.deprecatedHooks](#deprecatedhooks)
   - [.allowDeprecated](#allowdeprecated)
   - [.onHook(hook)](#onhookhook)
-  - [Hook class](#hook-class)
   - [.addHook(hook)](#addhookhook)
   - [.onHooks(Array)](#onhooksarray)
   - [.onceHook(eventName, handler)](#oncehookeventname-handler)
@@ -173,6 +174,54 @@ if you are not using ESM modules, you can use the following:
     }
   }
 </script>
+```
+
+# Hooks
+
+## Hook class
+
+The `Hook` class provides a convenient way to create hook entries. It implements the `IHook` interface.
+
+**Using the `Hook` class:**
+
+```javascript
+import { Hook, Hookified } from 'hookified';
+
+const hookified = new Hookified();
+
+const hook = new Hook('before:save', async (data) => {
+  data.validated = true;
+});
+
+// Register with onHook
+hookified.onHook(hook);
+
+// Or register multiple hooks with onHooks
+const hooks = [
+  new Hook('before:save', async (data) => { data.validated = true; }),
+  new Hook('after:save', async (data) => { console.log('saved'); }),
+];
+hookified.onHooks(hooks);
+
+// Remove hooks
+hookified.removeHooks(hooks);
+```
+
+**Using plain TypeScript with the `IHook` interface:**
+
+```typescript
+import { Hookified, type IHook } from 'hookified';
+
+const hookified = new Hookified();
+
+const hook: IHook = {
+  event: 'before:save',
+  handler: async (data) => {
+    data.validated = true;
+  },
+};
+
+hookified.onHook(hook);
 ```
 
 # API - Hooks
@@ -459,52 +508,6 @@ myClass.onHook({
     data.some = 'new data';
   },
 });
-```
-
-## Hook class
-
-The `Hook` class provides a convenient way to create hook entries. It implements the `IHook` interface.
-
-**Using the `Hook` class:**
-
-```javascript
-import { Hook, Hookified } from 'hookified';
-
-const hookified = new Hookified();
-
-const hook = new Hook('before:save', async (data) => {
-  data.validated = true;
-});
-
-// Register with onHook
-hookified.onHook(hook);
-
-// Or register multiple hooks with onHooks
-const hooks = [
-  new Hook('before:save', async (data) => { data.validated = true; }),
-  new Hook('after:save', async (data) => { console.log('saved'); }),
-];
-hookified.onHooks(hooks);
-
-// Remove hooks
-hookified.removeHooks(hooks);
-```
-
-**Using plain TypeScript with the `IHook` interface:**
-
-```typescript
-import { Hookified, type IHook } from 'hookified';
-
-const hookified = new Hookified();
-
-const hook: IHook = {
-  event: 'before:save',
-  handler: async (data) => {
-    data.validated = true;
-  },
-};
-
-hookified.onHook(hook);
 ```
 
 ## .addHook(hook)
