@@ -1795,7 +1795,10 @@ describe("Hookified", () => {
 		});
 
 		test("should throw error when throwOnHookError is true", () => {
-			const hookified = new Hookified({ throwOnHookError: true });
+			const hookified = new Hookified({
+				throwOnHookError: true,
+				throwOnEmptyListeners: false,
+			});
 
 			const handler = () => {
 				throw new Error("sync error");
