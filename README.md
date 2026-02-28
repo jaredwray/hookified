@@ -37,9 +37,9 @@
   - [.deprecatedHooks](#deprecatedhooks)
   - [.allowDeprecated](#allowdeprecated)
   - [.useHookClone](#usehookclone)
-  - [.onHook(hook)](#onhookhook)
+  - [.onHook(hook, options?)](#onhookhook-options)
   - [.addHook(event, handler)](#addhookevent-handler)
-  - [.onHooks(Array)](#onhooksarray)
+  - [.onHooks(Array, options?)](#onhooksarray-options)
   - [.onceHook(hook)](#oncehookhook)
   - [.prependHook(hook)](#prependhookhook)
   - [.prependOnceHook(hook)](#prependoncehookhook)
@@ -509,9 +509,13 @@ console.log(storedHooks[0] === hook); // true
 myClass.useHookClone = true;
 ```
 
-## .onHook(hook)
+## .onHook(hook, options?)
 
-Subscribe to a hook event. Takes an `IHook` object or an array of `IHook` objects. Returns the stored `IHook` (or `IHook[]` for arrays), or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` — especially when `useHookClone` is `true`.
+Subscribe to a hook event. Takes an `IHook` object and an optional `OnHookOptions` object. Returns the stored `IHook`, or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` — especially when `useHookClone` is `true`. To register multiple hooks at once, use `.onHooks()`.
+
+**Options (`OnHookOptions`)**:
+- `useHookClone` (boolean, optional) — Per-call override for the instance-level `useHookClone` setting. When `true`, the hook object is cloned before storing. When `false`, the original reference is stored directly. When omitted, falls back to the instance-level setting.
+- `position` (`"Top"` | `"Bottom"` | `number`, optional) — Controls where the hook is inserted in the handlers array. `"Top"` inserts at the beginning, `"Bottom"` appends to the end (default). A number inserts at that index, clamped to the array bounds.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -543,11 +547,16 @@ const stored = myClass.onHook({
 // Use the returned reference to remove the hook later
 myClass.removeHook(stored);
 
-// Array of hooks — returns IHook[] of those registered
-const storedHooks = myClass.onHook([
-  { event: 'before:myMethod2', handler: async (data) => { data.validated = true; } },
-  { event: 'after:myMethod2', handler: async (data) => { console.log('done'); } },
-]);
+// Override useHookClone per-call — store original reference even though instance default is true
+const hook = { event: 'before:save', handler: async (data) => {} };
+myClass.onHook(hook, { useHookClone: false });
+console.log(myClass.getHooks('before:save')[0] === hook); // true
+
+// Insert at the top of the handlers array
+myClass.onHook({ event: 'before:save', handler: async (data) => {} }, { position: 'Top' });
+
+// Insert at a specific index
+myClass.onHook({ event: 'before:save', handler: async (data) => {} }, { position: 1 });
 ```
 
 ## .addHook(event, handler)
@@ -560,9 +569,9 @@ myClass.addHook('before:myMethod2', async (data) => {
 });
 ```
 
-## .onHooks(Array)
+## .onHooks(Array, options?)
 
-Subscribe to multiple hook events at once
+Subscribe to multiple hook events at once. Takes an array of `IHook` objects and an optional `OnHookOptions` object that is applied to each hook.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -575,7 +584,7 @@ class MyClass extends Hookified {
   async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     await this.hook('before:myMethodWithHooks', data);
-    
+
     // do something here with the data
     data.some = 'new data';
 
@@ -601,6 +610,12 @@ const hooks = [
   },
 ];
 myClass.onHooks(hooks);
+
+// With options — insert all hooks at the top
+myClass.onHooks(hooks, { position: 'Top' });
+
+// With options — skip cloning for all hooks in this batch
+myClass.onHooks(hooks, { useHookClone: false });
 ```
 
 ## .onceHook(hook)
@@ -1601,7 +1616,7 @@ hookified.onHook({ event: 'before:save', handler: async (data) => {} });
 
 ### `onHook` signature changed
 
-`onHook` no longer accepts positional `(event, handler)` arguments. It now takes an `IHook` object, a `Hook` class instance, or an array of `IHook`. Use `addHook(event, handler)` if you prefer positional arguments.
+`onHook` no longer accepts positional `(event, handler)` arguments. It now takes a single `IHook` object or `Hook` class instance. Use `addHook(event, handler)` if you prefer positional arguments. Use `onHooks()` for bulk registration.
 
 **Before (v1):**
 
@@ -1615,29 +1630,13 @@ hookified.onHook('before:save', async (data) => {});
 // Using IHook object
 hookified.onHook({ event: 'before:save', handler: async (data) => {} });
 
-// Using an array of IHook
-hookified.onHook([
+// For multiple hooks, use onHooks
+hookified.onHooks([
   { event: 'before:save', handler: async (data) => {} },
   { event: 'after:save', handler: async (data) => {} },
 ]);
 
 // Or use addHook for positional args
-hookified.addHook('before:save', async (data) => {});
-```
-
-### `addHook` signature changed
-
-`addHook` now takes positional `(event, handler)` arguments instead of an `IHook` object.
-
-**Before (v1):**
-
-```typescript
-hookified.addHook({ event: 'before:save', handler: async (data) => {} });
-```
-
-**After (v2):**
-
-```typescript
 hookified.addHook('before:save', async (data) => {});
 ```
 
@@ -1728,7 +1727,7 @@ hookified.removeHook({ event: 'before:save', handler });
 
 ### `onHook` now returns the stored hook
 
-`onHook` now returns the stored `IHook` object (or `IHook[]` for arrays, or `undefined` if blocked by deprecation). Previously it returned `void`. The returned reference is the exact object stored internally, making it easy to later remove with `removeHook()`.
+`onHook` now returns the stored `IHook` object (or `undefined` if blocked by deprecation). Previously it returned `void`. The returned reference is the exact object stored internally, making it easy to later remove with `removeHook()`.
 
 **Before (v1):**
 
@@ -1759,23 +1758,49 @@ const hook = new Hook('before:save', async (data) => {
 hookified.onHook(hook);
 ```
 
-### `onHook` accepts arrays
-
-You can now pass an array of `IHook` objects to `onHook` to register multiple hooks at once.
-
-```typescript
-hookified.onHook([
-  { event: 'before:save', handler: async (data) => { data.validated = true; } },
-  { event: 'after:save', handler: async () => { console.log('saved'); } },
-]);
-```
-
 ### `useHookClone` option
 
 A new `useHookClone` option (default `true`) controls whether hook objects are shallow-cloned before storing. When enabled, external mutation of a registered hook object won't affect the internal state. Set to `false` to store the original reference for performance or when you need reference equality.
 
 ```typescript
 const hookified = new Hookified({ useHookClone: false });
+```
+
+### `onHook` now accepts `OnHookOptions`
+
+`onHook` now accepts an optional second parameter of type `OnHookOptions`. This allows you to override the instance-level `useHookClone` setting and control hook positioning on a per-call basis.
+
+```typescript
+// Override useHookClone for this specific call
+hookified.onHook({ event: 'before:save', handler }, { useHookClone: false });
+
+// Insert at the top of the handlers array instead of the end
+hookified.onHook({ event: 'before:save', handler }, { position: 'Top' });
+
+// Insert at a specific index
+hookified.onHook({ event: 'before:save', handler }, { position: 1 });
+```
+
+### `onHook` no longer accepts arrays
+
+`onHook` now only accepts a single `IHook` object. To register multiple hooks at once, use `onHooks` instead.
+
+**Before:**
+
+```typescript
+hookified.onHook([
+  { event: 'before:save', handler: async (data) => {} },
+  { event: 'after:save', handler: async (data) => {} },
+]);
+```
+
+**After:**
+
+```typescript
+hookified.onHooks([
+  { event: 'before:save', handler: async (data) => {} },
+  { event: 'after:save', handler: async (data) => {} },
+]);
 ```
 
 # How to Contribute

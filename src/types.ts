@@ -221,6 +221,24 @@ export interface IHook {
 	handler: HookFn;
 }
 
+export type OnHookOptions = {
+	/**
+	 * Per-call override for useHookClone.
+	 * When true, hook objects are cloned before storing.
+	 * When false, the original IHook reference is stored directly.
+	 * When undefined, falls back to the instance-level useHookClone setting.
+	 * @type {boolean}
+	 */
+	useHookClone?: boolean;
+	/**
+	 * Controls where the hook is inserted in the handlers array.
+	 * - "Top": Insert at the beginning (index 0), before all existing handlers.
+	 * - "Bottom": Append to the end, after all existing handlers. This is the default.
+	 * - number: Insert at a specific index. Values are clamped to the array bounds.
+	 */
+	position?: "Top" | "Bottom" | number;
+};
+
 export type HookifiedOptions = {
 	/**
 	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.

@@ -1,7 +1,12 @@
 import { Eventified } from "./eventified.js";
-import type { HookFn, HookifiedOptions, IHook } from "./types.js";
+import type {
+	HookFn,
+	HookifiedOptions,
+	IHook,
+	OnHookOptions,
+} from "./types.js";
 
-export type { HookFn, HookifiedOptions, IHook };
+export type { HookFn, HookifiedOptions, IHook, OnHookOptions };
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, IHook[]>;
@@ -130,35 +135,34 @@ export class Hookified extends Eventified {
 	}
 
 	/**
-	 * Adds a handler function for a specific event. Accepts a single hook or an array of hooks.
+	 * Adds a handler function for a specific event.
 	 * If you prefer the legacy `(event, handler)` signature, use {@link addHook} instead.
-	 * @param {IHook | IHook[]} hook - the hook or array of hooks containing event name and handler
-	 * @returns {IHook | IHook[] | undefined} the stored hook(s), or undefined if blocked by deprecation
+	 * To register multiple hooks at once, use {@link onHooks}.
+	 * @param {IHook} hook - the hook containing event name and handler
+	 * @param {OnHookOptions} [options] - optional per-call options (e.g., useHookClone override, position)
+	 * @returns {IHook | undefined} the stored hook, or undefined if blocked by deprecation
 	 */
-	public onHook(hook: IHook | IHook[]): IHook | IHook[] | undefined {
-		if (Array.isArray(hook)) {
-			const results: IHook[] = [];
-			for (const h of hook) {
-				const result = this.onHook(h);
-				if (result) {
-					results.push(result as IHook);
-				}
-			}
-
-			return results;
-		}
-
+	public onHook(hook: IHook, options?: OnHookOptions): IHook | undefined {
 		this.validateHookName(hook.event);
 		if (!this.checkDeprecatedHook(hook.event)) {
 			return undefined; // Skip registration if deprecated hooks are not allowed
 		}
 
-		const entry: IHook = this._useHookClone
+		const shouldClone = options?.useHookClone ?? this._useHookClone;
+		const entry: IHook = shouldClone
 			? { event: hook.event, handler: hook.handler }
 			: hook;
 		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			eventHandlers.push(entry);
+			const position = options?.position ?? "Bottom";
+			if (position === "Top") {
+				eventHandlers.unshift(entry);
+			} else if (position === "Bottom") {
+				eventHandlers.push(entry);
+			} else {
+				const index = Math.max(0, Math.min(position, eventHandlers.length));
+				eventHandlers.splice(index, 0, entry);
+			}
 		} else {
 			this._hooks.set(hook.event, [entry]);
 		}
@@ -177,13 +181,14 @@ export class Hookified extends Eventified {
 	}
 
 	/**
-	 * Adds a handler function for a specific event
+	 * Adds handler functions for specific events
 	 * @param {Array<IHook>} hooks
+	 * @param {OnHookOptions} [options] - optional per-call options (e.g., useHookClone override, position)
 	 * @returns {void}
 	 */
-	public onHooks(hooks: IHook[]) {
+	public onHooks(hooks: IHook[], options?: OnHookOptions) {
 		for (const hook of hooks) {
-			this.onHook(hook);
+			this.onHook(hook, options);
 		}
 	}
 
