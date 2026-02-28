@@ -163,11 +163,20 @@ export class Hookified extends Eventified {
 	}
 
 	/**
-	 * Adds a handler function for a specific event. If you prefer the legacy `(event, handler)` signature, use {@link addHook} instead.
-	 * @param {IHook} hook - the hook containing event name and handler
+	 * Adds a handler function for a specific event. Accepts a single hook or an array of hooks.
+	 * If you prefer the legacy `(event, handler)` signature, use {@link addHook} instead.
+	 * @param {IHook | IHook[]} hook - the hook or array of hooks containing event name and handler
 	 * @returns {void}
 	 */
-	public onHook(hook: IHook) {
+	public onHook(hook: IHook | IHook[]) {
+		if (Array.isArray(hook)) {
+			for (const h of hook) {
+				this.onHook(h);
+			}
+
+			return;
+		}
+
 		this.validateHookName(hook.event);
 		if (!this.checkDeprecatedHook(hook.event)) {
 			return; // Skip registration if deprecated hooks are not allowed

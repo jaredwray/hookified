@@ -23,6 +23,19 @@ describe("Hookified", () => {
 		expect(hookified.hooks.size).toBe(2);
 	});
 
+	test("onHook with array of IHook", async () => {
+		const hookified = new Hookified();
+		const handler = () => {};
+		const handler2 = () => {};
+		hookified.onHook([
+			{ event: "event", handler },
+			{ event: "event2", handler: handler2 },
+		]);
+		expect(hookified.getHooks("event")).toEqual([handler]);
+		expect(hookified.getHooks("event2")).toEqual([handler2]);
+		expect(hookified.hooks.size).toBe(2);
+	});
+
 	test("addHook", async () => {
 		const hookified = new Hookified();
 

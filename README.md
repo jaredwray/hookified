@@ -26,6 +26,7 @@
 # Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
+- [Migrating from v1 to v2](#migrating-from-v1-to-v2)
 - [Using it in the Browser](#using-it-in-the-browser)
 - [Hooks](#hooks)
   - [Hook class](#hook-class)
@@ -482,7 +483,7 @@ console.log(myClass.getHooks('oldHook')); // [handler function]
 
 ## .onHook(hook)
 
-Subscribe to a hook event. Takes an `IHook` object with `event` and `handler` properties.
+Subscribe to a hook event. Takes an `IHook` object or an array of `IHook` objects.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -502,12 +503,20 @@ class MyClass extends Hookified {
 }
 
 const myClass = new MyClass();
+
+// Single hook
 myClass.onHook({
   event: 'before:myMethod2',
   handler: async (data) => {
     data.some = 'new data';
   },
 });
+
+// Array of hooks
+myClass.onHook([
+  { event: 'before:myMethod2', handler: async (data) => { data.validated = true; } },
+  { event: 'after:myMethod2', handler: async (data) => { console.log('done'); } },
+]);
 ```
 
 ## .addHook(event, handler)
