@@ -21,7 +21,7 @@ export type EventEmitterOptions = {
 
 	/**
 	 * Whether to throw on 'error' when there are no listeners. This is the standard functionality in EventEmitter
-	 * @default false - in v2 this will be set to true by default
+	 * @default true
 	 */
 	throwOnEmptyListeners?: boolean;
 };

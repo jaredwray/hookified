@@ -13,7 +13,7 @@ export class Eventified implements IEventEmitter {
 	private _maxListeners: number;
 	private _eventLogger?: Logger;
 	private _throwOnEmitError = false;
-	private _throwOnEmptyListeners = false;
+	private _throwOnEmptyListeners = true;
 	private _errorEvent = "error";
 
 	constructor(options?: EventEmitterOptions) {
@@ -264,6 +264,9 @@ export class Eventified implements IEventEmitter {
 			}
 		}
 
+		// send it to the logger
+		this.sendToEventLogger(event, arguments_);
+
 		if (event === this._errorEvent) {
 			const error =
 				arguments_[0] instanceof Error
@@ -281,9 +284,6 @@ export class Eventified implements IEventEmitter {
 				}
 			}
 		}
-
-		// send it to the logger
-		this.sendToEventLogger(event, arguments_);
 
 		return result;
 	}
