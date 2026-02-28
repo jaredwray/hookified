@@ -23,31 +23,17 @@ describe("Hookified", () => {
 		expect(hookified.hooks.size).toBe(2);
 	});
 
-	test("onHook with positional args (event, handler)", async () => {
-		const hookified = new Hookified();
-		const handler = () => {};
-		hookified.onHook("event", handler);
-		expect(hookified.getHooks("event")).toEqual([handler]);
-	});
-
 	test("addHook", async () => {
 		const hookified = new Hookified();
 
 		const handler = () => {};
 
 		const handler2 = () => {};
-		hookified.addHook({ event: "event", handler });
-		hookified.addHook({ event: "event2", handler: handler2 });
+		hookified.addHook("event", handler);
+		hookified.addHook("event2", handler2);
 		expect(hookified.getHooks("event")).toEqual([handler]);
 		expect(hookified.getHooks("event2")).toEqual([handler2]);
 		expect(hookified.hooks.size).toBe(2);
-	});
-
-	test("addHook with positional args (event, handler)", async () => {
-		const hookified = new Hookified();
-		const handler = () => {};
-		hookified.addHook("event", handler);
-		expect(hookified.getHooks("event")).toEqual([handler]);
 	});
 
 	test("onHooks", async () => {
@@ -801,15 +787,9 @@ describe("Hookified", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			const handler = () => {};
 
-			expect(() =>
-				hookified.addHook({ event: "beforeTest", handler }),
-			).not.toThrow();
-			expect(() =>
-				hookified.addHook({ event: "afterTest", handler }),
-			).not.toThrow();
-			expect(() =>
-				hookified.addHook({ event: "invalidName", handler }),
-			).toThrow(
+			expect(() => hookified.addHook("beforeTest", handler)).not.toThrow();
+			expect(() => hookified.addHook("afterTest", handler)).not.toThrow();
+			expect(() => hookified.addHook("invalidName", handler)).toThrow(
 				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
 		});
@@ -1094,7 +1074,7 @@ describe("Hookified", () => {
 				warnEvent = event;
 			});
 
-			hookified.addHook({ event: "oldHook", handler });
+			hookified.addHook("oldHook", handler);
 
 			expect(warnEvent).toEqual({
 				hook: "oldHook",
@@ -1436,7 +1416,7 @@ describe("Hookified", () => {
 			});
 			const handler = () => {};
 
-			hookified.addHook({ event: "oldHook", handler });
+			hookified.addHook("oldHook", handler);
 
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});
