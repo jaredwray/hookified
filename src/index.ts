@@ -1,7 +1,7 @@
 import { Eventified } from "./eventified.js";
-import type { HookEntry, HookFn, HookifiedOptions, IHook } from "./types.js";
+import type { HookFn, HookifiedOptions, IHook } from "./types.js";
 
-export type { HookEntry, HookFn, HookifiedOptions, IHook };
+export type { HookFn, HookifiedOptions, IHook };
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, HookFn[]>;
@@ -163,41 +163,41 @@ export class Hookified extends Eventified {
 	}
 
 	/**
-	 * Adds a handler function for a specific event
-	 * @param {string} event
-	 * @param {HookFn} handler - this can be async or sync
+	 * Adds a handler function for a specific event. Accepts a single hook or an array of hooks.
+	 * If you prefer the legacy `(event, handler)` signature, use {@link addHook} instead.
+	 * @param {IHook | IHook[]} hook - the hook or array of hooks containing event name and handler
 	 * @returns {void}
 	 */
-	public onHook(event: string, handler: HookFn) {
-		this.onHookEntry({ event, handler });
-	}
+	public onHook(hook: IHook | IHook[]) {
+		if (Array.isArray(hook)) {
+			for (const h of hook) {
+				this.onHook(h);
+			}
 
-	/**
-	 * Adds a handler function for a specific event
-	 * @param {IHook} hookEntry
-	 * @returns {void}
-	 */
-	public onHookEntry(hookEntry: IHook) {
-		this.validateHookName(hookEntry.event);
-		if (!this.checkDeprecatedHook(hookEntry.event)) {
+			return;
+		}
+
+		this.validateHookName(hook.event);
+		if (!this.checkDeprecatedHook(hook.event)) {
 			return; // Skip registration if deprecated hooks are not allowed
 		}
-		const eventHandlers = this._hooks.get(hookEntry.event);
+
+		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			eventHandlers.push(hookEntry.handler);
+			eventHandlers.push(hook.handler);
 		} else {
-			this._hooks.set(hookEntry.event, [hookEntry.handler]);
+			this._hooks.set(hook.event, [hook.handler]);
 		}
 	}
 
 	/**
 	 * Alias for onHook. This is provided for compatibility with other libraries that use the `addHook` method.
-	 * @param {string} event
-	 * @param {HookFn} handler - this can be async or sync
+	 * @param {string} event - the event name
+	 * @param {HookFn} handler - the handler function
 	 * @returns {void}
 	 */
 	public addHook(event: string, handler: HookFn) {
-		this.onHookEntry({ event, handler });
+		this.onHook({ event, handler });
 	}
 
 	/**
@@ -207,7 +207,7 @@ export class Hookified extends Eventified {
 	 */
 	public onHooks(hooks: IHook[]) {
 		for (const hook of hooks) {
-			this.onHook(hook.event, hook.handler);
+			this.onHook(hook);
 		}
 	}
 
@@ -265,7 +265,7 @@ export class Hookified extends Eventified {
 			return handler(...arguments_);
 		};
 
-		this.onHook(event, hook);
+		this.onHook({ event, handler: hook });
 	}
 
 	/**

@@ -221,11 +221,6 @@ export interface IHook {
 	handler: HookFn;
 }
 
-/**
- * @deprecated Use `IHook` instead. This alias will be removed in a future version.
- */
-export type HookEntry = IHook;
-
 export type HookifiedOptions = {
 	/**
 	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.

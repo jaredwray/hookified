@@ -11,7 +11,7 @@ const bench = new Bench({ name: "hook", iterations: 10_000 });
 const hookified = new Hookified();
 
 const genericHookifiedHandler = () => {};
-hookified.onHook("event", genericHookifiedHandler);
+hookified.onHook({ event: "event", handler: genericHookifiedHandler });
 const hookifiedVersion = cleanVersion(pkg.version);
 
 const hookable = createHooks();
