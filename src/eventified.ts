@@ -18,7 +18,7 @@ export class Eventified implements IEventEmitter {
 
 	constructor(options?: EventEmitterOptions) {
 		this._eventListeners = new Map<string | symbol, EventListener[]>();
-		this._maxListeners = 100; // Default maximum number of listeners
+		this._maxListeners = 0; // Default is 0 (unlimited)
 
 		this._eventLogger = options?.eventLogger;
 
@@ -204,7 +204,7 @@ export class Eventified implements IEventEmitter {
 		const listeners = this._eventListeners.get(event);
 
 		if (listeners) {
-			if (listeners.length >= this._maxListeners) {
+			if (this._maxListeners > 0 && listeners.length >= this._maxListeners) {
 				console.warn(
 					`MaxListenersExceededWarning: Possible event memory leak detected. ${listeners.length + 1} ${event as string} listeners added. Use setMaxListeners() to increase limit.`,
 				);
@@ -319,11 +319,6 @@ export class Eventified implements IEventEmitter {
 	 */
 	public setMaxListeners(n: number): void {
 		this._maxListeners = n;
-		for (const listeners of this._eventListeners.values()) {
-			if (listeners.length > n) {
-				listeners.splice(n);
-			}
-		}
 	}
 
 	/**

@@ -1159,7 +1159,7 @@ myClass.removeAllListeners('message');
 
 ## .setMaxListeners(maxListeners: number)
 
-Set the maximum number of listeners and will truncate if there are already too many.
+Set the maximum number of listeners for a single event. Default is `0` (unlimited). Setting to `0` disables the limit and the warning. When the limit is exceeded, a `MaxListenersExceededWarning` is emitted via `console.warn` but the listener is still added. This matches standard Node.js EventEmitter behavior.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -1184,9 +1184,9 @@ myClass.on('message', (message) => {
 
 myClass.on('message', (message) => {
   console.log(message);
-}); // this will not be added and console warning
+}); // warning emitted but listener is still added
 
-console.log(myClass.listenerCount('message')); // 1
+console.log(myClass.listenerCount('message')); // 2
 ```
 
 ## .once(eventName, handler)
@@ -1528,6 +1528,29 @@ class MyClass extends Hookified {
 const myClass = new MyClass();
 myClass.eventLogger = pino({ level: 'debug' });
 console.log(myClass.eventLogger);
+```
+
+### `maxListeners` default changed from `100` to `0` (unlimited) and no longer truncates
+
+The default maximum number of listeners has changed from `100` to `0` (unlimited). The `MaxListenersExceededWarning` will no longer be emitted unless you explicitly set a limit via `setMaxListeners()`. Additionally, `setMaxListeners()` no longer truncates existing listeners — it only sets the warning threshold, matching standard Node.js EventEmitter behavior.
+
+**Before (v1):**
+
+```javascript
+const myClass = new MyClass(); // maxListeners defaults to 100
+// Warning emitted after adding 100+ listeners to the same event
+// setMaxListeners() would truncate existing listeners exceeding the limit
+```
+
+**After (v2):**
+
+```javascript
+const myClass = new MyClass(); // maxListeners defaults to 0 (unlimited)
+// No warning — unlimited listeners allowed
+// setMaxListeners() only sets warning threshold, never removes listeners
+
+// To restore v1 warning behavior:
+myClass.setMaxListeners(100);
 ```
 
 ### `onHookEntry` removed — use `onHook` instead
