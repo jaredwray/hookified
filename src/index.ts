@@ -133,20 +133,24 @@ export class Hookified extends Eventified {
 	 * Adds a handler function for a specific event. Accepts a single hook or an array of hooks.
 	 * If you prefer the legacy `(event, handler)` signature, use {@link addHook} instead.
 	 * @param {IHook | IHook[]} hook - the hook or array of hooks containing event name and handler
-	 * @returns {void}
+	 * @returns {IHook | IHook[] | undefined} the stored hook(s), or undefined if blocked by deprecation
 	 */
-	public onHook(hook: IHook | IHook[]) {
+	public onHook(hook: IHook | IHook[]): IHook | IHook[] | undefined {
 		if (Array.isArray(hook)) {
+			const results: IHook[] = [];
 			for (const h of hook) {
-				this.onHook(h);
+				const result = this.onHook(h);
+				if (result) {
+					results.push(result as IHook);
+				}
 			}
 
-			return;
+			return results;
 		}
 
 		this.validateHookName(hook.event);
 		if (!this.checkDeprecatedHook(hook.event)) {
-			return; // Skip registration if deprecated hooks are not allowed
+			return undefined; // Skip registration if deprecated hooks are not allowed
 		}
 
 		const entry: IHook = this._useHookClone
@@ -158,6 +162,8 @@ export class Hookified extends Eventified {
 		} else {
 			this._hooks.set(hook.event, [entry]);
 		}
+
+		return entry;
 	}
 
 	/**
@@ -213,7 +219,7 @@ export class Hookified extends Eventified {
 		}
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		const wrappedHandler = async (...arguments_: any[]) => {
-			this.removeHook(hook.event, wrappedHandler);
+			this.removeHook({ event: hook.event, handler: wrappedHandler });
 			return hook.handler(...arguments_);
 		};
 
@@ -231,7 +237,7 @@ export class Hookified extends Eventified {
 		}
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		const wrappedHandler = async (...arguments_: any[]) => {
-			this.removeHook(hook.event, wrappedHandler);
+			this.removeHook({ event: hook.event, handler: wrappedHandler });
 			return hook.handler(...arguments_);
 		};
 
@@ -240,22 +246,21 @@ export class Hookified extends Eventified {
 
 	/**
 	 * Removes a handler function for a specific event
-	 * @param {string} event
-	 * @param {HookFn} handler
+	 * @param {IHook} hook - the hook containing event name and handler to remove
 	 * @returns {IHook | undefined} the removed hook, or undefined if not found
 	 */
-	public removeHook(event: string, handler: HookFn): IHook | undefined {
-		this.validateHookName(event);
-		const eventHandlers = this._hooks.get(event);
+	public removeHook(hook: IHook): IHook | undefined {
+		this.validateHookName(hook.event);
+		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			const index = eventHandlers.findIndex((h) => h.handler === handler);
+			const index = eventHandlers.findIndex((h) => h.handler === hook.handler);
 			if (index !== -1) {
 				eventHandlers.splice(index, 1);
 				if (eventHandlers.length === 0) {
-					this._hooks.delete(event);
+					this._hooks.delete(hook.event);
 				}
 
-				return { event, handler };
+				return { event: hook.event, handler: hook.handler };
 			}
 		}
 
@@ -270,7 +275,7 @@ export class Hookified extends Eventified {
 	public removeHooks(hooks: IHook[]): IHook[] {
 		const removed: IHook[] = [];
 		for (const hook of hooks) {
-			const result = this.removeHook(hook.event, hook.handler);
+			const result = this.removeHook(hook);
 			if (result) {
 				removed.push(result);
 			}

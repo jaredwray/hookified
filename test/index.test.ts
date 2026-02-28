@@ -133,7 +133,7 @@ describe("Hookified", () => {
 		const handler2 = () => {};
 		hookified.onHook({ event: "event", handler });
 		hookified.onHook({ event: "event", handler: handler2 });
-		const removed = hookified.removeHook("event", handler);
+		const removed = hookified.removeHook({ event: "event", handler });
 		expect(removed).toEqual({ event: "event", handler });
 		expect(hookified.getHooks("event")).toEqual([
 			{ event: "event", handler: handler2 },
@@ -144,7 +144,7 @@ describe("Hookified", () => {
 	test("removeHook returns undefined when handler not found", () => {
 		const hookified = new Hookified();
 		const handler = () => {};
-		const result = hookified.removeHook("event", handler);
+		const result = hookified.removeHook({ event: "event", handler });
 		expect(result).toBeUndefined();
 	});
 
@@ -906,9 +906,15 @@ describe("Hookified", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			const handler = () => {};
 
-			expect(() => hookified.removeHook("beforeTest", handler)).not.toThrow();
-			expect(() => hookified.removeHook("afterTest", handler)).not.toThrow();
-			expect(() => hookified.removeHook("invalidName", handler)).toThrow(
+			expect(() =>
+				hookified.removeHook({ event: "beforeTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.removeHook({ event: "afterTest", handler }),
+			).not.toThrow();
+			expect(() =>
+				hookified.removeHook({ event: "invalidName", handler }),
+			).toThrow(
 				'Hook event "invalidName" must start with "before" or "after" when enforceBeforeAfter is enabled',
 			);
 		});
@@ -1240,7 +1246,7 @@ describe("Hookified", () => {
 			hookified.allowDeprecated = false;
 
 			// removeHook should still work regardless of deprecation
-			const removed = hookified.removeHook("oldHook", handler);
+			const removed = hookified.removeHook({ event: "oldHook", handler });
 			expect(removed).toEqual({ event: "oldHook", handler });
 		});
 
@@ -1603,7 +1609,7 @@ describe("Hookified", () => {
 			hookified.allowDeprecated = false;
 
 			// Should still be able to remove the hook
-			const removed = hookified.removeHook("oldHook", handler);
+			const removed = hookified.removeHook({ event: "oldHook", handler });
 			expect(removed).toEqual({ event: "oldHook", handler });
 			expect(hookified.getHooks("oldHook")).toBeUndefined();
 		});

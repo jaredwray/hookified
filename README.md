@@ -43,7 +43,7 @@
   - [.onceHook(hook)](#oncehookhook)
   - [.prependHook(hook)](#prependhookhook)
   - [.prependOnceHook(hook)](#prependoncehookhook)
-  - [.removeHook(eventName, handler)](#removehookeventname-handler)
+  - [.removeHook(hook)](#removehookhook)
   - [.removeHooks(Array)](#removehooksarray)
   - [.hook(eventName, ...args)](#hookeventname-args)
   - [.callHook(eventName, ...args)](#callhookeventname-args)
@@ -511,7 +511,7 @@ myClass.useHookClone = true;
 
 ## .onHook(hook)
 
-Subscribe to a hook event. Takes an `IHook` object or an array of `IHook` objects.
+Subscribe to a hook event. Takes an `IHook` object or an array of `IHook` objects. Returns the stored `IHook` (or `IHook[]` for arrays), or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` — especially when `useHookClone` is `true`.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -532,16 +532,19 @@ class MyClass extends Hookified {
 
 const myClass = new MyClass();
 
-// Single hook
-myClass.onHook({
+// Single hook — returns the stored IHook
+const stored = myClass.onHook({
   event: 'before:myMethod2',
   handler: async (data) => {
     data.some = 'new data';
   },
 });
 
-// Array of hooks
-myClass.onHook([
+// Use the returned reference to remove the hook later
+myClass.removeHook(stored);
+
+// Array of hooks — returns IHook[] of those registered
+const storedHooks = myClass.onHook([
   { event: 'before:myMethod2', handler: async (data) => { data.validated = true; } },
   { event: 'after:myMethod2', handler: async (data) => { console.log('done'); } },
 ]);
@@ -692,9 +695,9 @@ myClass.prependOnceHook({ event: 'before:myMethod2', handler: async (data) => {
 }});
 ```
 
-## .removeHook(eventName, handler)
+## .removeHook(hook)
 
-Unsubscribe a handler from a hook event. Returns the removed hook as an `IHook` object, or `undefined` if the handler was not found.
+Unsubscribe a handler from a hook event. Takes an `IHook` object with `event` and `handler` properties. Returns the removed hook as an `IHook` object, or `undefined` if the handler was not found.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -720,7 +723,7 @@ const handler = async (data) => {
 
 myClass.onHook({ event: 'before:myMethod2', handler });
 
-const removed = myClass.removeHook('before:myMethod2', handler);
+const removed = myClass.removeHook({ event: 'before:myMethod2', handler });
 console.log(removed); // { event: 'before:myMethod2', handler: [Function] }
 ```
 
@@ -1674,7 +1677,7 @@ hookified.removeHooks(hooks); // void
 **After (v2):**
 
 ```typescript
-const removed = hookified.removeHook('before:save', handler); // IHook | undefined
+const removed = hookified.removeHook({ event: 'before:save', handler }); // IHook | undefined
 const removedHooks = hookified.removeHooks(hooks); // IHook[]
 ```
 
