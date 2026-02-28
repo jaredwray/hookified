@@ -39,9 +39,9 @@
   - [.onHook(hook)](#onhookhook)
   - [.addHook(event, handler)](#addhookevent-handler)
   - [.onHooks(Array)](#onhooksarray)
-  - [.onceHook(eventName, handler)](#oncehookeventname-handler)
-  - [.prependHook(eventName, handler)](#prependhookeventname-handler)
-  - [.prependOnceHook(eventName, handler)](#prependoncehookeventname-handler)
+  - [.onceHook(hook)](#oncehookhook)
+  - [.prependHook(hook)](#prependhookhook)
+  - [.prependOnceHook(hook)](#prependoncehookhook)
   - [.removeHook(eventName, handler)](#removehookeventname-handler)
   - [.removeHooks(Array)](#removehooksarray)
   - [.hook(eventName, ...args)](#hookeventname-args)
@@ -573,9 +573,9 @@ const hooks = [
 myClass.onHooks(hooks);
 ```
 
-## .onceHook(eventName, handler)
+## .onceHook(hook)
 
-Subscribe to a hook event once.
+Subscribe to a hook event once. Takes an `IHook` object with `event` and `handler` properties. After the handler is called once, it is automatically removed.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -596,18 +596,18 @@ class MyClass extends Hookified {
 
 const myClass = new MyClass();
 
-myClass.onceHook('before:myMethod2', async (data) => {
+myClass.onceHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
-});
+}});
 
 myClass.myMethodWithHooks();
 
-console.log(myClass.hooks.length); // 0
+console.log(myClass.hooks.size); // 0
 ```
 
-## .prependHook(eventName, handler)
+## .prependHook(hook)
 
-Subscribe to a hook event before all other hooks.
+Subscribe to a hook event before all other hooks. Takes an `IHook` object with `event` and `handler` properties.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -630,14 +630,14 @@ const myClass = new MyClass();
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
-myClass.prependHook('before:myMethod2', async (data) => {
+myClass.prependHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'will run before new data';
-});
+}});
 ```
 
-## .prependOnceHook(eventName, handler)
+## .prependOnceHook(hook)
 
-Subscribe to a hook event before all other hooks. After it is used once it will be removed.
+Subscribe to a hook event before all other hooks. Takes an `IHook` object with `event` and `handler` properties. After the handler is called once, it is automatically removed.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -660,9 +660,9 @@ const myClass = new MyClass();
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
-myClass.prependHook('before:myMethod2', async (data) => {
+myClass.prependOnceHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'will run before new data';
-});
+}});
 ```
 
 ## .removeHook(eventName, handler)
@@ -884,7 +884,7 @@ myClass.myMethodWithSyncHooks(); // Only sync handler runs
 
 ## .hooks
 
-Get all hooks.
+Get all hooks. Returns a `Map<string, IHook[]>` where each key is an event name and the value is an array of `IHook` objects.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -908,12 +908,12 @@ myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
 
-console.log(myClass.hooks);
+console.log(myClass.hooks); // Map { 'before:myMethod2' => [{ event: 'before:myMethod2', handler: [Function] }] }
 ```
 
 ## .getHooks(eventName)
 
-Get all hooks for an event.
+Get all hooks for an event. Returns an `IHook[]` array, or `undefined` if no hooks are registered for the event.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -937,7 +937,7 @@ myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
 
-console.log(myClass.getHooks('before:myMethod2'));
+console.log(myClass.getHooks('before:myMethod2')); // [{ event: 'before:myMethod2', handler: [Function] }]
 ```
 
 ## .clearHooks(eventName)
@@ -1654,6 +1654,45 @@ const removedHooks = hookified.removeHooks(hooks); // IHook[]
 ### `removeHook`, `removeHooks`, and `getHooks` no longer check for deprecated hooks
 
 Previously, `removeHook`, `removeHooks`, and `getHooks` would skip their operation and emit a deprecation warning when called with a deprecated hook name and `allowDeprecated` was `false`. This made it impossible to clean up or inspect deprecated hooks. These methods now always operate regardless of deprecation status.
+
+### Internal hook storage now uses `IHook` objects
+
+The internal `_hooks` map now stores full `IHook` objects (`Map<string, IHook[]>`) instead of raw handler functions (`Map<string, HookFn[]>`). This means `.hooks` returns `Map<string, IHook[]>` and `.getHooks()` returns `IHook[] | undefined`.
+
+**Before (v1):**
+
+```typescript
+const hooks = myClass.getHooks('before:save'); // HookFn[]
+hooks[0](data); // direct function call
+```
+
+**After (v2):**
+
+```typescript
+const hooks = myClass.getHooks('before:save'); // IHook[]
+hooks[0].handler(data); // access .handler property
+hooks[0].event; // 'before:save'
+```
+
+### `onceHook`, `prependHook`, and `prependOnceHook` now take `IHook`
+
+These methods now accept an `IHook` object instead of separate `(event, handler)` arguments.
+
+**Before (v1):**
+
+```typescript
+hookified.onceHook('before:save', async (data) => {});
+hookified.prependHook('before:save', async (data) => {});
+hookified.prependOnceHook('before:save', async (data) => {});
+```
+
+**After (v2):**
+
+```typescript
+hookified.onceHook({ event: 'before:save', handler: async (data) => {} });
+hookified.prependHook({ event: 'before:save', handler: async (data) => {} });
+hookified.prependOnceHook({ event: 'before:save', handler: async (data) => {} });
+```
 
 ## New Features
 
