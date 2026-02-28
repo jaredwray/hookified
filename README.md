@@ -402,10 +402,11 @@ const myClassWithLogger = new Hookified({
 // Deprecation warnings will be logged to logger.warn
 ```
 
-The deprecation warning system applies to all hook-related methods:
+The deprecation warning system applies to the following hook-related methods:
 - Registration: `onHook()`, `addHook()`, `onHooks()`, `prependHook()`, `onceHook()`, `prependOnceHook()`
 - Execution: `hook()`, `callHook()`
-- Management: `getHooks()`, `removeHook()`, `removeHooks()`
+
+Note: `getHooks()`, `removeHook()`, and `removeHooks()` do not check for deprecated hooks and always operate normally.
 
 Deprecation warnings are emitted in two ways:
 1. **Event**: A 'warn' event is emitted with `{ hook: string, message: string }`
@@ -471,8 +472,8 @@ console.log(myClass.getHooks('oldHook')); // [handler function]
 
 **Behavior when `allowDeprecated` is false:**
 - **Registration**: All hook registration methods (`onHook`, `addHook`, `prependHook`, etc.) will emit warnings but skip registration
-- **Execution**: Hook execution methods (`hook`, `callHook`) will emit warnings but skip execution  
-- **Management**: Hook management methods (`getHooks`, `removeHook`) will emit warnings and return undefined/skip operations
+- **Execution**: Hook execution methods (`hook`, `callHook`) will emit warnings but skip execution
+- **Removal/Reading**: `removeHook`, `removeHooks`, and `getHooks` always work regardless of deprecation status
 - **Warnings**: Deprecation warnings are always emitted regardless of `allowDeprecated` setting
 
 **Use cases:**
