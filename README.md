@@ -37,7 +37,7 @@
   - [.deprecatedHooks](#deprecatedhooks)
   - [.allowDeprecated](#allowdeprecated)
   - [.useHookClone](#usehookclone)
-  - [.onHook(hook)](#onhookhook)
+  - [.onHook(hook, options?)](#onhookhook-options)
   - [.addHook(event, handler)](#addhookevent-handler)
   - [.onHooks(Array)](#onhooksarray)
   - [.onceHook(hook)](#oncehookhook)
@@ -509,9 +509,12 @@ console.log(storedHooks[0] === hook); // true
 myClass.useHookClone = true;
 ```
 
-## .onHook(hook)
+## .onHook(hook, options?)
 
-Subscribe to a hook event. Takes an `IHook` object or an array of `IHook` objects. Returns the stored `IHook` (or `IHook[]` for arrays), or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` — especially when `useHookClone` is `true`.
+Subscribe to a hook event. Takes an `IHook` object or an array of `IHook` objects, and an optional `OnHookOptions` object. Returns the stored `IHook` (or `IHook[]` for arrays), or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` — especially when `useHookClone` is `true`.
+
+**Options (`OnHookOptions`)**:
+- `useHookClone` (boolean, optional) — Per-call override for the instance-level `useHookClone` setting. When `true`, the hook object is cloned before storing. When `false`, the original reference is stored directly. When omitted, falls back to the instance-level setting.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -548,6 +551,11 @@ const storedHooks = myClass.onHook([
   { event: 'before:myMethod2', handler: async (data) => { data.validated = true; } },
   { event: 'after:myMethod2', handler: async (data) => { console.log('done'); } },
 ]);
+
+// Override useHookClone per-call — store original reference even though instance default is true
+const hook = { event: 'before:save', handler: async (data) => {} };
+myClass.onHook(hook, { useHookClone: false });
+console.log(myClass.getHooks('before:save')[0] === hook); // true
 ```
 
 ## .addHook(event, handler)
@@ -1776,6 +1784,18 @@ A new `useHookClone` option (default `true`) controls whether hook objects are s
 
 ```typescript
 const hookified = new Hookified({ useHookClone: false });
+```
+
+### `onHook` now accepts `OnHookOptions`
+
+`onHook` now accepts an optional second parameter of type `OnHookOptions`. This allows you to override the instance-level `useHookClone` setting on a per-call basis.
+
+```typescript
+// Before — no per-call control over cloning
+hookified.onHook({ event: 'before:save', handler });
+
+// After — override useHookClone for this specific call
+hookified.onHook({ event: 'before:save', handler }, { useHookClone: false });
 ```
 
 # How to Contribute

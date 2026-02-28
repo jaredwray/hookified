@@ -2037,5 +2037,65 @@ describe("Hookified", () => {
 			const stored = hookified.getHooks("event");
 			expect(stored?.[0]).toBe(hook);
 		});
+
+		test("should store original reference when options.useHookClone is false overriding instance default true", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.onHook(hook, { useHookClone: false });
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0]).toBe(hook);
+		});
+
+		test("should clone hook when options.useHookClone is true overriding instance setting false", () => {
+			const hookified = new Hookified({ useHookClone: false });
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.onHook(hook, { useHookClone: true });
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0]).not.toBe(hook);
+			expect(stored?.[0]).toEqual({ event: "event", handler });
+		});
+
+		test("should fall back to instance useHookClone when options.useHookClone is undefined", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.onHook(hook, {});
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0]).not.toBe(hook);
+		});
+
+		test("should preserve backward compatibility when no options parameter is provided", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.onHook(hook);
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0]).not.toBe(hook);
+		});
+
+		test("should pass options through when onHook is called with an array", () => {
+			const hookified = new Hookified();
+			const handler1 = () => {};
+			const handler2 = () => {};
+			const hook1 = { event: "event1", handler: handler1 };
+			const hook2 = { event: "event2", handler: handler2 };
+			hookified.onHook([hook1, hook2], { useHookClone: false });
+			const stored1 = hookified.getHooks("event1");
+			const stored2 = hookified.getHooks("event2");
+			expect(stored1?.[0]).toBe(hook1);
+			expect(stored2?.[0]).toBe(hook2);
+		});
+
+		test("should clone array hooks when options.useHookClone is true overriding instance false", () => {
+			const hookified = new Hookified({ useHookClone: false });
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.onHook([hook], { useHookClone: true });
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0]).not.toBe(hook);
+			expect(stored?.[0]).toEqual({ event: "event", handler });
+		});
 	});
 });

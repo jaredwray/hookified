@@ -183,6 +183,10 @@ describe("Export Verification Tests", () => {
 		test("should export HookifiedOptions type", () => {
 			expect(esmContent).toContain("HookifiedOptions");
 		});
+
+		test("should export OnHookOptions type", () => {
+			expect(esmContent).toContain("OnHookOptions");
+		});
 	});
 
 	describe("Node.js Build Files", () => {

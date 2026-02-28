@@ -1,7 +1,12 @@
 import { Eventified } from "./eventified.js";
-import type { HookFn, HookifiedOptions, IHook } from "./types.js";
+import type {
+	HookFn,
+	HookifiedOptions,
+	IHook,
+	OnHookOptions,
+} from "./types.js";
 
-export type { HookFn, HookifiedOptions, IHook };
+export type { HookFn, HookifiedOptions, IHook, OnHookOptions };
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, IHook[]>;
@@ -133,13 +138,17 @@ export class Hookified extends Eventified {
 	 * Adds a handler function for a specific event. Accepts a single hook or an array of hooks.
 	 * If you prefer the legacy `(event, handler)` signature, use {@link addHook} instead.
 	 * @param {IHook | IHook[]} hook - the hook or array of hooks containing event name and handler
+	 * @param {OnHookOptions} [options] - optional per-call options (e.g., useHookClone override)
 	 * @returns {IHook | IHook[] | undefined} the stored hook(s), or undefined if blocked by deprecation
 	 */
-	public onHook(hook: IHook | IHook[]): IHook | IHook[] | undefined {
+	public onHook(
+		hook: IHook | IHook[],
+		options?: OnHookOptions,
+	): IHook | IHook[] | undefined {
 		if (Array.isArray(hook)) {
 			const results: IHook[] = [];
 			for (const h of hook) {
-				const result = this.onHook(h);
+				const result = this.onHook(h, options);
 				if (result) {
 					results.push(result as IHook);
 				}
@@ -153,7 +162,8 @@ export class Hookified extends Eventified {
 			return undefined; // Skip registration if deprecated hooks are not allowed
 		}
 
-		const entry: IHook = this._useHookClone
+		const shouldClone = options?.useHookClone ?? this._useHookClone;
+		const entry: IHook = shouldClone
 			? { event: hook.event, handler: hook.handler }
 			: hook;
 		const eventHandlers = this._hooks.get(hook.event);

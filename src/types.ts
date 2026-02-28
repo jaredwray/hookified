@@ -221,6 +221,17 @@ export interface IHook {
 	handler: HookFn;
 }
 
+export type OnHookOptions = {
+	/**
+	 * Per-call override for useHookClone.
+	 * When true, hook objects are cloned before storing.
+	 * When false, the original IHook reference is stored directly.
+	 * When undefined, falls back to the instance-level useHookClone setting.
+	 * @type {boolean}
+	 */
+	useHookClone?: boolean;
+};
+
 export type HookifiedOptions = {
 	/**
 	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
