@@ -272,31 +272,37 @@ export class Hookified extends Eventified {
 	 * Removes a handler function for a specific event
 	 * @param {string} event
 	 * @param {HookFn} handler
-	 * @returns {void}
+	 * @returns {IHook | undefined} the removed hook, or undefined if not found
 	 */
-	public removeHook(event: string, handler: HookFn) {
+	public removeHook(event: string, handler: HookFn): IHook | undefined {
 		this.validateHookName(event);
-		if (!this.checkDeprecatedHook(event)) {
-			return; // Skip removal if deprecated hooks are not allowed
-		}
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
 			const index = eventHandlers.indexOf(handler);
 			if (index !== -1) {
 				eventHandlers.splice(index, 1);
+				return { event, handler };
 			}
 		}
+
+		return undefined;
 	}
 
 	/**
-	 * Removes all handlers for a specific event
+	 * Removes multiple hook handlers
 	 * @param {Array<IHook>} hooks
-	 * @returns {void}
+	 * @returns {IHook[]} the hooks that were successfully removed
 	 */
-	public removeHooks(hooks: IHook[]) {
+	public removeHooks(hooks: IHook[]): IHook[] {
+		const removed: IHook[] = [];
 		for (const hook of hooks) {
-			this.removeHook(hook.event, hook.handler);
+			const result = this.removeHook(hook.event, hook.handler);
+			if (result) {
+				removed.push(result);
+			}
 		}
+
+		return removed;
 	}
 
 	/**
@@ -401,9 +407,6 @@ export class Hookified extends Eventified {
 	 */
 	public getHooks(event: string) {
 		this.validateHookName(event);
-		if (!this.checkDeprecatedHook(event)) {
-			return undefined; // Return undefined if deprecated hooks are not allowed
-		}
 		return this._hooks.get(event);
 	}
 

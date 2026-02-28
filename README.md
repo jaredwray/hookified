@@ -42,7 +42,7 @@
   - [.onceHook(eventName, handler)](#oncehookeventname-handler)
   - [.prependHook(eventName, handler)](#prependhookeventname-handler)
   - [.prependOnceHook(eventName, handler)](#prependoncehookeventname-handler)
-  - [.removeHook(eventName)](#removehookeventname)
+  - [.removeHook(eventName, handler)](#removehookeventname-handler)
   - [.removeHooks(Array)](#removehooksarray)
   - [.hook(eventName, ...args)](#hookeventname-args)
   - [.callHook(eventName, ...args)](#callhookeventname-args)
@@ -93,7 +93,7 @@ class MyClass extends Hookified {
   }
 
   //with hooks you can pass data in and if they are subscribed via onHook they can modify the data
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -113,7 +113,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     let data2 = { some: 'data2' };
     // do something
@@ -140,7 +140,7 @@ class MyClass extends Hookified {
     }
 
     //with hooks you can pass data in and if they are subscribed via onHook they can modify the data
-    async myMethodWithHooks() Promise<any> {
+    async myMethodWithHooks(): Promise<any> {
       let data = { some: 'data' };
       // do something
       await this.hook('before:myMethod2', data);
@@ -166,7 +166,7 @@ if you are not using ESM modules, you can use the following:
     }
 
     //with hooks you can pass data in and if they are subscribed via onHook they can modify the data
-    async myMethodWithHooks() Promise<any> {
+    async myMethodWithHooks(): Promise<any> {
       let data = { some: 'data' };
       // do something
       await this.hook('before:myMethod2', data);
@@ -272,7 +272,7 @@ class MyClass extends Hookified {
     super({ eventLogger: logger });
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -493,7 +493,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -523,6 +523,12 @@ myClass.onHook([
 
 This is an alias for `.onHook()` that takes an event name and handler function directly.
 
+```javascript
+myClass.addHook('before:myMethod2', async (data) => {
+  data.some = 'new data';
+});
+```
+
 ## .onHooks(Array)
 
 Subscribe to multiple hook events at once
@@ -535,7 +541,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     await this.hook('before:myMethodWithHooks', data);
     
@@ -563,6 +569,7 @@ const hooks = [
     },
   },
 ];
+myClass.onHooks(hooks);
 ```
 
 ## .onceHook(eventName, handler)
@@ -577,7 +584,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -588,7 +595,7 @@ class MyClass extends Hookified {
 
 const myClass = new MyClass();
 
-myClass.onHookOnce('before:myMethod2', async (data) => {
+myClass.onceHook('before:myMethod2', async (data) => {
   data.some = 'new data';
 });
 
@@ -609,7 +616,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -622,7 +629,7 @@ const myClass = new MyClass();
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
-myClass.preHook('before:myMethod2', async (data) => {
+myClass.prependHook('before:myMethod2', async (data) => {
   data.some = 'will run before new data';
 });
 ```
@@ -639,7 +646,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -652,14 +659,14 @@ const myClass = new MyClass();
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
-myClass.preHook('before:myMethod2', async (data) => {
+myClass.prependHook('before:myMethod2', async (data) => {
   data.some = 'will run before new data';
 });
 ```
 
-## .removeHook(eventName)
+## .removeHook(eventName, handler)
 
-Unsubscribe from a hook event.
+Unsubscribe a handler from a hook event. Returns the removed hook as an `IHook` object, or `undefined` if the handler was not found.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -669,7 +676,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -685,11 +692,13 @@ const handler = async (data) => {
 
 myClass.onHook({ event: 'before:myMethod2', handler });
 
-myClass.removeHook('before:myMethod2', handler);
+const removed = myClass.removeHook('before:myMethod2', handler);
+console.log(removed); // { event: 'before:myMethod2', handler: [Function] }
 ```
 
 ## .removeHooks(Array)
-Unsubscribe from multiple hooks.
+
+Unsubscribe from multiple hooks. Returns an array of the hooks that were successfully removed.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -699,10 +708,10 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     await this.hook('before:myMethodWithHooks', data);
-    
+
     // do something
     data.some = 'new data';
     await this.hook('after:myMethodWithHooks', data);
@@ -730,7 +739,8 @@ const hooks = [
 myClass.onHooks(hooks);
 
 // remove all hooks
-myClass.removeHook(hooks);
+const removed = myClass.removeHooks(hooks);
+console.log(removed.length); // 2
 ```
 
 ## .hook(eventName, ...args)
@@ -745,7 +755,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -765,7 +775,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     let data2 = { some: 'data2' };
     // do something
@@ -801,7 +811,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // the event name will be `before:myMethod2`
     await this.beforeHook('myMethod2', data);
@@ -823,7 +833,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // the event name will be `after:myMethod2`
     await this.afterHook('myMethod2', data);
@@ -883,7 +893,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -912,7 +922,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -941,7 +951,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -973,7 +983,7 @@ class MyClass extends Hookified {
     super();
   }
 
-  async myMethodWithHooks() Promise<any> {
+  async myMethodWithHooks(): Promise<any> {
     let data = { some: 'data' };
     // do something
     await this.hook('before:myMethod2', data);
@@ -1542,6 +1552,28 @@ const hook: IHook = { event: 'before:save', handler: async () => {} };
 const myHook: HookFn = async (data) => {};
 ```
 
+### `removeHook` and `removeHooks` now return removed hooks
+
+`removeHook` now returns the removed hook as an `IHook` object (or `undefined` if not found). `removeHooks` now returns an `IHook[]` array of the hooks that were successfully removed. Previously both returned `void`.
+
+**Before (v1):**
+
+```typescript
+hookified.removeHook('before:save', handler); // void
+hookified.removeHooks(hooks); // void
+```
+
+**After (v2):**
+
+```typescript
+const removed = hookified.removeHook('before:save', handler); // IHook | undefined
+const removedHooks = hookified.removeHooks(hooks); // IHook[]
+```
+
+### `removeHook`, `removeHooks`, and `getHooks` no longer check for deprecated hooks
+
+Previously, `removeHook`, `removeHooks`, and `getHooks` would skip their operation and emit a deprecation warning when called with a deprecated hook name and `allowDeprecated` was `false`. This made it impossible to clean up or inspect deprecated hooks. These methods now always operate regardless of deprecation status.
+
 ## New Features
 
 ### `Hook` class
@@ -1602,7 +1634,3 @@ To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of
 # License and Copyright
 
 [MIT & © Jared Wray](LICENSE)
-
-
-
-
