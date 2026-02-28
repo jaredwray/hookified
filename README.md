@@ -1431,6 +1431,42 @@ _Note: the `EventEmitter` version is Nodejs versioning._
 
 ## Breaking Changes
 
+### `throwHookErrors` removed — use `throwOnHookError` instead
+
+The deprecated `throwHookErrors` option and property has been removed. Use `throwOnHookError` instead.
+
+**Before (v1):**
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ throwHookErrors: true });
+  }
+}
+
+const myClass = new MyClass();
+myClass.throwHookErrors = false;
+console.log(myClass.throwHookErrors);
+```
+
+**After (v2):**
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ throwOnHookError: true });
+  }
+}
+
+const myClass = new MyClass();
+myClass.throwOnHookError = false;
+console.log(myClass.throwOnHookError);
+```
+
 ### `logger` renamed to `eventLogger`
 
 The `logger` option and property has been renamed to `eventLogger` to avoid conflicts with other logger properties in your classes.
