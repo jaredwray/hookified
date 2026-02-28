@@ -4,7 +4,7 @@ import type { HookFn, HookifiedOptions, IHook } from "./types.js";
 export type { HookFn, HookifiedOptions, IHook };
 
 export class Hookified extends Eventified {
-	private readonly _hooks: Map<string, HookFn[]>;
+	private readonly _hooks: Map<string, IHook[]>;
 	private _throwOnHookError = false;
 	private _enforceBeforeAfter = false;
 	private _deprecatedHooks: Map<string, string>;
@@ -36,7 +36,7 @@ export class Hookified extends Eventified {
 
 	/**
 	 * Gets all hooks
-	 * @returns {Map<string, HookFn[]>}
+	 * @returns {Map<string, IHook[]>}
 	 */
 	public get hooks() {
 		return this._hooks;
@@ -164,9 +164,9 @@ export class Hookified extends Eventified {
 
 		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			eventHandlers.push(hook.handler);
+			eventHandlers.push(hook);
 		} else {
-			this._hooks.set(hook.event, [hook.handler]);
+			this._hooks.set(hook.event, [hook]);
 		}
 	}
 
@@ -204,9 +204,9 @@ export class Hookified extends Eventified {
 		}
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
-			eventHandlers.unshift(handler);
+			eventHandlers.unshift({ event, handler });
 		} else {
-			this._hooks.set(event, [handler]);
+			this._hooks.set(event, [{ event, handler }]);
 		}
 	}
 
@@ -258,7 +258,7 @@ export class Hookified extends Eventified {
 		this.validateHookName(event);
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
-			const index = eventHandlers.indexOf(handler);
+			const index = eventHandlers.findIndex((h) => h.handler === handler);
 			if (index !== -1) {
 				eventHandlers.splice(index, 1);
 				if (eventHandlers.length === 0) {
@@ -302,9 +302,9 @@ export class Hookified extends Eventified {
 		}
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
-			for (const handler of eventHandlers) {
+			for (const hook of eventHandlers) {
 				try {
-					await handler(...arguments_);
+					await hook.handler(...arguments_);
 				} catch (error) {
 					const message = `${event}: ${(error as Error).message}`;
 					this.emit("error", new Error(message));
@@ -335,14 +335,14 @@ export class Hookified extends Eventified {
 
 		const eventHandlers = this._hooks.get(event);
 		if (eventHandlers) {
-			for (const handler of eventHandlers) {
+			for (const hook of eventHandlers) {
 				// Skip async functions silently
-				if (handler.constructor.name === "AsyncFunction") {
+				if (hook.handler.constructor.name === "AsyncFunction") {
 					continue;
 				}
 
 				try {
-					handler(...arguments_);
+					hook.handler(...arguments_);
 				} catch (error) {
 					const message = `${event}: ${(error as Error).message}`;
 					this.emit("error", new Error(message));
@@ -387,7 +387,7 @@ export class Hookified extends Eventified {
 	/**
 	 * Gets all hooks for a specific event
 	 * @param {string} event
-	 * @returns {HookFn[]}
+	 * @returns {IHook[]}
 	 */
 	public getHooks(event: string) {
 		this.validateHookName(event);
