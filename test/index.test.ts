@@ -25,11 +25,11 @@ describe("Hookified", () => {
 		expect(hookified.hooks.size).toBe(2);
 	});
 
-	test("onHook with array of IHook", async () => {
+	test("onHooks with array of IHook", async () => {
 		const hookified = new Hookified();
 		const handler = () => {};
 		const handler2 = () => {};
-		hookified.onHook([
+		hookified.onHooks([
 			{ event: "event", handler },
 			{ event: "event2", handler: handler2 },
 		]);
@@ -2075,13 +2075,13 @@ describe("Hookified", () => {
 			expect(stored?.[0]).not.toBe(hook);
 		});
 
-		test("should pass options through when onHook is called with an array", () => {
+		test("should pass options through when onHooks is called with an array", () => {
 			const hookified = new Hookified();
 			const handler1 = () => {};
 			const handler2 = () => {};
 			const hook1 = { event: "event1", handler: handler1 };
 			const hook2 = { event: "event2", handler: handler2 };
-			hookified.onHook([hook1, hook2], { useHookClone: false });
+			hookified.onHooks([hook1, hook2], { useHookClone: false });
 			const stored1 = hookified.getHooks("event1");
 			const stored2 = hookified.getHooks("event2");
 			expect(stored1?.[0]).toBe(hook1);
@@ -2092,10 +2092,101 @@ describe("Hookified", () => {
 			const hookified = new Hookified({ useHookClone: false });
 			const handler = () => {};
 			const hook = { event: "event", handler };
-			hookified.onHook([hook], { useHookClone: true });
+			hookified.onHooks([hook], { useHookClone: true });
 			const stored = hookified.getHooks("event");
 			expect(stored?.[0]).not.toBe(hook);
 			expect(stored?.[0]).toEqual({ event: "event", handler });
+		});
+	});
+
+	describe("position", () => {
+		test("should append to end by default (no position)", () => {
+			const hookified = new Hookified();
+			const handler1 = () => {};
+			const handler2 = () => {};
+			hookified.onHook({ event: "event", handler: handler1 });
+			hookified.onHook({ event: "event", handler: handler2 });
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0].handler).toBe(handler1);
+			expect(stored?.[1].handler).toBe(handler2);
+		});
+
+		test("should append to end with position: Bottom", () => {
+			const hookified = new Hookified();
+			const handler1 = () => {};
+			const handler2 = () => {};
+			hookified.onHook({ event: "event", handler: handler1 });
+			hookified.onHook(
+				{ event: "event", handler: handler2 },
+				{ position: "Bottom" },
+			);
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0].handler).toBe(handler1);
+			expect(stored?.[1].handler).toBe(handler2);
+		});
+
+		test("should insert at beginning with position: Top", () => {
+			const hookified = new Hookified();
+			const handler1 = () => {};
+			const handler2 = () => {};
+			hookified.onHook({ event: "event", handler: handler1 });
+			hookified.onHook(
+				{ event: "event", handler: handler2 },
+				{ position: "Top" },
+			);
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0].handler).toBe(handler2);
+			expect(stored?.[1].handler).toBe(handler1);
+		});
+
+		test("should insert at index 0 with position: 0", () => {
+			const hookified = new Hookified();
+			const handler1 = () => {};
+			const handler2 = () => {};
+			hookified.onHook({ event: "event", handler: handler1 });
+			hookified.onHook({ event: "event", handler: handler2 }, { position: 0 });
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0].handler).toBe(handler2);
+			expect(stored?.[1].handler).toBe(handler1);
+		});
+
+		test("should insert at specific index with numeric position", () => {
+			const hookified = new Hookified();
+			const handler1 = () => {};
+			const handler2 = () => {};
+			const handler3 = () => {};
+			hookified.onHook({ event: "event", handler: handler1 });
+			hookified.onHook({ event: "event", handler: handler2 });
+			hookified.onHook({ event: "event", handler: handler3 }, { position: 1 });
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0].handler).toBe(handler1);
+			expect(stored?.[1].handler).toBe(handler3);
+			expect(stored?.[2].handler).toBe(handler2);
+		});
+
+		test("should clamp to end when position exceeds array length", () => {
+			const hookified = new Hookified();
+			const handler1 = () => {};
+			const handler2 = () => {};
+			hookified.onHook({ event: "event", handler: handler1 });
+			hookified.onHook(
+				{ event: "event", handler: handler2 },
+				{ position: 100 },
+			);
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0].handler).toBe(handler1);
+			expect(stored?.[1].handler).toBe(handler2);
+		});
+
+		test("should clamp to 0 when position is negative", () => {
+			const hookified = new Hookified();
+			const handler1 = () => {};
+			const handler2 = () => {};
+			hookified.onHook({ event: "event", handler: handler1 });
+			hookified.onHook({ event: "event", handler: handler2 }, { position: -5 });
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0].handler).toBe(handler2);
+			expect(stored?.[1].handler).toBe(handler1);
 		});
 	});
 });

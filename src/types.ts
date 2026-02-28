@@ -230,6 +230,13 @@ export type OnHookOptions = {
 	 * @type {boolean}
 	 */
 	useHookClone?: boolean;
+	/**
+	 * Controls where the hook is inserted in the handlers array.
+	 * - "Top": Insert at the beginning (index 0), before all existing handlers.
+	 * - "Bottom": Append to the end, after all existing handlers. This is the default.
+	 * - number: Insert at a specific index. Values are clamped to the array bounds.
+	 */
+	position?: "Top" | "Bottom" | number;
 };
 
 export type HookifiedOptions = {
