@@ -244,4 +244,11 @@ export type HookifiedOptions = {
 	 * @default true
 	 */
 	allowDeprecated?: boolean;
+	/**
+	 * Whether to clone hook objects before storing. Default is true.
+	 * When false, the original IHook reference is stored directly.
+	 * @type {boolean}
+	 * @default true
+	 */
+	useHookClone?: boolean;
 } & EventEmitterOptions;

@@ -1969,4 +1969,67 @@ describe("Hookified", () => {
 			expect(results).toEqual(["sync-part"]);
 		});
 	});
+
+	describe("useHookClone", () => {
+		test("should default to true", () => {
+			const hookified = new Hookified();
+			expect(hookified.useHookClone).toBe(true);
+		});
+
+		test("should clone hook objects by default in onHook", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.onHook(hook);
+			const stored = hookified.getHooks("event");
+			expect(stored).toEqual([{ event: "event", handler }]);
+			expect(stored?.[0]).not.toBe(hook);
+		});
+
+		test("should clone hook objects by default in prependHook", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.prependHook(hook);
+			const stored = hookified.getHooks("event");
+			expect(stored).toEqual([{ event: "event", handler }]);
+			expect(stored?.[0]).not.toBe(hook);
+		});
+
+		test("should store original reference when useHookClone is false in onHook", () => {
+			const hookified = new Hookified({ useHookClone: false });
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.onHook(hook);
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0]).toBe(hook);
+		});
+
+		test("should store original reference when useHookClone is false in prependHook", () => {
+			const hookified = new Hookified({ useHookClone: false });
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.prependHook(hook);
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0]).toBe(hook);
+		});
+
+		test("should accept useHookClone from constructor options", () => {
+			const hookified = new Hookified({ useHookClone: false });
+			expect(hookified.useHookClone).toBe(false);
+		});
+
+		test("should allow setting useHookClone at runtime", () => {
+			const hookified = new Hookified();
+			expect(hookified.useHookClone).toBe(true);
+			hookified.useHookClone = false;
+			expect(hookified.useHookClone).toBe(false);
+
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.onHook(hook);
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0]).toBe(hook);
+		});
+	});
 });

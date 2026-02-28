@@ -9,6 +9,7 @@ export class Hookified extends Eventified {
 	private _enforceBeforeAfter = false;
 	private _deprecatedHooks: Map<string, string>;
 	private _allowDeprecated = true;
+	private _useHookClone = true;
 
 	constructor(options?: HookifiedOptions) {
 		super({
@@ -31,6 +32,10 @@ export class Hookified extends Eventified {
 
 		if (options?.allowDeprecated !== undefined) {
 			this._allowDeprecated = options.allowDeprecated;
+		}
+
+		if (options?.useHookClone !== undefined) {
+			this._useHookClone = options.useHookClone;
 		}
 	}
 
@@ -108,38 +113,20 @@ export class Hookified extends Eventified {
 	}
 
 	/**
-	 * Validates hook event name if enforceBeforeAfter is enabled
-	 * @param {string} event - The event name to validate
-	 * @throws {Error} If enforceBeforeAfter is true and event doesn't start with 'before' or 'after'
+	 * Gets whether hook objects are cloned before storing. Default is true.
+	 * @returns {boolean}
 	 */
-	private validateHookName(event: string): void {
-		if (this._enforceBeforeAfter) {
-			const eventValue = event.trim().toLocaleLowerCase();
-			if (!eventValue.startsWith("before") && !eventValue.startsWith("after")) {
-				throw new Error(
-					`Hook event "${event}" must start with "before" or "after" when enforceBeforeAfter is enabled`,
-				);
-			}
-		}
+	public get useHookClone() {
+		return this._useHookClone;
 	}
 
 	/**
-	 * Checks if a hook is deprecated and emits a warning if it is
-	 * @param {string} event - The event name to check
-	 * @returns {boolean} - Returns true if the hook should proceed, false if it should be blocked
+	 * Sets whether hook objects are cloned before storing. Default is true.
+	 * When false, the original IHook reference is stored directly.
+	 * @param {boolean} value
 	 */
-	private checkDeprecatedHook(event: string): boolean {
-		if (this._deprecatedHooks.has(event)) {
-			const message = this._deprecatedHooks.get(event);
-			const warningMessage = `Hook "${event}" is deprecated${message ? `: ${message}` : ""}`;
-
-			// Emit deprecation warning event
-			this.emit("warn", { hook: event, message: warningMessage });
-
-			// Return false if deprecated hooks are not allowed
-			return this._allowDeprecated;
-		}
-		return true;
+	public set useHookClone(value) {
+		this._useHookClone = value;
 	}
 
 	/**
@@ -162,11 +149,14 @@ export class Hookified extends Eventified {
 			return; // Skip registration if deprecated hooks are not allowed
 		}
 
+		const entry: IHook = this._useHookClone
+			? { event: hook.event, handler: hook.handler }
+			: hook;
 		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			eventHandlers.push(hook);
+			eventHandlers.push(entry);
 		} else {
-			this._hooks.set(hook.event, [hook]);
+			this._hooks.set(hook.event, [entry]);
 		}
 	}
 
@@ -201,11 +191,14 @@ export class Hookified extends Eventified {
 		if (!this.checkDeprecatedHook(hook.event)) {
 			return; // Skip registration if deprecated hooks are not allowed
 		}
+		const entry: IHook = this._useHookClone
+			? { event: hook.event, handler: hook.handler }
+			: hook;
 		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			eventHandlers.unshift(hook);
+			eventHandlers.unshift(entry);
 		} else {
-			this._hooks.set(hook.event, [hook]);
+			this._hooks.set(hook.event, [entry]);
 		}
 	}
 
@@ -397,6 +390,41 @@ export class Hookified extends Eventified {
 	 */
 	public clearHooks() {
 		this._hooks.clear();
+	}
+
+	/**
+	 * Validates hook event name if enforceBeforeAfter is enabled
+	 * @param {string} event - The event name to validate
+	 * @throws {Error} If enforceBeforeAfter is true and event doesn't start with 'before' or 'after'
+	 */
+	private validateHookName(event: string): void {
+		if (this._enforceBeforeAfter) {
+			const eventValue = event.trim().toLocaleLowerCase();
+			if (!eventValue.startsWith("before") && !eventValue.startsWith("after")) {
+				throw new Error(
+					`Hook event "${event}" must start with "before" or "after" when enforceBeforeAfter is enabled`,
+				);
+			}
+		}
+	}
+
+	/**
+	 * Checks if a hook is deprecated and emits a warning if it is
+	 * @param {string} event - The event name to check
+	 * @returns {boolean} - Returns true if the hook should proceed, false if it should be blocked
+	 */
+	private checkDeprecatedHook(event: string): boolean {
+		if (this._deprecatedHooks.has(event)) {
+			const message = this._deprecatedHooks.get(event);
+			const warningMessage = `Hook "${event}" is deprecated${message ? `: ${message}` : ""}`;
+
+			// Emit deprecation warning event
+			this.emit("warn", { hook: event, message: warningMessage });
+
+			// Return false if deprecated hooks are not allowed
+			return this._allowDeprecated;
+		}
+		return true;
 	}
 }
 

@@ -36,6 +36,7 @@
   - [.enforceBeforeAfter](#enforcebeforeafter)
   - [.deprecatedHooks](#deprecatedhooks)
   - [.allowDeprecated](#allowdeprecated)
+  - [.useHookClone](#usehookclone)
   - [.onHook(hook)](#onhookhook)
   - [.addHook(event, handler)](#addhookevent-handler)
   - [.onHooks(Array)](#onhooksarray)
@@ -481,6 +482,32 @@ console.log(myClass.getHooks('oldHook')); // [handler function]
 - **Testing**: Set `allowDeprecated: false` to ensure no deprecated hooks are accidentally used
 - **Migration**: Gradually disable deprecated hooks during API transitions
 - **Production**: Disable deprecated hooks to prevent legacy code execution
+
+## .useHookClone
+
+Controls whether hook objects are cloned before storing internally. Default is `true`. When `true`, a shallow copy of the `IHook` object is stored, preventing external mutation from affecting registered hooks. When `false`, the original reference is stored directly.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super({ useHookClone: false });
+  }
+}
+
+const myClass = new MyClass();
+
+const hook = { event: 'before:save', handler: async (data) => {} };
+myClass.onHook(hook);
+
+// With useHookClone: false, the stored hook is the same reference
+const storedHooks = myClass.getHooks('before:save');
+console.log(storedHooks[0] === hook); // true
+
+// You can dynamically change the setting
+myClass.useHookClone = true;
+```
 
 ## .onHook(hook)
 
@@ -1719,6 +1746,14 @@ hookified.onHook([
   { event: 'before:save', handler: async (data) => { data.validated = true; } },
   { event: 'after:save', handler: async () => { console.log('saved'); } },
 ]);
+```
+
+### `useHookClone` option
+
+A new `useHookClone` option (default `true`) controls whether hook objects are shallow-cloned before storing. When enabled, external mutation of a registered hook object won't affect the internal state. Set to `false` to store the original reference for performance or when you need reference equality.
+
+```typescript
+const hookified = new Hookified({ useHookClone: false });
 ```
 
 # How to Contribute
