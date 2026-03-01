@@ -578,6 +578,63 @@ describe("Eventified", () => {
 		warnSpy.mockRestore();
 	});
 
+	test("emit with one argument and multiple listeners", (t) => {
+		const emitter = new Eventified();
+		const results: string[] = [];
+		emitter.on("test-event", (data: string) => results.push(data));
+		emitter.on("test-event", (data: string) => results.push(data));
+		emitter.emit("test-event", "hello");
+		t.expect(results).toEqual(["hello", "hello"]);
+	});
+
+	test("emit with two arguments on single listener", (t) => {
+		const emitter = new Eventified();
+		let received: unknown[] = [];
+		emitter.on("test-event", (a: string, b: string) => {
+			received = [a, b];
+		});
+		emitter.emit("test-event", "a", "b");
+		t.expect(received).toEqual(["a", "b"]);
+	});
+
+	test("emit with three arguments on single listener", (t) => {
+		const emitter = new Eventified();
+		let received: unknown[] = [];
+		emitter.on("test-event", (a: string, b: string, c: string) => {
+			received = [a, b, c];
+		});
+		emitter.emit("test-event", "a", "b", "c");
+		t.expect(received).toEqual(["a", "b", "c"]);
+	});
+
+	test("emit with two arguments on multiple listeners", (t) => {
+		const emitter = new Eventified();
+		const results: unknown[][] = [];
+		emitter.on("test-event", (a: string, b: string) => results.push([a, b]));
+		emitter.on("test-event", (a: string, b: string) => results.push([a, b]));
+		emitter.emit("test-event", "a", "b");
+		t.expect(results).toEqual([
+			["a", "b"],
+			["a", "b"],
+		]);
+	});
+
+	test("emit with three arguments on multiple listeners", (t) => {
+		const emitter = new Eventified();
+		const results: unknown[][] = [];
+		emitter.on("test-event", (a: string, b: string, c: string) =>
+			results.push([a, b, c]),
+		);
+		emitter.on("test-event", (a: string, b: string, c: string) =>
+			results.push([a, b, c]),
+		);
+		emitter.emit("test-event", "a", "b", "c");
+		t.expect(results).toEqual([
+			["a", "b", "c"],
+			["a", "b", "c"],
+		]);
+	});
+
 	test("off() removes listener from array with three or more listeners", (t) => {
 		const emitter = new Eventified();
 		const listener1 = () => {};
