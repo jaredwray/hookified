@@ -2312,6 +2312,60 @@ describe("Hookified", () => {
 			expect(stored?.[0].id).toBe("prepend-once-id");
 		});
 
+		test("prependHook should return the stored hook", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			const result = hookified.prependHook({ event: "event", handler });
+			expect(result).toBeDefined();
+			expect(result?.event).toBe("event");
+			expect(result?.handler).toBe(handler);
+			expect(typeof result?.id).toBe("string");
+		});
+
+		test("prependHook should return undefined when deprecated hook is blocked", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const result = hookified.prependHook({
+				event: "oldHook",
+				handler: () => {},
+			});
+			expect(result).toBeUndefined();
+		});
+
+		test("prependHook should accept useHookClone option to override instance setting", () => {
+			const hookified = new Hookified(); // useHookClone defaults to true
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.prependHook(hook, { useHookClone: false });
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0]).toBe(hook); // same reference, not cloned
+		});
+
+		test("prependOnceHook should return the stored hook", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			const result = hookified.prependOnceHook({ event: "event", handler });
+			expect(result).toBeDefined();
+			expect(result?.event).toBe("event");
+			expect(typeof result?.id).toBe("string");
+		});
+
+		test("prependOnceHook should return undefined when deprecated hook is blocked", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const result = hookified.prependOnceHook({
+				event: "oldHook",
+				handler: () => {},
+			});
+			expect(result).toBeUndefined();
+		});
+
 		test("Hook class should accept id parameter", () => {
 			const handler = () => {};
 			const hook = new Hook("event1", handler, "class-id");

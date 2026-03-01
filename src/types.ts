@@ -286,6 +286,8 @@ export type OnHookOptions = {
 	position?: "Top" | "Bottom" | number;
 };
 
+export type PrependHookOptions = Omit<OnHookOptions, "position">;
+
 export type HookifiedOptions = {
 	/**
 	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.

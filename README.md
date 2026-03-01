@@ -52,8 +52,8 @@
   - [.onHook(hook, options?)](#onhookhook-options)
   - [.onHooks(Array, options?)](#onhooksarray-options)
   - [.onceHook(hook)](#oncehookhook)
-  - [.prependHook(hook)](#prependhookhook)
-  - [.prependOnceHook(hook)](#prependoncehookhook)
+  - [.prependHook(hook, options?)](#prependhookhook-options)
+  - [.prependOnceHook(hook, options?)](#prependoncehookhook-options)
   - [.removeEventHooks(eventName)](#removeeventhookseventname)
   - [.removeHook(hook)](#removehookhook)
   - [.removeHookById(id)](#removehookbyidid)
@@ -826,9 +826,12 @@ await myClass.hook('before:myMethod2', data); // handler runs once then is remov
 console.log(myClass.hooks.size); // 0
 ```
 
-## .prependHook(hook)
+## .prependHook(hook, options?)
 
-Subscribe to a hook event before all other hooks. Takes an `IHook` object with `event` and `handler` properties.
+Subscribe to a hook event before all other hooks. Takes an `IHook` object with `event` and `handler` properties. Returns the stored `IHook` (with generated `id`), or `undefined` if blocked by deprecation. Equivalent to calling `onHook(hook, { position: "Top" })`.
+
+An optional `PrependHookOptions` object can be passed with:
+- `useHookClone` (boolean) — per-call override for hook cloning behavior
 
 ```javascript
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
@@ -839,9 +842,12 @@ myClass.prependHook({ event: 'before:myMethod2', handler: async (data) => {
 }});
 ```
 
-## .prependOnceHook(hook)
+## .prependOnceHook(hook, options?)
 
-Subscribe to a hook event before all other hooks. Takes an `IHook` object with `event` and `handler` properties. After the handler is called once, it is automatically removed.
+Subscribe to a hook event before all other hooks. Takes an `IHook` object with `event` and `handler` properties. After the handler is called once, it is automatically removed. Returns the stored `IHook` (with generated `id`), or `undefined` if blocked by deprecation.
+
+An optional `PrependHookOptions` object can be passed with:
+- `useHookClone` (boolean) — per-call override for hook cloning behavior
 
 ```javascript
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
