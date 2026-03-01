@@ -19,7 +19,8 @@
 - Enforce consistent hook naming conventions with `enforceBeforeAfter`
 - Deprecation warnings for hooks with `deprecatedHooks`
 - Control deprecated hook execution with `allowDeprecated`
-- No package dependencies and only 200KB in size
+- WaterfallHook for sequential data transformation pipelines
+- No package dependencies and only 250KB in size
 - Fast and Efficient with [Benchmarks](#benchmarks)
 - Maintained on a regular basis!
 
@@ -29,7 +30,8 @@
 - [Migrating from v1 to v2](#migrating-from-v1-to-v2)
 - [Using it in the Browser](#using-it-in-the-browser)
 - [Hooks](#hooks)
-  - [Hook class](#hook-class)
+  - [Standard Hook](#standard-hook)
+  - [Waterfall Hook](#waterfallhook)
 - [API - Hooks](#api---hooks)
   - [.throwOnHookError](#throwOnHookError)
   - [.eventLogger](#eventlogger)
@@ -45,6 +47,7 @@
   - [.prependOnceHook(hook)](#prependoncehookhook)
   - [.removeHook(hook)](#removehookhook)
   - [.removeHooks(Array)](#removehooksarray)
+  - [.removeHookById(id)](#removehookbyidid)
   - [.hook(eventName, ...args)](#hookeventname-args)
   - [.callHook(eventName, ...args)](#callhookeventname-args)
   - [.beforeHook(eventName, ...args)](#beforehookeventname-args)
@@ -52,6 +55,7 @@
   - [.hookSync(eventName, ...args)](#hooksync-eventname-args)
   - [.hooks](#hooks)
   - [.getHooks(eventName)](#gethookseventname)
+  - [.getHook(id)](#gethookid)
   - [.clearHooks(eventName)](#clearhookeventname)
 - [API - Events](#api---events)
   - [.throwOnEmitError](#throwonemitterror)
@@ -180,9 +184,19 @@ if you are not using ESM modules, you can use the following:
 
 # Hooks
 
-## Hook class
+## Standard Hook
 
 The `Hook` class provides a convenient way to create hook entries. It implements the `IHook` interface.
+
+The `IHook` interface has the following properties:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | No | Unique identifier for the hook. Auto-generated via `crypto.randomUUID()` if not provided. |
+| `event` | `string` | Yes | The event name for the hook. |
+| `handler` | `HookFn` | Yes | The handler function for the hook. |
+
+When a hook is registered, it is assigned an `id` (auto-generated if not provided). The `id` can be used to look up or remove hooks via `getHook` and `removeHookById`. If you register a hook with the same `id` on the same event, it will replace the existing hook in-place (preserving its position).
 
 **Using the `Hook` class:**
 
@@ -191,9 +205,15 @@ import { Hook, Hookified } from 'hookified';
 
 const hookified = new Hookified();
 
+// Without id (auto-generated)
 const hook = new Hook('before:save', async (data) => {
   data.validated = true;
 });
+
+// With id
+const hook2 = new Hook('after:save', async (data) => {
+  console.log('saved');
+}, 'my-after-save-hook');
 
 // Register with onHook
 hookified.onHook(hook);
@@ -217,13 +237,96 @@ import { Hookified, type IHook } from 'hookified';
 const hookified = new Hookified();
 
 const hook: IHook = {
+  id: 'my-validation-hook', // optional — auto-generated if omitted
   event: 'before:save',
   handler: async (data) => {
     data.validated = true;
   },
 };
 
-hookified.onHook(hook);
+const stored = hookified.onHook(hook);
+console.log(stored?.id); // 'my-validation-hook'
+
+// Later, remove by id
+hookified.removeHookById('my-validation-hook');
+```
+
+## Waterfall Hook
+
+The `WaterfallHook` class chains multiple hook functions sequentially in a waterfall pipeline. Each hook receives a context containing the original arguments and the accumulated results from all previous hooks. It implements the `IHook` interface, so it integrates directly with `Hookified.onHook()`.
+
+The `WaterfallHookContext` has the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `initialArgs` | `any` | The original arguments passed to the waterfall execution. |
+| `results` | `WaterfallHookResult[]` | Array of `{ hook, result }` entries from previous hooks. Empty for the first hook. |
+
+**Basic usage:**
+
+```javascript
+import { WaterfallHook } from 'hookified';
+
+const wh = new WaterfallHook('process', ({ results, initialArgs }) => {
+  // Final handler receives all accumulated results
+  const lastResult = results[results.length - 1].result;
+  console.log('Final:', lastResult);
+});
+
+// Add transformation hooks to the pipeline
+wh.addHook(({ initialArgs }) => {
+  return initialArgs + 1; // 5 -> 6
+});
+
+wh.addHook(({ results }) => {
+  return results[results.length - 1].result * 2; // 6 -> 12
+});
+
+// Execute the waterfall by calling handler directly
+await wh.handler(5); // Final: 12
+```
+
+**Integrating with Hookified via `onHook()`:**
+
+```javascript
+import { Hookified, WaterfallHook } from 'hookified';
+
+const hookified = new Hookified();
+
+const wh = new WaterfallHook('save', ({ results }) => {
+  const data = results[results.length - 1].result;
+  console.log('Saved:', data);
+});
+
+wh.addHook(({ initialArgs }) => {
+  return { ...initialArgs, validated: true };
+});
+
+wh.addHook(({ results }) => {
+  return { ...results[results.length - 1].result, timestamp: Date.now() };
+});
+
+// Register with Hookified — works because WaterfallHook implements IHook
+hookified.onHook(wh);
+
+// When hook() fires, the full waterfall pipeline executes
+await hookified.hook('save', { name: 'test' });
+// Saved: { name: 'test', validated: true, timestamp: ... }
+```
+
+**Managing hooks:**
+
+```javascript
+const wh = new WaterfallHook('process', ({ results }) => results);
+
+const myHook = ({ initialArgs }) => initialArgs + 1;
+wh.addHook(myHook);
+
+// Remove a hook by reference
+wh.removeHook(myHook); // returns true
+
+// Access the hooks array
+console.log(wh.hooks.length); // 0
 ```
 
 # API - Hooks
@@ -511,7 +614,9 @@ myClass.useHookClone = true;
 
 ## .onHook(hook, options?)
 
-Subscribe to a hook event. Takes an `IHook` object and an optional `OnHookOptions` object. Returns the stored `IHook`, or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` — especially when `useHookClone` is `true`. To register multiple hooks at once, use `.onHooks()`.
+Subscribe to a hook event. Takes an `IHook` object and an optional `OnHookOptions` object. Returns the stored `IHook` (with `id` assigned), or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` or `.removeHookById()`. To register multiple hooks at once, use `.onHooks()`.
+
+If the hook has an `id`, it will be used as-is. If not, a UUID is auto-generated via `crypto.randomUUID()`. If a hook with the same `id` already exists on the same event, it will be **replaced in-place** (preserving its position in the array).
 
 **Options (`OnHookOptions`)**:
 - `useHookClone` (boolean, optional) — Per-call override for the instance-level `useHookClone` setting. When `true`, the hook object is cloned before storing. When `false`, the original reference is stored directly. When omitted, falls back to the instance-level setting.
@@ -536,13 +641,32 @@ class MyClass extends Hookified {
 
 const myClass = new MyClass();
 
-// Single hook — returns the stored IHook
+// Single hook — returns the stored IHook with id
 const stored = myClass.onHook({
   event: 'before:myMethod2',
   handler: async (data) => {
     data.some = 'new data';
   },
 });
+console.log(stored.id); // auto-generated UUID
+
+// With a custom id
+const stored2 = myClass.onHook({
+  id: 'my-validation',
+  event: 'before:save',
+  handler: async (data) => { data.validated = true; },
+});
+
+// Replace hook by registering with the same id
+myClass.onHook({
+  id: 'my-validation',
+  event: 'before:save',
+  handler: async (data) => { data.validated = true; data.extra = true; },
+});
+// Only one hook with id 'my-validation' exists, at the same position
+
+// Remove by id
+myClass.removeHookById('my-validation');
 
 // Use the returned reference to remove the hook later
 myClass.removeHook(stored);
@@ -789,6 +913,31 @@ const removed = myClass.removeHooks(hooks);
 console.log(removed.length); // 2
 ```
 
+## .removeHookById(id)
+
+Remove one or more hooks by `id`, searching across all events. Accepts a single `string` or an array of `string` ids.
+
+- **Single id**: Returns the removed `IHook`, or `undefined` if not found.
+- **Array of ids**: Returns an `IHook[]` array of the hooks that were successfully removed.
+
+When the last hook for an event is removed, the event key is cleaned up.
+
+```javascript
+const myClass = new MyClass();
+
+myClass.onHook({ id: 'hook-a', event: 'before:save', handler: async () => {} });
+myClass.onHook({ id: 'hook-b', event: 'after:save', handler: async () => {} });
+myClass.onHook({ id: 'hook-c', event: 'before:save', handler: async () => {} });
+
+// Remove a single hook by id
+const removed = myClass.removeHookById('hook-a');
+console.log(removed?.id); // 'hook-a'
+
+// Remove multiple hooks by ids
+const removedMany = myClass.removeHookById(['hook-b', 'hook-c']);
+console.log(removedMany.length); // 2
+```
+
 ## .hook(eventName, ...args)
 
 Run a hook event.
@@ -983,6 +1132,25 @@ myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
 }});
 
 console.log(myClass.getHooks('before:myMethod2')); // [{ event: 'before:myMethod2', handler: [Function] }]
+```
+
+## .getHook(id)
+
+Get a specific hook by `id`, searching across all events. Returns the `IHook` if found, or `undefined`.
+
+```javascript
+const myClass = new MyClass();
+
+myClass.onHook({
+  id: 'my-hook',
+  event: 'before:save',
+  handler: async (data) => { data.validated = true; },
+});
+
+const hook = myClass.getHook('my-hook');
+console.log(hook?.id); // 'my-hook'
+console.log(hook?.event); // 'before:save'
+console.log(hook?.handler); // [Function]
 ```
 
 ## .clearHooks(eventName)
@@ -1474,6 +1642,28 @@ _Note: the `EventEmitter` version is Nodejs versioning._
 
 # Migrating from v1 to v2
 
+**[Breaking Changes](#breaking-changes)**
+- [`throwHookErrors` removed — use `throwOnHookError` instead](#throwhookerrors-removed--use-throwonhookerror-instead)
+- [`throwOnEmptyListeners` now defaults to `true`](#throwonemptylisteners-now-defaults-to-true)
+- [`logger` renamed to `eventLogger`](#logger-renamed-to-eventlogger)
+- [`maxListeners` default changed from `100` to `0` (unlimited) and no longer truncates](#maxlisteners-default-changed-from-100-to-0-unlimited-and-no-longer-truncates)
+- [`onHookEntry` removed — use `onHook` instead](#onhookentry-removed--use-onhook-instead)
+- [`onHook` signature changed](#onhook-signature-changed)
+- [`HookEntry` type and `Hook` type removed](#hookentry-type-and-hook-type-removed)
+- [`removeHook` and `removeHooks` now return removed hooks](#removehook-and-removehooks-now-return-removed-hooks)
+- [`removeHook`, `removeHooks`, and `getHooks` no longer check for deprecated hooks](#removehook-removehooks-and-gethooks-no-longer-check-for-deprecated-hooks)
+- [Internal hook storage now uses `IHook` objects](#internal-hook-storage-now-uses-ihook-objects)
+- [`onceHook`, `prependHook`, `prependOnceHook`, and `removeHook` now take `IHook`](#oncehook-prependhook-prependoncehook-and-removehook-now-take-ihook)
+- [`onHook` now returns the stored hook](#onhook-now-returns-the-stored-hook)
+
+**[New Features](#new-features)**
+- [standard `Hook` class now available](#standard-hook)
+- [`WaterfallHook` class for sequential data transformation pipelines](#waterfallhook-class)
+- [`useHookClone` option](#usehookclone-option)
+- [`onHook` now accepts `OnHookOptions`](#onhook-now-accepts-onhookoptions)
+- [`onHook` no longer accepts arrays](#onhook-no-longer-accepts-arrays)
+- [`IHook` now has an `id` property](#ihook-now-has-an-id-property)
+
 ## Breaking Changes
 
 ### `throwHookErrors` removed — use `throwOnHookError` instead
@@ -1801,6 +1991,43 @@ hookified.onHooks([
   { event: 'before:save', handler: async (data) => {} },
   { event: 'after:save', handler: async (data) => {} },
 ]);
+```
+
+### `IHook` now has an `id` property
+
+Every hook now has an optional `id` property. If not provided, a UUID is auto-generated via `crypto.randomUUID()`. The `id` enables easier lookups and removal via the new `getHook(id)` and `removeHookById(id)` methods, which search across all events.
+
+Registering a hook with the same `id` on the same event replaces the existing hook in-place (preserving its position).
+
+```typescript
+// With custom id
+const stored = hookified.onHook({
+  id: 'my-validation',
+  event: 'before:save',
+  handler: async (data) => { data.validated = true; },
+});
+
+// Without id — auto-generated
+const stored2 = hookified.onHook({
+  event: 'before:save',
+  handler: async (data) => {},
+});
+console.log(stored2.id); // e.g. '550e8400-e29b-41d4-a716-446655440000'
+
+// Look up by id (searches all events)
+const hook = hookified.getHook('my-validation');
+
+// Remove by id (searches all events)
+hookified.removeHookById('my-validation');
+
+// Remove multiple by ids
+hookified.removeHookById(['hook-a', 'hook-b']);
+```
+
+The `Hook` class also accepts an optional `id` parameter:
+
+```typescript
+const hook = new Hook('before:save', handler, 'my-custom-id');
 ```
 
 # How to Contribute

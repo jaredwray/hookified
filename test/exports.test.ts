@@ -21,10 +21,17 @@ describe("Export Verification Tests", () => {
 			expect(typeof Eventified).toBe("function");
 		});
 
+		test("should import WaterfallHook from main export", async () => {
+			const { WaterfallHook } = await import("hookified");
+			expect(WaterfallHook).toBeDefined();
+			expect(typeof WaterfallHook).toBe("function");
+		});
+
 		test("should have all expected exports", async () => {
 			const exports = await import("hookified");
 			expect(exports).toHaveProperty("Hookified");
 			expect(exports).toHaveProperty("Eventified");
+			expect(exports).toHaveProperty("WaterfallHook");
 		});
 
 		test("should create and use Hookified instance", async () => {
@@ -178,6 +185,18 @@ describe("Export Verification Tests", () => {
 
 		test("should export Hook class", () => {
 			expect(esmContent).toContain("Hook");
+		});
+
+		test("should export WaterfallHook class", () => {
+			expect(esmContent).toContain("WaterfallHook");
+		});
+
+		test("should export IWaterfallHook interface", () => {
+			expect(esmContent).toContain("IWaterfallHook");
+		});
+
+		test("should export WaterfallHookFn type", () => {
+			expect(esmContent).toContain("WaterfallHookFn");
 		});
 
 		test("should export HookifiedOptions type", () => {

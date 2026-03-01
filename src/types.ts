@@ -212,6 +212,10 @@ export type HookFn = (...arguments_: any[]) => Promise<void> | void;
 
 export interface IHook {
 	/**
+	 * Unique identifier for the hook. Auto-generated via crypto.randomUUID() if not provided.
+	 */
+	id?: string;
+	/**
 	 * The event name for the hook
 	 */
 	event: string;
@@ -219,6 +223,49 @@ export interface IHook {
 	 * The handler function for the hook
 	 */
 	handler: HookFn;
+}
+
+export type WaterfallHookResult = {
+	/**
+	 * The hook function that produced this result
+	 */
+	hook: WaterfallHookFn;
+	/**
+	 * The value returned by the hook
+	 */
+	result: any;
+};
+
+export type WaterfallHookContext = {
+	/**
+	 * The original arguments passed to the waterfall execution, before any hooks processed them.
+	 */
+	initialArgs: any;
+	/**
+	 * Array of results from previous hooks in execution order, each containing the hook and its result.
+	 * Empty for the first hook.
+	 */
+	results: WaterfallHookResult[];
+};
+
+export type WaterfallHookFn = (
+	context: WaterfallHookContext,
+) => Promise<any> | any;
+
+export interface IWaterfallHook extends IHook {
+	/**
+	 * Array of hook functions that are called sequentially.
+	 * Each hook receives a WaterfallHookContext with initialArgs and results.
+	 */
+	hooks: WaterfallHookFn[];
+	/**
+	 * Adds a hook function to the end of the waterfall chain
+	 */
+	addHook(hook: WaterfallHookFn): void;
+	/**
+	 * Removes a specific hook function from the waterfall chain
+	 */
+	removeHook(hook: WaterfallHookFn): boolean;
 }
 
 export type OnHookOptions = {

@@ -3,10 +3,23 @@ import type {
 	HookFn,
 	HookifiedOptions,
 	IHook,
+	IWaterfallHook,
 	OnHookOptions,
+	WaterfallHookContext,
+	WaterfallHookFn,
+	WaterfallHookResult,
 } from "./types.js";
 
-export type { HookFn, HookifiedOptions, IHook, OnHookOptions };
+export type {
+	HookFn,
+	HookifiedOptions,
+	IHook,
+	IWaterfallHook,
+	OnHookOptions,
+	WaterfallHookContext,
+	WaterfallHookFn,
+	WaterfallHookResult,
+};
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, IHook[]>;
@@ -150,18 +163,27 @@ export class Hookified extends Eventified {
 
 		const shouldClone = options?.useHookClone ?? this._useHookClone;
 		const entry: IHook = shouldClone
-			? { event: hook.event, handler: hook.handler }
+			? { id: hook.id, event: hook.event, handler: hook.handler }
 			: hook;
+
+		entry.id = entry.id ?? crypto.randomUUID();
+
 		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			const position = options?.position ?? "Bottom";
-			if (position === "Top") {
-				eventHandlers.unshift(entry);
-			} else if (position === "Bottom") {
-				eventHandlers.push(entry);
+			// Check for duplicate id — replace in-place if found
+			const existingIndex = eventHandlers.findIndex((h) => h.id === entry.id);
+			if (existingIndex !== -1) {
+				eventHandlers[existingIndex] = entry;
 			} else {
-				const index = Math.max(0, Math.min(position, eventHandlers.length));
-				eventHandlers.splice(index, 0, entry);
+				const position = options?.position ?? "Bottom";
+				if (position === "Top") {
+					eventHandlers.unshift(entry);
+				} else if (position === "Bottom") {
+					eventHandlers.push(entry);
+				} else {
+					const index = Math.max(0, Math.min(position, eventHandlers.length));
+					eventHandlers.splice(index, 0, entry);
+				}
 			}
 		} else {
 			this._hooks.set(hook.event, [entry]);
@@ -203,11 +225,20 @@ export class Hookified extends Eventified {
 			return; // Skip registration if deprecated hooks are not allowed
 		}
 		const entry: IHook = this._useHookClone
-			? { event: hook.event, handler: hook.handler }
+			? { id: hook.id, event: hook.event, handler: hook.handler }
 			: hook;
+
+		entry.id = entry.id ?? crypto.randomUUID();
+
 		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			eventHandlers.unshift(entry);
+			// Check for duplicate id — replace in-place if found
+			const existingIndex = eventHandlers.findIndex((h) => h.id === entry.id);
+			if (existingIndex !== -1) {
+				eventHandlers[existingIndex] = entry;
+			} else {
+				eventHandlers.unshift(entry);
+			}
 		} else {
 			this._hooks.set(hook.event, [entry]);
 		}
@@ -228,7 +259,11 @@ export class Hookified extends Eventified {
 			return hook.handler(...arguments_);
 		};
 
-		this.prependHook({ event: hook.event, handler: wrappedHandler });
+		this.prependHook({
+			id: hook.id,
+			event: hook.event,
+			handler: wrappedHandler,
+		});
 	}
 
 	/**
@@ -246,7 +281,7 @@ export class Hookified extends Eventified {
 			return hook.handler(...arguments_);
 		};
 
-		this.onHook({ event: hook.event, handler: wrappedHandler });
+		this.onHook({ id: hook.id, event: hook.event, handler: wrappedHandler });
 	}
 
 	/**
@@ -395,6 +430,55 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Gets a specific hook by id, searching across all events
+	 * @param {string} id - the hook id
+	 * @returns {IHook | undefined} the hook if found, or undefined
+	 */
+	public getHook(id: string): IHook | undefined {
+		for (const eventHandlers of this._hooks.values()) {
+			const found = eventHandlers.find((h) => h.id === id);
+			if (found) {
+				return found;
+			}
+		}
+
+		return undefined;
+	}
+
+	/**
+	 * Removes one or more hooks by id, searching across all events
+	 * @param {string | string[]} id - the hook id or array of hook ids to remove
+	 * @returns {IHook | IHook[] | undefined} the removed hook(s), or undefined/empty array if not found
+	 */
+	public removeHookById(id: string | string[]): IHook | IHook[] | undefined {
+		if (Array.isArray(id)) {
+			const removed: IHook[] = [];
+			for (const singleId of id) {
+				const result = this.removeHookById(singleId);
+				if (result && !Array.isArray(result)) {
+					removed.push(result);
+				}
+			}
+
+			return removed;
+		}
+
+		for (const [event, eventHandlers] of this._hooks.entries()) {
+			const index = eventHandlers.findIndex((h) => h.id === id);
+			if (index !== -1) {
+				const [removed] = eventHandlers.splice(index, 1);
+				if (eventHandlers.length === 0) {
+					this._hooks.delete(event);
+				}
+
+				return removed;
+			}
+		}
+
+		return undefined;
+	}
+
+	/**
 	 * Removes all hooks
 	 * @returns {void}
 	 */
@@ -440,6 +524,7 @@ export class Hookified extends Eventified {
 
 export { Eventified } from "./eventified.js";
 export { Hook } from "./hooks/hook.js";
+export { WaterfallHook } from "./hooks/waterfall-hook.js";
 export type {
 	EventEmitterOptions,
 	EventListener,
