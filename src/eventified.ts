@@ -8,13 +8,14 @@ import type {
 
 export type { EventEmitterOptions, EventListener, IEventEmitter };
 
+const ERROR_EVENT = "error";
+
 export class Eventified implements IEventEmitter {
 	private readonly _eventListeners: Map<string | symbol, EventListener[]>;
 	private _maxListeners: number;
 	private _eventLogger?: Logger;
 	private _throwOnEmitError = false;
 	private _throwOnEmptyListeners = true;
-	private _errorEvent = "error";
 
 	constructor(options?: EventEmitterOptions) {
 		this._eventListeners = new Map<string | symbol, EventListener[]>();
@@ -105,7 +106,12 @@ export class Eventified implements IEventEmitter {
 	 */
 	public listenerCount(eventName?: string | symbol): number {
 		if (eventName === undefined) {
-			return this.getAllListeners().length;
+			let count = 0;
+			for (const listeners of this._eventListeners.values()) {
+				count += listeners.length;
+			}
+
+			return count;
 		}
 
 		const listeners = this._eventListeners.get(eventName);
@@ -197,21 +203,20 @@ export class Eventified implements IEventEmitter {
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
 	public on(event: string | symbol, listener: EventListener): IEventEmitter {
-		if (!this._eventListeners.has(event)) {
-			this._eventListeners.set(event, []);
+		let listeners = this._eventListeners.get(event);
+
+		if (listeners === undefined) {
+			listeners = [];
+			this._eventListeners.set(event, listeners);
 		}
 
-		const listeners = this._eventListeners.get(event);
-
-		if (listeners) {
-			if (this._maxListeners > 0 && listeners.length >= this._maxListeners) {
-				console.warn(
-					`MaxListenersExceededWarning: Possible event memory leak detected. ${listeners.length + 1} ${event as string} listeners added. Use setMaxListeners() to increase limit.`,
-				);
-			}
-
-			listeners.push(listener);
+		if (this._maxListeners > 0 && listeners.length >= this._maxListeners) {
+			console.warn(
+				`MaxListenersExceededWarning: Possible event memory leak detected. ${listeners.length + 1} ${event as string} listeners added. Use setMaxListeners() to increase limit.`,
+			);
 		}
+
+		listeners.push(listener);
 
 		return this;
 	}
@@ -234,14 +239,15 @@ export class Eventified implements IEventEmitter {
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
 	public off(event: string | symbol, listener: EventListener): IEventEmitter {
-		const listeners = this._eventListeners.get(event) ?? [];
-		const index = listeners.indexOf(listener);
-		if (index !== -1) {
-			listeners.splice(index, 1);
-		}
-
-		if (listeners.length === 0) {
-			this._eventListeners.delete(event);
+		const listeners = this._eventListeners.get(event);
+		if (listeners) {
+			const index = listeners.indexOf(listener);
+			if (index !== -1) {
+				listeners.splice(index, 1);
+				if (listeners.length === 0) {
+					this._eventListeners.delete(event);
+				}
+			}
 		}
 
 		return this;
@@ -258,30 +264,26 @@ export class Eventified implements IEventEmitter {
 		const listeners = this._eventListeners.get(event);
 
 		if (listeners && listeners.length > 0) {
-			for (const listener of listeners) {
-				listener(...arguments_);
-				result = true;
+			for (let i = 0; i < listeners.length; i++) {
+				listeners[i](...arguments_);
 			}
+
+			result = true;
 		}
 
 		// send it to the logger
-		this.sendToEventLogger(event, arguments_);
+		if (this._eventLogger) {
+			this.sendToEventLogger(event, arguments_);
+		}
 
-		if (event === this._errorEvent) {
+		if (event === ERROR_EVENT && !result) {
 			const error =
 				arguments_[0] instanceof Error
 					? arguments_[0]
 					: new Error(`${arguments_[0]}`);
 
-			if (this._throwOnEmitError && !result) {
+			if (this._throwOnEmitError || this._throwOnEmptyListeners) {
 				throw error;
-			} else {
-				if (
-					this.listeners(this._errorEvent).length === 0 &&
-					this._throwOnEmptyListeners === true
-				) {
-					throw error;
-				}
 			}
 		}
 
@@ -326,9 +328,11 @@ export class Eventified implements IEventEmitter {
 	 * @returns {EventListener[]} An array of listeners
 	 */
 	public getAllListeners(): EventListener[] {
-		let result: EventListener[] = [];
+		const result: EventListener[] = [];
 		for (const listeners of this._eventListeners.values()) {
-			result = [...result, ...listeners];
+			for (let i = 0; i < listeners.length; i++) {
+				result.push(listeners[i]);
+			}
 		}
 
 		return result;
