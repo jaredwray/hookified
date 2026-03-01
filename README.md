@@ -19,7 +19,8 @@
 - Enforce consistent hook naming conventions with `enforceBeforeAfter`
 - Deprecation warnings for hooks with `deprecatedHooks`
 - Control deprecated hook execution with `allowDeprecated`
-- No package dependencies and only 200KB in size
+- WaterfallHook for sequential data transformation pipelines
+- No package dependencies and only 250KB in size
 - Fast and Efficient with [Benchmarks](#benchmarks)
 - Maintained on a regular basis!
 
@@ -30,6 +31,7 @@
 - [Using it in the Browser](#using-it-in-the-browser)
 - [Hooks](#hooks)
   - [Standard Hook](#standard-hook)
+  - [Waterfall Hook](#waterfallhook)
 - [API - Hooks](#api---hooks)
   - [.throwOnHookError](#throwOnHookError)
   - [.eventLogger](#eventlogger)
@@ -247,6 +249,84 @@ console.log(stored?.id); // 'my-validation-hook'
 
 // Later, remove by id
 hookified.removeHookById('my-validation-hook');
+```
+
+## Waterfall Hook
+
+The `WaterfallHook` class chains multiple hook functions sequentially in a waterfall pipeline. Each hook receives a context containing the original arguments and the accumulated results from all previous hooks. It implements the `IHook` interface, so it integrates directly with `Hookified.onHook()`.
+
+The `WaterfallHookContext` has the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `initialArgs` | `any` | The original arguments passed to the waterfall execution. |
+| `results` | `WaterfallHookResult[]` | Array of `{ hook, result }` entries from previous hooks. Empty for the first hook. |
+
+**Basic usage:**
+
+```javascript
+import { WaterfallHook } from 'hookified';
+
+const wh = new WaterfallHook('process', ({ results, initialArgs }) => {
+  // Final handler receives all accumulated results
+  const lastResult = results[results.length - 1].result;
+  console.log('Final:', lastResult);
+});
+
+// Add transformation hooks to the pipeline
+wh.addHook(({ initialArgs }) => {
+  return initialArgs + 1; // 5 -> 6
+});
+
+wh.addHook(({ results }) => {
+  return results[results.length - 1].result * 2; // 6 -> 12
+});
+
+// Execute the waterfall by calling handler directly
+await wh.handler(5); // Final: 12
+```
+
+**Integrating with Hookified via `onHook()`:**
+
+```javascript
+import { Hookified, WaterfallHook } from 'hookified';
+
+const hookified = new Hookified();
+
+const wh = new WaterfallHook('save', ({ results }) => {
+  const data = results[results.length - 1].result;
+  console.log('Saved:', data);
+});
+
+wh.addHook(({ initialArgs }) => {
+  return { ...initialArgs, validated: true };
+});
+
+wh.addHook(({ results }) => {
+  return { ...results[results.length - 1].result, timestamp: Date.now() };
+});
+
+// Register with Hookified — works because WaterfallHook implements IHook
+hookified.onHook(wh);
+
+// When hook() fires, the full waterfall pipeline executes
+await hookified.hook('save', { name: 'test' });
+// Saved: { name: 'test', validated: true, timestamp: ... }
+```
+
+**Managing hooks:**
+
+```javascript
+const wh = new WaterfallHook('process', ({ results }) => results);
+
+const myHook = ({ initialArgs }) => initialArgs + 1;
+wh.addHook(myHook);
+
+// Remove a hook by reference
+wh.removeHook(myHook); // returns true
+
+// Access the hooks array
+console.log(wh.hooks.length); // 0
 ```
 
 # API - Hooks
@@ -1578,6 +1658,7 @@ _Note: the `EventEmitter` version is Nodejs versioning._
 
 **[New Features](#new-features)**
 - [standard `Hook` class now available](#standard-hook)
+- [`WaterfallHook` class for sequential data transformation pipelines](#waterfallhook-class)
 - [`useHookClone` option](#usehookclone-option)
 - [`onHook` now accepts `OnHookOptions`](#onhook-now-accepts-onhookoptions)
 - [`onHook` no longer accepts arrays](#onhook-no-longer-accepts-arrays)

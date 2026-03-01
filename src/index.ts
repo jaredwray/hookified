@@ -3,10 +3,23 @@ import type {
 	HookFn,
 	HookifiedOptions,
 	IHook,
+	IWaterfallHook,
 	OnHookOptions,
+	WaterfallHookContext,
+	WaterfallHookFn,
+	WaterfallHookResult,
 } from "./types.js";
 
-export type { HookFn, HookifiedOptions, IHook, OnHookOptions };
+export type {
+	HookFn,
+	HookifiedOptions,
+	IHook,
+	IWaterfallHook,
+	OnHookOptions,
+	WaterfallHookContext,
+	WaterfallHookFn,
+	WaterfallHookResult,
+};
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, IHook[]>;
@@ -511,6 +524,7 @@ export class Hookified extends Eventified {
 
 export { Eventified } from "./eventified.js";
 export { Hook } from "./hooks/hook.js";
+export { WaterfallHook } from "./hooks/waterfall-hook.js";
 export type {
 	EventEmitterOptions,
 	EventListener,
