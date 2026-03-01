@@ -95,7 +95,7 @@ class MyClass extends Hookified {
   }
 
   async myMethodEmittingEvent() {
-    this.emit('message', 'Hello World'); //using Emittery
+    this.emit('message', 'Hello World');
   }
 
   //with hooks you can pass data in and if they are subscribed via onHook they can modify the data
@@ -142,7 +142,7 @@ class MyClass extends Hookified {
     }
 
     async myMethodEmittingEvent() {
-      this.emit('message', 'Hello World'); //using Emittery
+      this.emit('message', 'Hello World');
     }
 
     //with hooks you can pass data in and if they are subscribed via onHook they can modify the data
@@ -168,7 +168,7 @@ if you are not using ESM modules, you can use the following:
     }
 
     async myMethodEmittingEvent() {
-      this.emit('message', 'Hello World'); //using Emittery
+      this.emit('message', 'Hello World');
     }
 
     //with hooks you can pass data in and if they are subscribed via onHook they can modify the data
@@ -204,7 +204,11 @@ When a hook is registered, it is assigned an `id` (auto-generated if not provide
 ```javascript
 import { Hook, Hookified } from 'hookified';
 
-const hookified = new Hookified();
+class MyClass extends Hookified {
+  constructor() { super(); }
+}
+
+const myClass = new MyClass();
 
 // Without id (auto-generated)
 const hook = new Hook('before:save', async (data) => {
@@ -217,17 +221,17 @@ const hook2 = new Hook('after:save', async (data) => {
 }, 'my-after-save-hook');
 
 // Register with onHook
-hookified.onHook(hook);
+myClass.onHook(hook);
 
 // Or register multiple hooks with onHooks
 const hooks = [
   new Hook('before:save', async (data) => { data.validated = true; }),
   new Hook('after:save', async (data) => { console.log('saved'); }),
 ];
-hookified.onHooks(hooks);
+myClass.onHooks(hooks);
 
 // Remove hooks
-hookified.removeHooks(hooks);
+myClass.removeHooks(hooks);
 ```
 
 **Using plain TypeScript with the `IHook` interface:**
@@ -235,7 +239,11 @@ hookified.removeHooks(hooks);
 ```typescript
 import { Hookified, type IHook } from 'hookified';
 
-const hookified = new Hookified();
+class MyClass extends Hookified {
+  constructor() { super(); }
+}
+
+const myClass = new MyClass();
 
 const hook: IHook = {
   id: 'my-validation-hook', // optional — auto-generated if omitted
@@ -245,11 +253,11 @@ const hook: IHook = {
   },
 };
 
-const stored = hookified.onHook(hook);
+const stored = myClass.onHook(hook);
 console.log(stored?.id); // 'my-validation-hook'
 
 // Later, remove by id
-hookified.removeHookById('my-validation-hook');
+myClass.removeHookById('my-validation-hook');
 ```
 
 ## Waterfall Hook
@@ -292,7 +300,11 @@ await wh.handler(5); // Final: 12
 ```javascript
 import { Hookified, WaterfallHook } from 'hookified';
 
-const hookified = new Hookified();
+class MyClass extends Hookified {
+  constructor() { super(); }
+}
+
+const myClass = new MyClass();
 
 const wh = new WaterfallHook('save', ({ results }) => {
   const data = results[results.length - 1].result;
@@ -308,10 +320,10 @@ wh.addHook(({ results }) => {
 });
 
 // Register with Hookified — works because WaterfallHook implements IHook
-hookified.onHook(wh);
+myClass.onHook(wh);
 
 // When hook() fires, the full waterfall pipeline executes
-await hookified.hook('save', { name: 'test' });
+await myClass.hook('save', { name: 'test' });
 // Saved: { name: 'test', validated: true, timestamp: ... }
 ```
 
@@ -331,6 +343,15 @@ console.log(wh.hooks.length); // 0
 ```
 
 # API - Hooks
+
+> All examples below assume the following setup unless otherwise noted:
+> ```javascript
+> import { Hookified } from 'hookified';
+> class MyClass extends Hookified {
+>   constructor(options) { super(options); }
+> }
+> const myClass = new MyClass();
+> ```
 
 ## .allowDeprecated
 
@@ -528,26 +549,10 @@ Note: The `beforeHook()` and `afterHook()` helper methods automatically generate
 If set, errors thrown in hooks will be logged to the logger. If not set, errors will be only emitted.
 
 ```javascript
-import { Hookified } from 'hookified';
 import pino from 'pino';
 
-const logger = pino(); // create a logger instance that is compatible with Logger type
+const myClass = new MyClass({ eventLogger: pino() });
 
-class MyClass extends Hookified {
-  constructor() {
-    super({ eventLogger: logger });
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
 myClass.onHook({ event: 'before:myMethod2', handler: async () => {
   throw new Error('error');
 }});
@@ -561,23 +566,6 @@ await myClass.hook('before:myMethod2');
 Get all hooks. Returns a `Map<string, IHook[]>` where each key is an event name and the value is an array of `IHook` objects.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
@@ -590,17 +578,9 @@ console.log(myClass.hooks); // Map { 'before:myMethod2' => [{ event: 'before:myM
 If set to true, errors thrown in hooks will be thrown. If set to false, errors will be only emitted.
 
 ```javascript
-import { Hookified } from 'hookified';
+const myClass = new MyClass({ throwOnHookError: true });
 
-class MyClass extends Hookified {
-  constructor() {
-    super({ throwOnHookError: true });
-  }
-}
-
-const myClass = new MyClass();
-
-console.log(myClass.throwOnHookError); // true. because it is set in super
+console.log(myClass.throwOnHookError); // true
 
 try {
   myClass.onHook({ event: 'error-event', handler: async () => {
@@ -621,15 +601,7 @@ console.log(myClass.throwOnHookError); // false
 Controls whether hook objects are cloned before storing internally. Default is `true`. When `true`, a shallow copy of the `IHook` object is stored, preventing external mutation from affecting registered hooks. When `false`, the original reference is stored directly.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super({ useHookClone: false });
-  }
-}
-
-const myClass = new MyClass();
+const myClass = new MyClass({ useHookClone: false });
 
 const hook = { event: 'before:save', handler: async (data) => {} };
 myClass.onHook(hook);
@@ -657,21 +629,8 @@ myClass.addHook('before:myMethod2', async (data) => {
 This is a helper function that will prepend a hook name with `after:`.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // the event name will be `after:myMethod2`
-    await this.afterHook('myMethod2', data);
-
-    return data;
-  }
-}
+// Inside your class method — the event name will be `after:myMethod2`
+await this.afterHook('myMethod2', data);
 ```
 
 ## .beforeHook(eventName, ...args)
@@ -679,21 +638,8 @@ class MyClass extends Hookified {
 This is a helper function that will prepend a hook name with `before:`.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // the event name will be `before:myMethod2`
-    await this.beforeHook('myMethod2', data);
-
-    return data;
-  }
-}
+// Inside your class method — the event name will be `before:myMethod2`
+await this.beforeHook('myMethod2', data);
 ```
 
 ## .callHook(eventName, ...args)
@@ -705,24 +651,6 @@ This is an alias for `.hook(eventName, ...args)` for backwards compatibility.
 Clear all hooks across all events.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
@@ -754,23 +682,6 @@ console.log(hook?.handler); // [Function]
 Get all hooks for an event. Returns an `IHook[]` array, or `undefined` if no hooks are registered for the event.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
@@ -783,51 +694,21 @@ console.log(myClass.getHooks('before:myMethod2')); // [{ event: 'before:myMethod
 Run a hook event.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
-}
+// Inside your class method
+await this.hook('before:myMethod2', data);
 ```
 
-in this example we are passing multiple arguments to the hook:
+You can pass multiple arguments to the hook:
 
 ```javascript
-import { Hookified } from 'hookified';
+// Inside your class method
+await this.hook('before:myMethod2', data, data2);
 
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    let data2 = { some: 'data2' };
-    // do something
-    await this.hook('before:myMethod2', data, data2);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
-
+// The handler receives all arguments
 myClass.onHook({ event: 'before:myMethod2', handler: async (data, data2) => {
   data.some = 'new data';
   data2.some = 'new data2';
 }});
-
-await myClass.myMethodWithHooks();
 ```
 
 ## .hookSync(eventName, ...args)
@@ -837,24 +718,6 @@ Run a hook event synchronously. Async handlers (functions declared with `async` 
 > **Note:** The `.hook()` method is preferred as it executes both sync and async functions. Use `.hookSync()` only when you specifically need synchronous execution.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  myMethodWithSyncHooks() {
-    let data = { some: 'data' };
-    // Only synchronous handlers will execute
-    this.hookSync('before:myMethod', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
-
 // This sync handler will execute
 myClass.onHook({ event: 'before:myMethod', handler: (data) => {
   data.some = 'modified';
@@ -865,7 +728,8 @@ myClass.onHook({ event: 'before:myMethod', handler: async (data) => {
   data.some = 'will not run';
 }});
 
-myClass.myMethodWithSyncHooks(); // Only sync handler runs
+// Inside your class method
+this.hookSync('before:myMethod', data); // Only sync handler runs
 ```
 
 ## .onHook(hook, options?)
@@ -879,24 +743,6 @@ If the hook has an `id`, it will be used as-is. If not, a UUID is auto-generated
 - `position` (`"Top"` | `"Bottom"` | `number`, optional) — Controls where the hook is inserted in the handlers array. `"Top"` inserts at the beginning, `"Bottom"` appends to the end (default). A number inserts at that index, clamped to the array bounds.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
-
 // Single hook — returns the stored IHook with id
 const stored = myClass.onHook({
   event: 'before:myMethod2',
@@ -944,27 +790,6 @@ myClass.onHook({ event: 'before:save', handler: async (data) => {} }, { position
 Subscribe to multiple hook events at once. Takes an array of `IHook` objects and an optional `OnHookOptions` object that is applied to each hook.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    await this.hook('before:myMethodWithHooks', data);
-
-    // do something here with the data
-    data.some = 'new data';
-
-    await this.hook('after:myMethodWithHooks', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
 const hooks = [
   {
     event: 'before:myMethodWithHooks',
@@ -993,30 +818,11 @@ myClass.onHooks(hooks, { useHookClone: false });
 Subscribe to a hook event once. Takes an `IHook` object with `event` and `handler` properties. After the handler is called once, it is automatically removed.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.onceHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
 
-myClass.myMethodWithHooks();
-
+await myClass.hook('before:myMethod2', data); // handler runs once then is removed
 console.log(myClass.hooks.size); // 0
 ```
 
@@ -1025,23 +831,6 @@ console.log(myClass.hooks.size); // 0
 Subscribe to a hook event before all other hooks. Takes an `IHook` object with `event` and `handler` properties.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
@@ -1055,23 +844,6 @@ myClass.prependHook({ event: 'before:myMethod2', handler: async (data) => {
 Subscribe to a hook event before all other hooks. Takes an `IHook` object with `event` and `handler` properties. After the handler is called once, it is automatically removed.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
@@ -1085,22 +857,6 @@ myClass.prependOnceHook({ event: 'before:myMethod2', handler: async (data) => {
 Removes all hooks for a specific event and returns the removed hooks as an `IHook[]` array. Returns an empty array if no hooks are registered for the event.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    await this.hook('before:myMethod2', data);
-    return data;
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
@@ -1118,23 +874,6 @@ console.log(removed.length); // 2
 Unsubscribe a handler from a hook event. Takes an `IHook` object with `event` and `handler` properties. Returns the removed hook as an `IHook` object, or `undefined` if the handler was not found.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
 const handler = async (data) => {
   data.some = 'new data';
 };
@@ -1175,69 +914,42 @@ console.log(removedMany.length); // 2
 Unsubscribe from multiple hooks. Returns an array of the hooks that were successfully removed.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    await this.hook('before:myMethodWithHooks', data);
-
-    // do something
-    data.some = 'new data';
-    await this.hook('after:myMethodWithHooks', data);
-
-    return data;
-  }
-}
-
-const myClass = new MyClass();
-
 const hooks = [
-  {
-    event: 'before:myMethodWithHooks',
-    handler: async (data) => {
-      data.some = 'new data1';
-    },
-  },
-  {
-    event: 'after:myMethodWithHooks',
-    handler: async (data) => {
-      data.some = 'new data2';
-    },
-  },
+  { event: 'before:save', handler: async (data) => { data.some = 'new data1'; } },
+  { event: 'after:save', handler: async (data) => { data.some = 'new data2'; } },
 ];
 myClass.onHooks(hooks);
 
-// remove all hooks
 const removed = myClass.removeHooks(hooks);
 console.log(removed.length); // 2
 ```
 
 # API - Events
 
+> All examples below assume the following setup unless otherwise noted:
+> ```javascript
+> import { Hookified } from 'hookified';
+> class MyClass extends Hookified {
+>   constructor(options) { super(options); }
+> }
+> const myClass = new MyClass();
+> ```
+
 ## .throwOnEmitError
 
-If set to true, errors emitted as `error` will be thrown if there are no listeners. If set to false, errors will be only emitted.
+If set to true, errors emitted as `error` will always be thrown, even if there are listeners. If set to false (default), errors will only be emitted to listeners.
 
 ```javascript
-import { Hookified } from 'hookified';
+const myClass = new MyClass({ throwOnEmitError: true });
 
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
+myClass.on('error', (err) => {
+  console.log('listener received:', err.message);
+});
 
-  async myMethodWithHooks(): Promise<any> {
-    let data = { some: 'data' };
-    // do something
-    await this.hook('before:myMethod2', data);
-
-    return data;
-  }
+try {
+  myClass.emit('error', new Error('This will throw despite having a listener'));
+} catch (error) {
+  console.log(error.message); // This will throw despite having a listener
 }
 ```
 
@@ -1246,17 +958,9 @@ class MyClass extends Hookified {
 If set to true, errors will be thrown when emitting an `error` event with no listeners. This follows the standard Node.js EventEmitter behavior. Default is `true`.
 
 ```javascript
-import { Hookified } from 'hookified';
+const myClass = new MyClass({ throwOnEmptyListeners: true });
 
-class MyClass extends Hookified {
-  constructor() {
-    super({ throwOnEmptyListeners: true });
-  }
-}
-
-const myClass = new MyClass();
-
-console.log(myClass.throwOnEmptyListeners); // true
+console.log(myClass.throwOnEmptyListeners); // true (default)
 
 // This will throw because there are no error listeners
 try {
@@ -1288,20 +992,6 @@ When both are set to `true`, `throwOnEmitError` takes precedence.
 Subscribe to an event.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodEmittingEvent() {
-    this.emit('message', 'Hello World');
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.on('message', (message) => {
   console.log(message);
 });
@@ -1312,26 +1002,12 @@ myClass.on('message', (message) => {
 Unsubscribe from an event.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodEmittingEvent() {
-    this.emit('message', 'Hello World');
-  }
-}
-
-const myClass = new MyClass();
-myClass.on('message', (message) => {
+const handler = (message) => {
   console.log(message);
-});
+};
 
-myClass.off('message', (message) => {
-  console.log(message);
-});
+myClass.on('message', handler);
+myClass.off('message', handler);
 ```
 
 ## .emit(eventName, ...args)
@@ -1339,17 +1015,7 @@ myClass.off('message', (message) => {
 Emit an event.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodEmittingEvent() {
-    this.emit('message', 'Hello World');
-  }
-}
+myClass.emit('message', 'Hello World');
 ```
 
 ## .listeners(eventName)
@@ -1357,20 +1023,6 @@ class MyClass extends Hookified {
 Get all listeners for an event.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodEmittingEvent() {
-    this.emit('message', 'Hello World');
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.on('message', (message) => {
   console.log(message);
 });
@@ -1383,20 +1035,6 @@ console.log(myClass.listeners('message'));
 Remove all listeners for an event.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodEmittingEvent() {
-    this.emit('message', 'Hello World');
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.on('message', (message) => {
   console.log(message);
 });
@@ -1409,20 +1047,6 @@ myClass.removeAllListeners('message');
 Set the maximum number of listeners for a single event. Default is `0` (unlimited). Negative values are treated as `0`. Setting to `0` disables the limit and the warning. When the limit is exceeded, a `MaxListenersExceededWarning` is emitted via `console.warn` but the listener is still added. This matches standard Node.js EventEmitter behavior.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-
-  async myMethodEmittingEvent() {
-    this.emit('message', 'Hello World');
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.setMaxListeners(1);
 
 myClass.on('message', (message) => {
@@ -1441,23 +1065,12 @@ console.log(myClass.listenerCount('message')); // 2
 Subscribe to an event once.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.once('message', (message) => {
   console.log(message);
 });
 
-myClass.emit('message', 'Hello World');
-
-myClass.emit('message', 'Hello World'); // this will not be called
+myClass.emit('message', 'Hello World'); // handler runs
+myClass.emit('message', 'Hello World'); // handler does not run
 ```
 
 ## .prependListener(eventName, handler)
@@ -1465,16 +1078,6 @@ myClass.emit('message', 'Hello World'); // this will not be called
 Prepend a listener to an event. This will be called before any other listeners.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.prependListener('message', (message) => {
   console.log(message);
 });
@@ -1485,16 +1088,6 @@ myClass.prependListener('message', (message) => {
 Prepend a listener to an event once. This will be called before any other listeners.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.prependOnceListener('message', (message) => {
   console.log(message);
 });
@@ -1507,38 +1100,18 @@ myClass.emit('message', 'Hello World');
 Get all event names.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.on('message', (message) => {
   console.log(message);
 });
 
-console.log(myClass.eventNames());
+console.log(myClass.eventNames()); // ['message']
 ```
 
 ## .listenerCount(eventName?)
 
-Get the count of listeners for an event or all events if evenName not provided.
+Get the count of listeners for an event or all events if eventName not provided.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.on('message', (message) => {
   console.log(message);
 });
@@ -1548,19 +1121,9 @@ console.log(myClass.listenerCount('message')); // 1
 
 ## .rawListeners(eventName?)
 
-Get all listeners for an event or all events if evenName not provided.
+Get all listeners for an event or all events if eventName not provided.
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super();
-  }
-}
-
-const myClass = new MyClass();
-
 myClass.on('message', (message) => {
   console.log(message);
 });
@@ -1978,7 +1541,7 @@ const hook = new Hook('before:save', async (data) => {
   data.validated = true;
 });
 
-hookified.onHook(hook);
+myClass.onHook(hook);
 ```
 
 ### `WaterfallHook` class
@@ -1988,7 +1551,11 @@ A new `WaterfallHook` class is available for creating sequential data transforma
 ```typescript
 import { Hookified, WaterfallHook } from 'hookified';
 
-const hookified = new Hookified();
+class MyClass extends Hookified {
+  constructor() { super(); }
+}
+
+const myClass = new MyClass();
 
 const wh = new WaterfallHook('save', ({ results }) => {
   const data = results[results.length - 1].result;
@@ -2003,8 +1570,8 @@ wh.addHook(({ results }) => {
   return { ...results[results.length - 1].result, timestamp: Date.now() };
 });
 
-hookified.onHook(wh);
-await hookified.hook('save', { name: 'test' });
+myClass.onHook(wh);
+await myClass.hook('save', { name: 'test' });
 // Saved: { name: 'test', validated: true, timestamp: ... }
 ```
 
@@ -2015,7 +1582,9 @@ See the [Waterfall Hook](#waterfallhook) section for full documentation.
 A new `useHookClone` option (default `true`) controls whether hook objects are shallow-cloned before storing. When enabled, external mutation of a registered hook object won't affect the internal state. Set to `false` to store the original reference for performance or when you need reference equality.
 
 ```typescript
-const hookified = new Hookified({ useHookClone: false });
+class MyClass extends Hookified {
+  constructor() { super({ useHookClone: false }); }
+}
 ```
 
 ### `onHook` now accepts `OnHookOptions`
@@ -2081,21 +1650,7 @@ console.log(removed.length); // number of hooks removed
 
 # How to Contribute
 
-Hookified is written in TypeScript and tests are written in `vitest`. To run the tests, use the following command:
-
-To setup the environment and run the tests:
-
-```bash
-pnpm i && pnpm test
-```
-
-Note that we are using `pnpm` as our package manager. If you don't have it installed, you can install it globally with:
-
-```bash
-npm install -g pnpm
-```
-
-To contribute follow the [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
+Hookified is written in TypeScript and tests are written with `vitest`. To setup the environment and run the tests:
 
 ```bash
 pnpm i && pnpm test
