@@ -1676,6 +1676,33 @@ _Note: the `EventEmitter` version is Nodejs versioning._
 
 # Migrating from v1 to v2
 
+## Quick Guide
+
+v2 overhauls hook storage to use `IHook` objects instead of raw functions. This enables hook IDs, ordering via position, cloning control, and new hook types like `WaterfallHook`. The main change most users will notice is that `onHook` now takes an `IHook` object instead of positional arguments:
+
+```typescript
+// v1 — positional arguments
+hookified.onHook('before:save', async (data) => {});
+
+// v2 — IHook object (or use addHook for positional args)
+hookified.onHook({ event: 'before:save', handler: async (data) => {} });
+hookified.addHook('before:save', async (data) => {}); // still works
+```
+
+**Other common changes:**
+
+| v1 | v2 |
+|---|---|
+| `throwHookErrors` | `throwOnHookError` |
+| `logger` | `eventLogger` |
+| `onHookEntry(hook)` | `onHook(hook)` |
+| `HookEntry` type | `IHook` interface |
+| `Hook` type (fn) | `HookFn` type |
+| `getHooks()` returns `HookFn[]` | `getHooks()` returns `IHook[]` |
+| `removeHook(event, handler)` | `removeHook({ event, handler })` |
+
+See below for full details on each change.
+
 **[Breaking Changes](#breaking-changes)**
 - [`throwHookErrors` removed — use `throwOnHookError` instead](#throwhookerrors-removed--use-throwonhookerror-instead)
 - [`throwOnEmptyListeners` now defaults to `true`](#throwonemptylisteners-now-defaults-to-true)
@@ -1700,6 +1727,20 @@ _Note: the `EventEmitter` version is Nodejs versioning._
 
 ## Breaking Changes
 
+| Change | Summary |
+|---|---|
+| `throwHookErrors` | Renamed to `throwOnHookError` |
+| `throwOnEmptyListeners` | Default changed from `false` to `true` |
+| `logger` | Renamed to `eventLogger` |
+| `maxListeners` | Default changed from `100` to `0` (unlimited), no longer truncates |
+| `onHookEntry` | Removed — use `onHook` instead |
+| `onHook` signature | Now takes `IHook` object instead of `(event, handler)` |
+| `HookEntry` / `Hook` types | Replaced with `IHook` / `HookFn` |
+| `removeHook` / `removeHooks` | Now return removed hooks; no longer check deprecated status |
+| Internal hook storage | Uses `IHook` objects instead of raw functions |
+| `onceHook`, `prependHook`, etc. | Now take `IHook` instead of `(event, handler)` |
+| `onHook` return | Now returns stored `IHook` (was `void`) |
+
 ### `throwHookErrors` removed — use `throwOnHookError` instead
 
 The deprecated `throwHookErrors` option and property has been removed. Use `throwOnHookError` instead.
@@ -1707,33 +1748,15 @@ The deprecated `throwHookErrors` option and property has been removed. Use `thro
 **Before (v1):**
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super({ throwHookErrors: true });
-  }
-}
-
-const myClass = new MyClass();
+super({ throwHookErrors: true });
 myClass.throwHookErrors = false;
-console.log(myClass.throwHookErrors);
 ```
 
 **After (v2):**
 
 ```javascript
-import { Hookified } from 'hookified';
-
-class MyClass extends Hookified {
-  constructor() {
-    super({ throwOnHookError: true });
-  }
-}
-
-const myClass = new MyClass();
+super({ throwOnHookError: true });
 myClass.throwOnHookError = false;
-console.log(myClass.throwOnHookError);
 ```
 
 ### `throwOnEmptyListeners` now defaults to `true`
@@ -1764,39 +1787,15 @@ The `logger` option and property has been renamed to `eventLogger` to avoid conf
 **Before (v1):**
 
 ```javascript
-import { Hookified } from 'hookified';
-import pino from 'pino';
-
-const logger = pino();
-
-class MyClass extends Hookified {
-  constructor() {
-    super({ logger });
-  }
-}
-
-const myClass = new MyClass();
+super({ logger });
 myClass.logger = pino({ level: 'debug' });
-console.log(myClass.logger);
 ```
 
 **After (v2):**
 
 ```javascript
-import { Hookified } from 'hookified';
-import pino from 'pino';
-
-const logger = pino();
-
-class MyClass extends Hookified {
-  constructor() {
-    super({ eventLogger: logger });
-  }
-}
-
-const myClass = new MyClass();
+super({ eventLogger: logger });
 myClass.eventLogger = pino({ level: 'debug' });
-console.log(myClass.eventLogger);
 ```
 
 ### `maxListeners` default changed from `100` to `0` (unlimited) and no longer truncates
