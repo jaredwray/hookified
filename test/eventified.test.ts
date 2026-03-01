@@ -578,6 +578,15 @@ describe("Eventified", () => {
 		warnSpy.mockRestore();
 	});
 
+	test("emit with one argument and multiple listeners", (t) => {
+		const emitter = new Eventified();
+		const results: string[] = [];
+		emitter.on("test-event", (data: string) => results.push(data));
+		emitter.on("test-event", (data: string) => results.push(data));
+		emitter.emit("test-event", "hello");
+		t.expect(results).toEqual(["hello", "hello"]);
+	});
+
 	test("off() removes listener from array with three or more listeners", (t) => {
 		const emitter = new Eventified();
 		const listener1 = () => {};

@@ -308,14 +308,23 @@ export class Eventified implements IEventEmitter {
 	public emit(event: string | symbol, ...arguments_: any[]): boolean {
 		let result = false;
 		const entry = this._eventListeners.get(event);
+		const argumentLegth = arguments_.length;
 
 		if (entry !== undefined) {
 			if (typeof entry === "function") {
-				entry(...arguments_);
+				if (argumentLegth === 1) {
+					entry(arguments_[0]);
+				} else {
+					entry(...arguments_);
+				}
 			} else {
 				const snapshot = [...entry];
 				for (let i = 0; i < snapshot.length; i++) {
-					snapshot[i](...arguments_);
+					if (argumentLegth === 1) {
+						snapshot[i](arguments_[0]);
+					} else {
+						snapshot[i](...arguments_);
+					}
 				}
 			}
 
