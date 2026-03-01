@@ -45,7 +45,7 @@ const readme = readFileSync(readmePath, "utf-8");
 // Build the new benchmarks section
 const benchmarksSection = `# Benchmarks
 
-We are doing very simple benchmarking to see how this compares to other libraries using \`tinybench\`. This is not a full benchmark but just a simple way to see how it performs. Our goal is to be as close or better than the other libraries including native (EventEmitter).
+We are doing very simple benchmarking to see how this compares to other libraries using \`tinybench\`. This is not a full benchmark but just a simple way to see how it performs.
 
 ## Hooks
 
@@ -53,7 +53,7 @@ ${hooksTable}
 
 ## Emits
 
-This shows how on par \`hookified\` is to the native \`EventEmitter\` and popular \`eventemitter3\`. These are simple emitting benchmarks to see how it performs.
+This shows how on par \`hookified\` is to the native \`EventEmitter\` and popular \`eventemitter3\`. These are simple emitting benchmarks to see how it performs. Our goal is to be as close or better than the other libraries including native (EventEmitter).
 
 ${emitTable}
 
