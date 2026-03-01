@@ -212,6 +212,10 @@ export type HookFn = (...arguments_: any[]) => Promise<void> | void;
 
 export interface IHook {
 	/**
+	 * Unique identifier for the hook. Auto-generated via crypto.randomUUID() if not provided.
+	 */
+	id?: string;
+	/**
 	 * The event name for the hook
 	 */
 	event: string;

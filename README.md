@@ -45,6 +45,7 @@
   - [.prependOnceHook(hook)](#prependoncehookhook)
   - [.removeHook(hook)](#removehookhook)
   - [.removeHooks(Array)](#removehooksarray)
+  - [.removeHookById(id)](#removehookbyidid)
   - [.hook(eventName, ...args)](#hookeventname-args)
   - [.callHook(eventName, ...args)](#callhookeventname-args)
   - [.beforeHook(eventName, ...args)](#beforehookeventname-args)
@@ -52,6 +53,7 @@
   - [.hookSync(eventName, ...args)](#hooksync-eventname-args)
   - [.hooks](#hooks)
   - [.getHooks(eventName)](#gethookseventname)
+  - [.getHook(id)](#gethookid)
   - [.clearHooks(eventName)](#clearhookeventname)
 - [API - Events](#api---events)
   - [.throwOnEmitError](#throwonemitterror)
@@ -184,6 +186,16 @@ if you are not using ESM modules, you can use the following:
 
 The `Hook` class provides a convenient way to create hook entries. It implements the `IHook` interface.
 
+The `IHook` interface has the following properties:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | No | Unique identifier for the hook. Auto-generated via `crypto.randomUUID()` if not provided. |
+| `event` | `string` | Yes | The event name for the hook. |
+| `handler` | `HookFn` | Yes | The handler function for the hook. |
+
+When a hook is registered, it is assigned an `id` (auto-generated if not provided). The `id` can be used to look up or remove hooks via `getHook` and `removeHookById`. If you register a hook with the same `id` on the same event, it will replace the existing hook in-place (preserving its position).
+
 **Using the `Hook` class:**
 
 ```javascript
@@ -191,9 +203,15 @@ import { Hook, Hookified } from 'hookified';
 
 const hookified = new Hookified();
 
+// Without id (auto-generated)
 const hook = new Hook('before:save', async (data) => {
   data.validated = true;
 });
+
+// With id
+const hook2 = new Hook('after:save', async (data) => {
+  console.log('saved');
+}, 'my-after-save-hook');
 
 // Register with onHook
 hookified.onHook(hook);
@@ -217,13 +235,18 @@ import { Hookified, type IHook } from 'hookified';
 const hookified = new Hookified();
 
 const hook: IHook = {
+  id: 'my-validation-hook', // optional — auto-generated if omitted
   event: 'before:save',
   handler: async (data) => {
     data.validated = true;
   },
 };
 
-hookified.onHook(hook);
+const stored = hookified.onHook(hook);
+console.log(stored?.id); // 'my-validation-hook'
+
+// Later, remove by id
+hookified.removeHookById('my-validation-hook');
 ```
 
 # API - Hooks
@@ -511,7 +534,9 @@ myClass.useHookClone = true;
 
 ## .onHook(hook, options?)
 
-Subscribe to a hook event. Takes an `IHook` object and an optional `OnHookOptions` object. Returns the stored `IHook`, or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` — especially when `useHookClone` is `true`. To register multiple hooks at once, use `.onHooks()`.
+Subscribe to a hook event. Takes an `IHook` object and an optional `OnHookOptions` object. Returns the stored `IHook` (with `id` assigned), or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` or `.removeHookById()`. To register multiple hooks at once, use `.onHooks()`.
+
+If the hook has an `id`, it will be used as-is. If not, a UUID is auto-generated via `crypto.randomUUID()`. If a hook with the same `id` already exists on the same event, it will be **replaced in-place** (preserving its position in the array).
 
 **Options (`OnHookOptions`)**:
 - `useHookClone` (boolean, optional) — Per-call override for the instance-level `useHookClone` setting. When `true`, the hook object is cloned before storing. When `false`, the original reference is stored directly. When omitted, falls back to the instance-level setting.
@@ -536,13 +561,32 @@ class MyClass extends Hookified {
 
 const myClass = new MyClass();
 
-// Single hook — returns the stored IHook
+// Single hook — returns the stored IHook with id
 const stored = myClass.onHook({
   event: 'before:myMethod2',
   handler: async (data) => {
     data.some = 'new data';
   },
 });
+console.log(stored.id); // auto-generated UUID
+
+// With a custom id
+const stored2 = myClass.onHook({
+  id: 'my-validation',
+  event: 'before:save',
+  handler: async (data) => { data.validated = true; },
+});
+
+// Replace hook by registering with the same id
+myClass.onHook({
+  id: 'my-validation',
+  event: 'before:save',
+  handler: async (data) => { data.validated = true; data.extra = true; },
+});
+// Only one hook with id 'my-validation' exists, at the same position
+
+// Remove by id
+myClass.removeHookById('my-validation');
 
 // Use the returned reference to remove the hook later
 myClass.removeHook(stored);
@@ -789,6 +833,31 @@ const removed = myClass.removeHooks(hooks);
 console.log(removed.length); // 2
 ```
 
+## .removeHookById(id)
+
+Remove one or more hooks by `id`, searching across all events. Accepts a single `string` or an array of `string` ids.
+
+- **Single id**: Returns the removed `IHook`, or `undefined` if not found.
+- **Array of ids**: Returns an `IHook[]` array of the hooks that were successfully removed.
+
+When the last hook for an event is removed, the event key is cleaned up.
+
+```javascript
+const myClass = new MyClass();
+
+myClass.onHook({ id: 'hook-a', event: 'before:save', handler: async () => {} });
+myClass.onHook({ id: 'hook-b', event: 'after:save', handler: async () => {} });
+myClass.onHook({ id: 'hook-c', event: 'before:save', handler: async () => {} });
+
+// Remove a single hook by id
+const removed = myClass.removeHookById('hook-a');
+console.log(removed?.id); // 'hook-a'
+
+// Remove multiple hooks by ids
+const removedMany = myClass.removeHookById(['hook-b', 'hook-c']);
+console.log(removedMany.length); // 2
+```
+
 ## .hook(eventName, ...args)
 
 Run a hook event.
@@ -983,6 +1052,25 @@ myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
 }});
 
 console.log(myClass.getHooks('before:myMethod2')); // [{ event: 'before:myMethod2', handler: [Function] }]
+```
+
+## .getHook(id)
+
+Get a specific hook by `id`, searching across all events. Returns the `IHook` if found, or `undefined`.
+
+```javascript
+const myClass = new MyClass();
+
+myClass.onHook({
+  id: 'my-hook',
+  event: 'before:save',
+  handler: async (data) => { data.validated = true; },
+});
+
+const hook = myClass.getHook('my-hook');
+console.log(hook?.id); // 'my-hook'
+console.log(hook?.event); // 'before:save'
+console.log(hook?.handler); // [Function]
 ```
 
 ## .clearHooks(eventName)
@@ -1801,6 +1889,43 @@ hookified.onHooks([
   { event: 'before:save', handler: async (data) => {} },
   { event: 'after:save', handler: async (data) => {} },
 ]);
+```
+
+### `IHook` now has an `id` property
+
+Every hook now has an optional `id` property. If not provided, a UUID is auto-generated via `crypto.randomUUID()`. The `id` enables easier lookups and removal via the new `getHook(id)` and `removeHookById(id)` methods, which search across all events.
+
+Registering a hook with the same `id` on the same event replaces the existing hook in-place (preserving its position).
+
+```typescript
+// With custom id
+const stored = hookified.onHook({
+  id: 'my-validation',
+  event: 'before:save',
+  handler: async (data) => { data.validated = true; },
+});
+
+// Without id — auto-generated
+const stored2 = hookified.onHook({
+  event: 'before:save',
+  handler: async (data) => {},
+});
+console.log(stored2.id); // e.g. '550e8400-e29b-41d4-a716-446655440000'
+
+// Look up by id (searches all events)
+const hook = hookified.getHook('my-validation');
+
+// Remove by id (searches all events)
+hookified.removeHookById('my-validation');
+
+// Remove multiple by ids
+hookified.removeHookById(['hook-a', 'hook-b']);
+```
+
+The `Hook` class also accepts an optional `id` parameter:
+
+```typescript
+const hook = new Hook('before:save', handler, 'my-custom-id');
 ```
 
 # How to Contribute
