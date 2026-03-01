@@ -488,30 +488,19 @@ export class Hookified extends Eventified {
 
 	/**
 	 * Removes all hooks for a specific event and returns the removed hooks.
-	 * If no event is provided, removes all hooks across all events.
-	 * @param {string} [event] - Optional event name. If omitted, removes all hooks.
+	 * @param {string} event - The event name to remove hooks for.
 	 * @returns {IHook[]} the hooks that were removed
 	 */
-	public removeEventHooks(event?: string): IHook[] {
-		if (event !== undefined) {
-			this.validateHookName(event);
-			const eventHandlers = this._hooks.get(event);
-			if (eventHandlers) {
-				const removed = [...eventHandlers];
-				this._hooks.delete(event);
-				return removed;
-			}
-
-			return [];
+	public removeEventHooks(event: string): IHook[] {
+		this.validateHookName(event);
+		const eventHandlers = this._hooks.get(event);
+		if (eventHandlers) {
+			const removed = [...eventHandlers];
+			this._hooks.delete(event);
+			return removed;
 		}
 
-		const removed: IHook[] = [];
-		for (const eventHandlers of this._hooks.values()) {
-			removed.push(...eventHandlers);
-		}
-
-		this._hooks.clear();
-		return removed;
+		return [];
 	}
 
 	/**

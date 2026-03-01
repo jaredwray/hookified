@@ -57,7 +57,7 @@
   - [.getHooks(eventName)](#gethookseventname)
   - [.getHook(id)](#gethookid)
   - [.clearHooks()](#clearhooks)
-  - [.removeEventHooks(eventName?)](#removeeventhookseventname)
+  - [.removeEventHooks(eventName)](#removeeventhookseventname)
 - [API - Events](#api---events)
   - [.throwOnEmitError](#throwonemitterror)
   - [.throwOnEmptyListeners](#throwonemptylisteners)
@@ -1184,9 +1184,9 @@ myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
 myClass.clearHooks();
 ```
 
-## .removeEventHooks(eventName?)
+## .removeEventHooks(eventName)
 
-Removes all hooks for a specific event and returns the removed hooks. If no event name is provided, removes all hooks across all events and returns them.
+Removes all hooks for a specific event and returns the removed hooks as an `IHook[]` array. Returns an empty array if no hooks are registered for the event.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -1215,10 +1215,6 @@ myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
 // Remove all hooks for a specific event
 const removed = myClass.removeEventHooks('before:myMethod2');
 console.log(removed.length); // 2
-
-// Remove all hooks across all events
-const allRemoved = myClass.removeEventHooks();
-console.log(allRemoved.length); // 0 (already removed above)
 ```
 
 # API - Events
@@ -2077,16 +2073,11 @@ const hook = new Hook('before:save', handler, 'my-custom-id');
 
 ### `removeEventHooks` method
 
-A new `removeEventHooks(event?)` method removes all hooks for a specific event (or all events if no argument is provided) and returns the removed hooks as an `IHook[]` array.
+A new `removeEventHooks(event)` method removes all hooks for a specific event and returns the removed hooks as an `IHook[]` array.
 
 ```typescript
-// Remove all hooks for a specific event
 const removed = hookified.removeEventHooks('before:save');
 console.log(removed.length); // number of hooks removed
-
-// Remove all hooks across all events
-const allRemoved = hookified.removeEventHooks();
-console.log(allRemoved.length); // total hooks removed
 ```
 
 # How to Contribute

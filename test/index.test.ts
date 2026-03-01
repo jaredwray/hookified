@@ -2462,24 +2462,6 @@ describe("Hookified", () => {
 			expect(removed.length).toBe(0);
 		});
 
-		test("should remove all hooks across all events when no event argument given", () => {
-			const hookified = new Hookified();
-			hookified.onHook({ event: "event1", handler: () => {} });
-			hookified.onHook({ event: "event1", handler: () => {} });
-			hookified.onHook({ event: "event2", handler: () => {} });
-
-			const removed = hookified.removeEventHooks();
-			expect(removed.length).toBe(3);
-			expect(hookified.hooks.size).toBe(0);
-		});
-
-		test("should return empty array when there are no hooks at all", () => {
-			const hookified = new Hookified();
-
-			const removed = hookified.removeEventHooks();
-			expect(removed.length).toBe(0);
-		});
-
 		test("should validate hook name when enforceBeforeAfter is enabled", () => {
 			const hookified = new Hookified({ enforceBeforeAfter: true });
 			expect(() => hookified.removeEventHooks("invalid")).toThrow(
