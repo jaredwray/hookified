@@ -264,8 +264,9 @@ export class Eventified implements IEventEmitter {
 		const listeners = this._eventListeners.get(event);
 
 		if (listeners && listeners.length > 0) {
-			for (let i = 0; i < listeners.length; i++) {
-				listeners[i](...arguments_);
+			const snapshot = [...listeners];
+			for (let i = 0; i < snapshot.length; i++) {
+				snapshot[i](...arguments_);
 			}
 
 			result = true;
@@ -344,6 +345,7 @@ export class Eventified implements IEventEmitter {
 	 * @param {unknown} data - The data to log
 	 */
 	private sendToEventLogger(eventName: string | symbol, data: any): void {
+		/* v8 ignore next 3 -- @preserve: guarded by caller */
 		if (!this._eventLogger) {
 			return;
 		}
