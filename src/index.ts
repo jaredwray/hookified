@@ -487,6 +487,34 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Removes all hooks for a specific event and returns the removed hooks.
+	 * If no event is provided, removes all hooks across all events.
+	 * @param {string} [event] - Optional event name. If omitted, removes all hooks.
+	 * @returns {IHook[]} the hooks that were removed
+	 */
+	public removeEventHooks(event?: string): IHook[] {
+		if (event !== undefined) {
+			this.validateHookName(event);
+			const eventHandlers = this._hooks.get(event);
+			if (eventHandlers) {
+				const removed = [...eventHandlers];
+				this._hooks.delete(event);
+				return removed;
+			}
+
+			return [];
+		}
+
+		const removed: IHook[] = [];
+		for (const eventHandlers of this._hooks.values()) {
+			removed.push(...eventHandlers);
+		}
+
+		this._hooks.clear();
+		return removed;
+	}
+
+	/**
 	 * Validates hook event name if enforceBeforeAfter is enabled
 	 * @param {string} event - The event name to validate
 	 * @throws {Error} If enforceBeforeAfter is true and event doesn't start with 'before' or 'after'

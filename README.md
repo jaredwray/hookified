@@ -56,7 +56,8 @@
   - [.hooks](#hooks)
   - [.getHooks(eventName)](#gethookseventname)
   - [.getHook(id)](#gethookid)
-  - [.clearHooks(eventName)](#clearhookeventname)
+  - [.clearHooks()](#clearhooks)
+  - [.removeEventHooks(eventName?)](#removeeventhookseventname)
 - [API - Events](#api---events)
   - [.throwOnEmitError](#throwonemitterror)
   - [.throwOnEmptyListeners](#throwonemptylisteners)
@@ -1153,9 +1154,9 @@ console.log(hook?.event); // 'before:save'
 console.log(hook?.handler); // [Function]
 ```
 
-## .clearHooks(eventName)
+## .clearHooks()
 
-Clear all hooks for an event.
+Clear all hooks across all events.
 
 ```javascript
 import { Hookified } from 'hookified';
@@ -1180,7 +1181,44 @@ myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
   data.some = 'new data';
 }});
 
-myClass.clearHooks('before:myMethod2');
+myClass.clearHooks();
+```
+
+## .removeEventHooks(eventName?)
+
+Removes all hooks for a specific event and returns the removed hooks. If no event name is provided, removes all hooks across all events and returns them.
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() {
+    super();
+  }
+
+  async myMethodWithHooks(): Promise<any> {
+    let data = { some: 'data' };
+    await this.hook('before:myMethod2', data);
+    return data;
+  }
+}
+
+const myClass = new MyClass();
+
+myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
+  data.some = 'new data';
+}});
+myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
+  data.some = 'more data';
+}});
+
+// Remove all hooks for a specific event
+const removed = myClass.removeEventHooks('before:myMethod2');
+console.log(removed.length); // 2
+
+// Remove all hooks across all events
+const allRemoved = myClass.removeEventHooks();
+console.log(allRemoved.length); // 0 (already removed above)
 ```
 
 # API - Events
@@ -1661,8 +1699,8 @@ _Note: the `EventEmitter` version is Nodejs versioning._
 - [`WaterfallHook` class for sequential data transformation pipelines](#waterfallhook-class)
 - [`useHookClone` option](#usehookclone-option)
 - [`onHook` now accepts `OnHookOptions`](#onhook-now-accepts-onhookoptions)
-- [`onHook` no longer accepts arrays](#onhook-no-longer-accepts-arrays)
 - [`IHook` now has an `id` property](#ihook-now-has-an-id-property)
+- [`removeEventHooks` method](#removeeventhooks-method)
 
 ## Breaking Changes
 
@@ -1948,6 +1986,35 @@ const hook = new Hook('before:save', async (data) => {
 hookified.onHook(hook);
 ```
 
+### `WaterfallHook` class
+
+A new `WaterfallHook` class is available for creating sequential data transformation pipelines. It implements the `IHook` interface and integrates directly with `Hookified.onHook()`. Each hook in the chain receives a `WaterfallHookContext` with `initialArgs` (the original arguments) and `results` (an array of `{ hook, result }` entries from all previous hooks).
+
+```typescript
+import { Hookified, WaterfallHook } from 'hookified';
+
+const hookified = new Hookified();
+
+const wh = new WaterfallHook('save', ({ results }) => {
+  const data = results[results.length - 1].result;
+  console.log('Saved:', data);
+});
+
+wh.addHook(({ initialArgs }) => {
+  return { ...initialArgs, validated: true };
+});
+
+wh.addHook(({ results }) => {
+  return { ...results[results.length - 1].result, timestamp: Date.now() };
+});
+
+hookified.onHook(wh);
+await hookified.hook('save', { name: 'test' });
+// Saved: { name: 'test', validated: true, timestamp: ... }
+```
+
+See the [Waterfall Hook](#waterfallhook) section for full documentation.
+
 ### `useHookClone` option
 
 A new `useHookClone` option (default `true`) controls whether hook objects are shallow-cloned before storing. When enabled, external mutation of a registered hook object won't affect the internal state. Set to `false` to store the original reference for performance or when you need reference equality.
@@ -1969,28 +2036,6 @@ hookified.onHook({ event: 'before:save', handler }, { position: 'Top' });
 
 // Insert at a specific index
 hookified.onHook({ event: 'before:save', handler }, { position: 1 });
-```
-
-### `onHook` no longer accepts arrays
-
-`onHook` now only accepts a single `IHook` object. To register multiple hooks at once, use `onHooks` instead.
-
-**Before:**
-
-```typescript
-hookified.onHook([
-  { event: 'before:save', handler: async (data) => {} },
-  { event: 'after:save', handler: async (data) => {} },
-]);
-```
-
-**After:**
-
-```typescript
-hookified.onHooks([
-  { event: 'before:save', handler: async (data) => {} },
-  { event: 'after:save', handler: async (data) => {} },
-]);
 ```
 
 ### `IHook` now has an `id` property
@@ -2028,6 +2073,20 @@ The `Hook` class also accepts an optional `id` parameter:
 
 ```typescript
 const hook = new Hook('before:save', handler, 'my-custom-id');
+```
+
+### `removeEventHooks` method
+
+A new `removeEventHooks(event?)` method removes all hooks for a specific event (or all events if no argument is provided) and returns the removed hooks as an `IHook[]` array.
+
+```typescript
+// Remove all hooks for a specific event
+const removed = hookified.removeEventHooks('before:save');
+console.log(removed.length); // number of hooks removed
+
+// Remove all hooks across all events
+const allRemoved = hookified.removeEventHooks();
+console.log(allRemoved.length); // total hooks removed
 ```
 
 # How to Contribute

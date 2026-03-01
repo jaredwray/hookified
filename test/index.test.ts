@@ -2436,4 +2436,64 @@ describe("Hookified", () => {
 			expect(removedArray.length).toBe(0);
 		});
 	});
+
+	describe("removeEventHooks", () => {
+		test("should remove all hooks for a specific event and return them", () => {
+			const hookified = new Hookified();
+			const handler1 = () => {};
+			const handler2 = () => {};
+			hookified.onHook({ event: "event1", handler: handler1 });
+			hookified.onHook({ event: "event1", handler: handler2 });
+			hookified.onHook({ event: "event2", handler: () => {} });
+
+			const removed = hookified.removeEventHooks("event1");
+			expect(removed.length).toBe(2);
+			expect(removed[0].handler).toBe(handler1);
+			expect(removed[1].handler).toBe(handler2);
+			expect(hookified.hooks.has("event1")).toBe(false);
+			expect(hookified.hooks.has("event2")).toBe(true);
+		});
+
+		test("should return empty array when event has no hooks", () => {
+			const hookified = new Hookified();
+			hookified.onHook({ event: "event1", handler: () => {} });
+
+			const removed = hookified.removeEventHooks("nonexistent");
+			expect(removed.length).toBe(0);
+		});
+
+		test("should remove all hooks across all events when no event argument given", () => {
+			const hookified = new Hookified();
+			hookified.onHook({ event: "event1", handler: () => {} });
+			hookified.onHook({ event: "event1", handler: () => {} });
+			hookified.onHook({ event: "event2", handler: () => {} });
+
+			const removed = hookified.removeEventHooks();
+			expect(removed.length).toBe(3);
+			expect(hookified.hooks.size).toBe(0);
+		});
+
+		test("should return empty array when there are no hooks at all", () => {
+			const hookified = new Hookified();
+
+			const removed = hookified.removeEventHooks();
+			expect(removed.length).toBe(0);
+		});
+
+		test("should validate hook name when enforceBeforeAfter is enabled", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			expect(() => hookified.removeEventHooks("invalid")).toThrow(
+				'Hook event "invalid" must start with "before" or "after"',
+			);
+		});
+
+		test("should delete the map entry after removing hooks for an event", () => {
+			const hookified = new Hookified();
+			hookified.onHook({ event: "event1", handler: () => {} });
+
+			hookified.removeEventHooks("event1");
+			expect(hookified.hooks.size).toBe(0);
+			expect(hookified.hooks.get("event1")).toBeUndefined();
+		});
+	});
 });
