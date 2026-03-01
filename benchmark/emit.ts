@@ -18,6 +18,12 @@ const emitteryVersion = cleanVersion(pkg.devDependencies.emittery);
 const eventEmitter3 = new EventEmitter3();
 const emitter3Version = cleanVersion(pkg.devDependencies.eventemitter3);
 
+// Register listeners so emits actually invoke handlers
+eventEmitter.on("event", (_data: string) => {});
+emittery.on("event", (_data: unknown) => {});
+eventEmitter3.on("event", (_data: string) => {});
+hookified.on("event", (_data: string) => {});
+
 bench.add(`EventEmitter (${process.version})`, async () => {
 	eventEmitter.emit("event", "test");
 });

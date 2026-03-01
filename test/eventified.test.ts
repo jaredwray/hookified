@@ -556,4 +556,38 @@ describe("Eventified", () => {
 			);
 		});
 	});
+
+	test("prepend listener with three or more listeners", (t) => {
+		const emitter = new Eventified();
+		const order: number[] = [];
+		emitter.on("test-event", () => order.push(1));
+		emitter.on("test-event", () => order.push(2));
+		emitter.prependListener("test-event", () => order.push(0));
+		emitter.emit("test-event");
+		t.expect(order).toEqual([0, 1, 2]);
+	});
+
+	test("on() with three or more listeners triggers maxListeners warning", (t) => {
+		const emitter = new Eventified();
+		emitter.setMaxListeners(2);
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		emitter.on("test-event", () => {});
+		emitter.on("test-event", () => {});
+		emitter.on("test-event", () => {});
+		t.expect(warnSpy).toHaveBeenCalled();
+		warnSpy.mockRestore();
+	});
+
+	test("off() removes listener from array with three or more listeners", (t) => {
+		const emitter = new Eventified();
+		const listener1 = () => {};
+		const listener2 = () => {};
+		const listener3 = () => {};
+		emitter.on("test-event", listener1);
+		emitter.on("test-event", listener2);
+		emitter.on("test-event", listener3);
+		emitter.off("test-event", listener2);
+		t.expect(emitter.listenerCount("test-event")).toBe(2);
+		t.expect(emitter.listeners("test-event")).toEqual([listener1, listener3]);
+	});
 });
