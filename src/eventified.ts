@@ -11,14 +11,20 @@ export type { EventEmitterOptions, EventListener, IEventEmitter };
 const ERROR_EVENT = "error";
 
 export class Eventified implements IEventEmitter {
-	private readonly _eventListeners: Map<string | symbol, EventListener[]>;
+	private readonly _eventListeners: Map<
+		string | symbol,
+		EventListener | EventListener[]
+	>;
 	private _maxListeners: number;
 	private _eventLogger?: Logger;
 	private _throwOnEmitError = false;
 	private _throwOnEmptyListeners = true;
 
 	constructor(options?: EventEmitterOptions) {
-		this._eventListeners = new Map<string | symbol, EventListener[]>();
+		this._eventListeners = new Map<
+			string | symbol,
+			EventListener | EventListener[]
+		>();
 		this._maxListeners = 0; // Default is 0 (unlimited)
 
 		this._eventLogger = options?.eventLogger;
@@ -107,15 +113,19 @@ export class Eventified implements IEventEmitter {
 	public listenerCount(eventName?: string | symbol): number {
 		if (eventName === undefined) {
 			let count = 0;
-			for (const listeners of this._eventListeners.values()) {
-				count += listeners.length;
+			for (const entry of this._eventListeners.values()) {
+				count += typeof entry === "function" ? 1 : entry.length;
 			}
 
 			return count;
 		}
 
-		const listeners = this._eventListeners.get(eventName);
-		return listeners ? listeners.length : 0;
+		const entry = this._eventListeners.get(eventName);
+		if (entry === undefined) {
+			return 0;
+		}
+
+		return typeof entry === "function" ? 1 : entry.length;
 	}
 
 	/**
@@ -136,7 +146,12 @@ export class Eventified implements IEventEmitter {
 			return this.getAllListeners();
 		}
 
-		return this._eventListeners.get(event) ?? [];
+		const entry = this._eventListeners.get(event);
+		if (entry === undefined) {
+			return [];
+		}
+
+		return typeof entry === "function" ? [entry] : entry;
 	}
 
 	/**
@@ -149,9 +164,16 @@ export class Eventified implements IEventEmitter {
 		eventName: string | symbol,
 		listener: EventListener,
 	): IEventEmitter {
-		const listeners = this._eventListeners.get(eventName) ?? [];
-		listeners.unshift(listener);
-		this._eventListeners.set(eventName, listeners);
+		const existing = this._eventListeners.get(eventName);
+
+		if (existing === undefined) {
+			this._eventListeners.set(eventName, listener);
+		} else if (typeof existing === "function") {
+			this._eventListeners.set(eventName, [listener, existing]);
+		} else {
+			existing.unshift(listener);
+		}
+
 		return this;
 	}
 
@@ -203,20 +225,29 @@ export class Eventified implements IEventEmitter {
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
 	public on(event: string | symbol, listener: EventListener): IEventEmitter {
-		let listeners = this._eventListeners.get(event);
+		const existing = this._eventListeners.get(event);
 
-		if (listeners === undefined) {
-			listeners = [];
-			this._eventListeners.set(event, listeners);
+		if (existing === undefined) {
+			this._eventListeners.set(event, listener);
+			return this;
 		}
 
-		if (this._maxListeners > 0 && listeners.length >= this._maxListeners) {
-			console.warn(
-				`MaxListenersExceededWarning: Possible event memory leak detected. ${listeners.length + 1} ${event as string} listeners added. Use setMaxListeners() to increase limit.`,
-			);
+		if (typeof existing === "function") {
+			const arr = [existing, listener];
+			this._eventListeners.set(event, arr);
+			if (this._maxListeners > 0 && arr.length > this._maxListeners) {
+				console.warn(
+					`MaxListenersExceededWarning: Possible event memory leak detected. ${arr.length} ${event as string} listeners added. Use setMaxListeners() to increase limit.`,
+				);
+			}
+		} else {
+			existing.push(listener);
+			if (this._maxListeners > 0 && existing.length > this._maxListeners) {
+				console.warn(
+					`MaxListenersExceededWarning: Possible event memory leak detected. ${existing.length} ${event as string} listeners added. Use setMaxListeners() to increase limit.`,
+				);
+			}
 		}
-
-		listeners.push(listener);
 
 		return this;
 	}
@@ -239,14 +270,29 @@ export class Eventified implements IEventEmitter {
 	 * @returns {IEventEmitter} returns the instance of the class for chaining
 	 */
 	public off(event: string | symbol, listener: EventListener): IEventEmitter {
-		const listeners = this._eventListeners.get(event);
-		if (listeners) {
-			const index = listeners.indexOf(listener);
-			if (index !== -1) {
-				listeners.splice(index, 1);
-				if (listeners.length === 0) {
-					this._eventListeners.delete(event);
-				}
+		const entry = this._eventListeners.get(event);
+		if (entry === undefined) {
+			return this;
+		}
+
+		if (typeof entry === "function") {
+			if (entry === listener) {
+				this._eventListeners.delete(event);
+			}
+
+			return this;
+		}
+
+		const index = entry.indexOf(listener);
+		if (index !== -1) {
+			if (entry.length === 2) {
+				this._eventListeners.set(event, entry[1 - index]);
+				/* v8 ignore start -- @preserve: single-element arrays are stored as functions */
+			} else if (entry.length === 1) {
+				this._eventListeners.delete(event);
+				/* v8 ignore stop */
+			} else {
+				entry.splice(index, 1);
 			}
 		}
 
@@ -261,12 +307,16 @@ export class Eventified implements IEventEmitter {
 	 */
 	public emit(event: string | symbol, ...arguments_: any[]): boolean {
 		let result = false;
-		const listeners = this._eventListeners.get(event);
+		const entry = this._eventListeners.get(event);
 
-		if (listeners && listeners.length > 0) {
-			const snapshot = [...listeners];
-			for (let i = 0; i < snapshot.length; i++) {
-				snapshot[i](...arguments_);
+		if (entry !== undefined) {
+			if (typeof entry === "function") {
+				entry(...arguments_);
+			} else {
+				const snapshot = [...entry];
+				for (let i = 0; i < snapshot.length; i++) {
+					snapshot[i](...arguments_);
+				}
 			}
 
 			result = true;
@@ -297,7 +347,12 @@ export class Eventified implements IEventEmitter {
 	 * @returns {EventListener[]} An array of listeners
 	 */
 	public listeners(event: string | symbol): EventListener[] {
-		return this._eventListeners.get(event) ?? [];
+		const entry = this._eventListeners.get(event);
+		if (entry === undefined) {
+			return [];
+		}
+
+		return typeof entry === "function" ? [entry] : entry;
 	}
 
 	/**
@@ -330,9 +385,13 @@ export class Eventified implements IEventEmitter {
 	 */
 	public getAllListeners(): EventListener[] {
 		const result: EventListener[] = [];
-		for (const listeners of this._eventListeners.values()) {
-			for (let i = 0; i < listeners.length; i++) {
-				result.push(listeners[i]);
+		for (const entry of this._eventListeners.values()) {
+			if (typeof entry === "function") {
+				result.push(entry);
+			} else {
+				for (let i = 0; i < entry.length; i++) {
+					result.push(entry[i]);
+				}
 			}
 		}
 
