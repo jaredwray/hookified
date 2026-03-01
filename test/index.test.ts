@@ -2312,6 +2312,60 @@ describe("Hookified", () => {
 			expect(stored?.[0].id).toBe("prepend-once-id");
 		});
 
+		test("prependHook should return the stored hook", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			const result = hookified.prependHook({ event: "event", handler });
+			expect(result).toBeDefined();
+			expect(result?.event).toBe("event");
+			expect(result?.handler).toBe(handler);
+			expect(typeof result?.id).toBe("string");
+		});
+
+		test("prependHook should return undefined when deprecated hook is blocked", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const result = hookified.prependHook({
+				event: "oldHook",
+				handler: () => {},
+			});
+			expect(result).toBeUndefined();
+		});
+
+		test("prependHook should accept useHookClone option to override instance setting", () => {
+			const hookified = new Hookified(); // useHookClone defaults to true
+			const handler = () => {};
+			const hook = { event: "event", handler };
+			hookified.prependHook(hook, { useHookClone: false });
+			const stored = hookified.getHooks("event");
+			expect(stored?.[0]).toBe(hook); // same reference, not cloned
+		});
+
+		test("prependOnceHook should return the stored hook", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			const result = hookified.prependOnceHook({ event: "event", handler });
+			expect(result).toBeDefined();
+			expect(result?.event).toBe("event");
+			expect(typeof result?.id).toBe("string");
+		});
+
+		test("prependOnceHook should return undefined when deprecated hook is blocked", () => {
+			const deprecatedHooks = new Map([["oldHook", "Use newHook instead"]]);
+			const hookified = new Hookified({
+				deprecatedHooks,
+				allowDeprecated: false,
+			});
+			const result = hookified.prependOnceHook({
+				event: "oldHook",
+				handler: () => {},
+			});
+			expect(result).toBeUndefined();
+		});
+
 		test("Hook class should accept id parameter", () => {
 			const handler = () => {};
 			const hook = new Hook("event1", handler, "class-id");
@@ -2434,6 +2488,48 @@ describe("Hookified", () => {
 			const removed = hookified.removeHookById(["nope1", "nope2"]);
 			const removedArray = removed as IHook[];
 			expect(removedArray.length).toBe(0);
+		});
+	});
+
+	describe("removeEventHooks", () => {
+		test("should remove all hooks for a specific event and return them", () => {
+			const hookified = new Hookified();
+			const handler1 = () => {};
+			const handler2 = () => {};
+			hookified.onHook({ event: "event1", handler: handler1 });
+			hookified.onHook({ event: "event1", handler: handler2 });
+			hookified.onHook({ event: "event2", handler: () => {} });
+
+			const removed = hookified.removeEventHooks("event1");
+			expect(removed.length).toBe(2);
+			expect(removed[0].handler).toBe(handler1);
+			expect(removed[1].handler).toBe(handler2);
+			expect(hookified.hooks.has("event1")).toBe(false);
+			expect(hookified.hooks.has("event2")).toBe(true);
+		});
+
+		test("should return empty array when event has no hooks", () => {
+			const hookified = new Hookified();
+			hookified.onHook({ event: "event1", handler: () => {} });
+
+			const removed = hookified.removeEventHooks("nonexistent");
+			expect(removed.length).toBe(0);
+		});
+
+		test("should validate hook name when enforceBeforeAfter is enabled", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			expect(() => hookified.removeEventHooks("invalid")).toThrow(
+				'Hook event "invalid" must start with "before" or "after"',
+			);
+		});
+
+		test("should delete the map entry after removing hooks for an event", () => {
+			const hookified = new Hookified();
+			hookified.onHook({ event: "event1", handler: () => {} });
+
+			hookified.removeEventHooks("event1");
+			expect(hookified.hooks.size).toBe(0);
+			expect(hookified.hooks.get("event1")).toBeUndefined();
 		});
 	});
 });

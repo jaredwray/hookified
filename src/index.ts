@@ -5,6 +5,7 @@ import type {
 	IHook,
 	IWaterfallHook,
 	OnHookOptions,
+	PrependHookOptions,
 	WaterfallHookContext,
 	WaterfallHookFn,
 	WaterfallHookResult,
@@ -16,6 +17,7 @@ export type {
 	IHook,
 	IWaterfallHook,
 	OnHookOptions,
+	PrependHookOptions,
 	WaterfallHookContext,
 	WaterfallHookFn,
 	WaterfallHookResult,
@@ -215,55 +217,40 @@ export class Hookified extends Eventified {
 	}
 
 	/**
-	 * Adds a handler function for a specific event that runs before all other handlers
+	 * Adds a handler function for a specific event that runs before all other handlers.
+	 * Equivalent to calling `onHook(hook, { position: "Top" })`.
 	 * @param {IHook} hook - the hook containing event name and handler
-	 * @returns {void}
+	 * @param {PrependHookOptions} [options] - optional per-call options (e.g., useHookClone override)
+	 * @returns {IHook | undefined} the stored hook, or undefined if blocked by deprecation
 	 */
-	public prependHook(hook: IHook) {
-		this.validateHookName(hook.event);
-		if (!this.checkDeprecatedHook(hook.event)) {
-			return; // Skip registration if deprecated hooks are not allowed
-		}
-		const entry: IHook = this._useHookClone
-			? { id: hook.id, event: hook.event, handler: hook.handler }
-			: hook;
-
-		entry.id = entry.id ?? crypto.randomUUID();
-
-		const eventHandlers = this._hooks.get(hook.event);
-		if (eventHandlers) {
-			// Check for duplicate id — replace in-place if found
-			const existingIndex = eventHandlers.findIndex((h) => h.id === entry.id);
-			if (existingIndex !== -1) {
-				eventHandlers[existingIndex] = entry;
-			} else {
-				eventHandlers.unshift(entry);
-			}
-		} else {
-			this._hooks.set(hook.event, [entry]);
-		}
+	public prependHook(
+		hook: IHook,
+		options?: PrependHookOptions,
+	): IHook | undefined {
+		return this.onHook(hook, { ...options, position: "Top" });
 	}
 
 	/**
-	 * Adds a handler that only executes once for a specific event before all other handlers
+	 * Adds a handler that only executes once for a specific event before all other handlers.
+	 * Equivalent to calling `onHook` with a self-removing wrapper and `{ position: "Top" }`.
 	 * @param {IHook} hook - the hook containing event name and handler
+	 * @param {PrependHookOptions} [options] - optional per-call options (e.g., useHookClone override)
+	 * @returns {IHook | undefined} the stored hook, or undefined if blocked by deprecation
 	 */
-	public prependOnceHook(hook: IHook) {
-		this.validateHookName(hook.event);
-		if (!this.checkDeprecatedHook(hook.event)) {
-			return; // Skip registration if deprecated hooks are not allowed
-		}
+	public prependOnceHook(
+		hook: IHook,
+		options?: PrependHookOptions,
+	): IHook | undefined {
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		const wrappedHandler = async (...arguments_: any[]) => {
 			this.removeHook({ event: hook.event, handler: wrappedHandler });
 			return hook.handler(...arguments_);
 		};
 
-		this.prependHook({
-			id: hook.id,
-			event: hook.event,
-			handler: wrappedHandler,
-		});
+		return this.onHook(
+			{ id: hook.id, event: hook.event, handler: wrappedHandler },
+			{ ...options, position: "Top" },
+		);
 	}
 
 	/**
@@ -484,6 +471,23 @@ export class Hookified extends Eventified {
 	 */
 	public clearHooks() {
 		this._hooks.clear();
+	}
+
+	/**
+	 * Removes all hooks for a specific event and returns the removed hooks.
+	 * @param {string} event - The event name to remove hooks for.
+	 * @returns {IHook[]} the hooks that were removed
+	 */
+	public removeEventHooks(event: string): IHook[] {
+		this.validateHookName(event);
+		const eventHandlers = this._hooks.get(event);
+		if (eventHandlers) {
+			const removed = [...eventHandlers];
+			this._hooks.delete(event);
+			return removed;
+		}
+
+		return [];
 	}
 
 	/**
