@@ -1562,6 +1562,27 @@ _Note: the `EventEmitter` version is Nodejs versioning._
 
 # Migrating from v1 to v2
 
+**[Breaking Changes](#breaking-changes)**
+- [`throwHookErrors` removed — use `throwOnHookError` instead](#throwhookerrors-removed--use-throwonhookerror-instead)
+- [`throwOnEmptyListeners` now defaults to `true`](#throwonemptylisteners-now-defaults-to-true)
+- [`logger` renamed to `eventLogger`](#logger-renamed-to-eventlogger)
+- [`maxListeners` default changed from `100` to `0` (unlimited) and no longer truncates](#maxlisteners-default-changed-from-100-to-0-unlimited-and-no-longer-truncates)
+- [`onHookEntry` removed — use `onHook` instead](#onhookentry-removed--use-onhook-instead)
+- [`onHook` signature changed](#onhook-signature-changed)
+- [`HookEntry` type and `Hook` type removed](#hookentry-type-and-hook-type-removed)
+- [`removeHook` and `removeHooks` now return removed hooks](#removehook-and-removehooks-now-return-removed-hooks)
+- [`removeHook`, `removeHooks`, and `getHooks` no longer check for deprecated hooks](#removehook-removehooks-and-gethooks-no-longer-check-for-deprecated-hooks)
+- [Internal hook storage now uses `IHook` objects](#internal-hook-storage-now-uses-ihook-objects)
+- [`onceHook`, `prependHook`, `prependOnceHook`, and `removeHook` now take `IHook`](#oncehook-prependhook-prependoncehook-and-removehook-now-take-ihook)
+- [`onHook` now returns the stored hook](#onhook-now-returns-the-stored-hook)
+
+**[New Features](#new-features)**
+- [`Hook` class](#hook-class)
+- [`useHookClone` option](#usehookclone-option)
+- [`onHook` now accepts `OnHookOptions`](#onhook-now-accepts-onhookoptions)
+- [`onHook` no longer accepts arrays](#onhook-no-longer-accepts-arrays)
+- [`IHook` now has an `id` property](#ihook-now-has-an-id-property)
+
 ## Breaking Changes
 
 ### `throwHookErrors` removed — use `throwOnHookError` instead
