@@ -29,7 +29,7 @@
 - [Migrating from v1 to v2](#migrating-from-v1-to-v2)
 - [Using it in the Browser](#using-it-in-the-browser)
 - [Hooks](#hooks)
-  - [Hook class](#hook-class)
+  - [Standard Hook](#standard-hook)
 - [API - Hooks](#api---hooks)
   - [.throwOnHookError](#throwOnHookError)
   - [.eventLogger](#eventlogger)
@@ -182,7 +182,7 @@ if you are not using ESM modules, you can use the following:
 
 # Hooks
 
-## Hook class
+## Standard Hook
 
 The `Hook` class provides a convenient way to create hook entries. It implements the `IHook` interface.
 
@@ -1577,7 +1577,7 @@ _Note: the `EventEmitter` version is Nodejs versioning._
 - [`onHook` now returns the stored hook](#onhook-now-returns-the-stored-hook)
 
 **[New Features](#new-features)**
-- [`Hook` class](#hook-class)
+- [standard `Hook` class now available](#standard-hook)
 - [`useHookClone` option](#usehookclone-option)
 - [`onHook` now accepts `OnHookOptions`](#onhook-now-accepts-onhookoptions)
 - [`onHook` no longer accepts arrays](#onhook-no-longer-accepts-arrays)
