@@ -314,6 +314,10 @@ export class Eventified implements IEventEmitter {
 			if (typeof entry === "function") {
 				if (argumentLegth === 1) {
 					entry(arguments_[0]);
+				} else if (argumentLegth === 2) {
+					entry(arguments_[0], arguments_[1]);
+				} else if (argumentLegth === 3) {
+					entry(arguments_[0], arguments_[1], arguments_[2]);
 				} else {
 					entry(...arguments_);
 				}
@@ -322,6 +326,10 @@ export class Eventified implements IEventEmitter {
 				for (let i = 0; i < snapshot.length; i++) {
 					if (argumentLegth === 1) {
 						snapshot[i](arguments_[0]);
+					} else if (argumentLegth === 2) {
+						snapshot[i](arguments_[0], arguments_[1]);
+					} else if (argumentLegth === 3) {
+						snapshot[i](arguments_[0], arguments_[1], arguments_[2]);
 					} else {
 						snapshot[i](...arguments_);
 					}
