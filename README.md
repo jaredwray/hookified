@@ -732,9 +732,14 @@ myClass.onHook({ event: 'before:myMethod', handler: async (data) => {
 this.hookSync('before:myMethod', data); // Only sync handler runs
 ```
 
-## .onHook(hook, options?)
+## .onHook(hook, options?) / .onHook(event, handler)
 
-Subscribe to a hook event. Takes an `IHook` object and an optional `OnHookOptions` object. Returns the stored `IHook` (with `id` assigned), or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` or `.removeHookById()`. To register multiple hooks at once, use `.onHooks()`.
+Subscribe to a hook event. Supports two calling styles:
+
+- **Object form**: `onHook(hook, options?)` — takes an `IHook` object and an optional `OnHookOptions` object.
+- **Shorthand form**: `onHook(event, handler)` — takes an event name string and a handler function (v1-compatible).
+
+Returns the stored `IHook` (with `id` assigned), or `undefined` if the hook was blocked by deprecation. The returned reference is the exact object stored internally, which is useful for later removal with `.removeHook()` or `.removeHookById()`. To register multiple hooks at once, use `.onHooks()`.
 
 If the hook has an `id`, it will be used as-is. If not, a UUID is auto-generated via `crypto.randomUUID()`. If a hook with the same `id` already exists on the same event, it will be **replaced in-place** (preserving its position in the array).
 
@@ -783,6 +788,11 @@ myClass.onHook({ event: 'before:save', handler: async (data) => {} }, { position
 
 // Insert at a specific index
 myClass.onHook({ event: 'before:save', handler: async (data) => {} }, { position: 1 });
+
+// Shorthand form — pass event name and handler directly (v1-compatible)
+myClass.onHook('before:save', async (data) => {
+  data.validated = true;
+});
 ```
 
 ## .onHooks(Array, options?)
@@ -1247,15 +1257,17 @@ _Note: the `EventEmitter` version is Nodejs versioning._
 
 ## Quick Guide
 
-v2 overhauls hook storage to use `IHook` objects instead of raw functions. This enables hook IDs, ordering via position, cloning control, and new hook types like `WaterfallHook`. The main change most users will notice is that `onHook` now takes an `IHook` object instead of positional arguments:
+v2 overhauls hook storage to use `IHook` objects instead of raw functions. This enables hook IDs, ordering via position, cloning control, and new hook types like `WaterfallHook`. `onHook` now supports both the v1 positional `(event, handler)` form and the new `IHook` object form, so this is **not a breaking change**:
 
 ```typescript
-// v1 — positional arguments
+// v1 style — still works
 hookified.onHook('before:save', async (data) => {});
 
-// v2 — IHook object (or use addHook for positional args)
+// v2 style — IHook object with options support
 hookified.onHook({ event: 'before:save', handler: async (data) => {} });
-hookified.addHook('before:save', async (data) => {}); // still works
+
+// addHook also works as an alias for the positional form
+hookified.addHook('before:save', async (data) => {});
 ```
 
 **Other common changes:**
@@ -1278,7 +1290,7 @@ See below for full details on each change.
 - [`logger` renamed to `eventLogger`](#logger-renamed-to-eventlogger)
 - [`maxListeners` default changed from `100` to `0` (unlimited) and no longer truncates](#maxlisteners-default-changed-from-100-to-0-unlimited-and-no-longer-truncates)
 - [`onHookEntry` removed — use `onHook` instead](#onhookentry-removed--use-onhook-instead)
-- [`onHook` signature changed](#onhook-signature-changed)
+- [`onHook` signature updated (not breaking)](#onhook-signature-updated)
 - [`HookEntry` type and `Hook` type removed](#hookentry-type-and-hook-type-removed)
 - [`removeHook` and `removeHooks` now return removed hooks](#removehook-and-removehooks-now-return-removed-hooks)
 - [`removeHook`, `removeHooks`, and `getHooks` no longer check for deprecated hooks](#removehook-removehooks-and-gethooks-no-longer-check-for-deprecated-hooks)
@@ -1303,7 +1315,7 @@ See below for full details on each change.
 | `logger` | Renamed to `eventLogger` |
 | `maxListeners` | Default changed from `100` to `0` (unlimited), no longer truncates |
 | `onHookEntry` | Removed — use `onHook` instead |
-| `onHook` signature | Now takes `IHook` object instead of `(event, handler)` |
+| `onHook` signature | Now takes `IHook` object **or** `(event, handler)` — both supported (not breaking) |
 | `HookEntry` / `Hook` types | Replaced with `IHook` / `HookFn` |
 | `removeHook` / `removeHooks` | Now return removed hooks; no longer check deprecated status |
 | Internal hook storage | Uses `IHook` objects instead of raw functions |
@@ -1406,20 +1418,15 @@ hookified.onHookEntry({ event: 'before:save', handler: async (data) => {} });
 hookified.onHook({ event: 'before:save', handler: async (data) => {} });
 ```
 
-### `onHook` signature changed
+### `onHook` signature updated
 
-`onHook` no longer accepts positional `(event, handler)` arguments. It now takes a single `IHook` object or `Hook` class instance. Use `addHook(event, handler)` if you prefer positional arguments. Use `onHooks()` for bulk registration.
-
-**Before (v1):**
+`onHook` now supports both the v1 positional `(event, handler)` form and the new `IHook` object form. **This is not a breaking change** — existing v1 code continues to work. The `IHook` object form is recommended for new code as it supports hook IDs, positioning, and cloning options. You can also use `addHook(event, handler)` as an alias or `onHooks()` for bulk registration.
 
 ```typescript
+// v1 style — still works
 hookified.onHook('before:save', async (data) => {});
-```
 
-**After (v2):**
-
-```typescript
-// Using IHook object
+// v2 style — IHook object with full options support
 hookified.onHook({ event: 'before:save', handler: async (data) => {} });
 
 // For multiple hooks, use onHooks
@@ -1428,7 +1435,7 @@ hookified.onHooks([
   { event: 'after:save', handler: async (data) => {} },
 ]);
 
-// Or use addHook for positional args
+// addHook also works as an alias for positional args
 hookified.addHook('before:save', async (data) => {});
 ```
 
