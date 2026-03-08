@@ -169,7 +169,13 @@ export class Hookified extends Eventified {
 		let options: OnHookOptions | undefined;
 
 		if (typeof hookOrEvent === "string") {
-			hook = { event: hookOrEvent, handler: optionsOrHandler as HookFn };
+			if (typeof optionsOrHandler !== "function") {
+				throw new TypeError(
+					"When calling onHook(event, handler), the second argument must be a function",
+				);
+			}
+
+			hook = { event: hookOrEvent, handler: optionsOrHandler };
 			options = undefined;
 		} else {
 			hook = hookOrEvent;

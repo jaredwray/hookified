@@ -56,6 +56,18 @@ describe("Hookified", () => {
 		expect(values).toEqual(["hello"]);
 	});
 
+	test("onHook with (event, non-function) throws TypeError", () => {
+		const hookified = new Hookified();
+		expect(() => {
+			// @ts-expect-error testing runtime validation
+			hookified.onHook("event", { position: "Top" });
+		}).toThrow(TypeError);
+		expect(() => {
+			// @ts-expect-error testing runtime validation
+			hookified.onHook("event", "not-a-function");
+		}).toThrow("the second argument must be a function");
+	});
+
 	test("onHooks with array of IHook", async () => {
 		const hookified = new Hookified();
 		const handler = () => {};
