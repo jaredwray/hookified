@@ -151,13 +151,36 @@ export class Hookified extends Eventified {
 
 	/**
 	 * Adds a handler function for a specific event.
-	 * If you prefer the legacy `(event, handler)` signature, use {@link addHook} instead.
+	 * Supports both object and legacy signatures:
+	 *   onHook({ event, handler }, options?)
+	 *   onHook(event, handler)
 	 * To register multiple hooks at once, use {@link onHooks}.
-	 * @param {IHook} hook - the hook containing event name and handler
-	 * @param {OnHookOptions} [options] - optional per-call options (e.g., useHookClone override, position)
+	 * @param {IHook | string} hookOrEvent - the hook object or event name
+	 * @param {OnHookOptions | HookFn} [optionsOrHandler] - options (when using object form) or handler function (when using string form)
 	 * @returns {IHook | undefined} the stored hook, or undefined if blocked by deprecation
 	 */
-	public onHook(hook: IHook, options?: OnHookOptions): IHook | undefined {
+	public onHook(hook: IHook, options?: OnHookOptions): IHook | undefined;
+	public onHook(event: string, handler: HookFn): IHook | undefined;
+	public onHook(
+		hookOrEvent: IHook | string,
+		optionsOrHandler?: OnHookOptions | HookFn,
+	): IHook | undefined {
+		let hook: IHook;
+		let options: OnHookOptions | undefined;
+
+		if (typeof hookOrEvent === "string") {
+			if (typeof optionsOrHandler !== "function") {
+				throw new TypeError(
+					"When calling onHook(event, handler), the second argument must be a function",
+				);
+			}
+
+			hook = { event: hookOrEvent, handler: optionsOrHandler };
+			options = undefined;
+		} else {
+			hook = hookOrEvent;
+			options = optionsOrHandler as OnHookOptions | undefined;
+		}
 		this.validateHookName(hook.event);
 		if (!this.checkDeprecatedHook(hook.event)) {
 			return undefined; // Skip registration if deprecated hooks are not allowed

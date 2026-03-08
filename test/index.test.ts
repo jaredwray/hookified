@@ -27,6 +27,47 @@ describe("Hookified", () => {
 		expect(hookified.hooks.size).toBe(2);
 	});
 
+	test("onHook with event and handler arguments", async () => {
+		const hookified = new Hookified();
+
+		const handler = () => {};
+		const handler2 = () => {};
+		const result = hookified.onHook("event", handler);
+		hookified.onHook("event2", handler2);
+		expect(result).toBeDefined();
+		expect(result?.event).toBe("event");
+		expect(result?.handler).toBe(handler);
+		expect(hookified.getHooks("event")).toMatchObject([
+			{ event: "event", handler },
+		]);
+		expect(hookified.getHooks("event2")).toMatchObject([
+			{ event: "event2", handler: handler2 },
+		]);
+		expect(hookified.hooks.size).toBe(2);
+	});
+
+	test("onHook with event and handler executes hook correctly", async () => {
+		const hookified = new Hookified();
+		const values: string[] = [];
+		hookified.onHook("test-event", async (val: string) => {
+			values.push(val);
+		});
+		await hookified.hook("test-event", "hello");
+		expect(values).toEqual(["hello"]);
+	});
+
+	test("onHook with (event, non-function) throws TypeError", () => {
+		const hookified = new Hookified();
+		expect(() => {
+			// @ts-expect-error testing runtime validation
+			hookified.onHook("event", { position: "Top" });
+		}).toThrow(TypeError);
+		expect(() => {
+			// @ts-expect-error testing runtime validation
+			hookified.onHook("event", "not-a-function");
+		}).toThrow("the second argument must be a function");
+	});
+
 	test("onHooks with array of IHook", async () => {
 		const hookified = new Hookified();
 		const handler = () => {};
