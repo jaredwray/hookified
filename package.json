@@ -33,6 +33,8 @@
     "benchmark:hooks": "pnpm tsx benchmark/hook.ts",
     "benchmark:emit": "pnpm tsx benchmark/emit.ts",
     "benchmark:readme": "pnpm tsx scripts/benchmark-readme.ts",
+    "website:build": "docula build",
+    "website:serve": "docula serve",
     "website:dev": "docula dev",
     "prepare": "pnpm build"
   },
