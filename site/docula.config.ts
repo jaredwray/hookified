@@ -4,13 +4,13 @@ import process from 'node:process';
 
 export const options = {
 	githubPath: 'jaredwray/hookified',
-	outputPath: './site/dist',
 	siteTitle: 'Hookified',
 	siteDescription: 'Event Emitting and Middleware Hooks for Node.js',
 	siteUrl: 'https://hookified.org',
+	themeMode: 'light',
 };
 
-export const onPrepare = async config => {
+export const onPrepare = async (config: {sitePath: string}) => {
 	const readmePath = path.join(process.cwd(), './README.md');
 	const readmeSitePath = path.join(config.sitePath, 'README.md');
 	const readme = await fs.promises.readFile(readmePath, 'utf8');
