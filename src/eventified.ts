@@ -320,14 +320,14 @@ export class Eventified implements IEventEmitter {
 					entry(...arguments_);
 				}
 			} else {
-				const snapshot = [...entry];
-				for (let i = 0; i < snapshot.length; i++) {
+				const len = entry.length;
+				for (let i = 0; i < len; i++) {
 					if (argumentLength === 1) {
-						snapshot[i](arguments_[0]);
+						entry[i](arguments_[0]);
 					} else if (argumentLength === 2) {
-						snapshot[i](arguments_[0], arguments_[1]);
+						entry[i](arguments_[0], arguments_[1]);
 					} else {
-						snapshot[i](...arguments_);
+						entry[i](...arguments_);
 					}
 				}
 			}
@@ -340,7 +340,7 @@ export class Eventified implements IEventEmitter {
 			this.sendToEventLogger(event, arguments_);
 		}
 
-		if (event === ERROR_EVENT && !result) {
+		if (!result && event === ERROR_EVENT) {
 			const error =
 				arguments_[0] instanceof Error
 					? arguments_[0]
