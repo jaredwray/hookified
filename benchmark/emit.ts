@@ -20,7 +20,7 @@ const emitter3Version = cleanVersion(pkg.devDependencies.eventemitter3);
 
 // Register listeners so emits actually invoke handlers
 eventEmitter.on("event", (_data: string) => {});
-emittery.on("event", (_data: unknown) => {});
+emittery.on("event", (_event: { name: string; data: unknown }) => {});
 eventEmitter3.on("event", (_data: string) => {});
 hookified.on("event", (_data: string) => {});
 
