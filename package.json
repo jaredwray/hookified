@@ -33,8 +33,7 @@
     "benchmark:hooks": "pnpm tsx benchmark/hook.ts",
     "benchmark:emit": "pnpm tsx benchmark/emit.ts",
     "benchmark:readme": "pnpm tsx scripts/benchmark-readme.ts",
-    "website:build": "docula build",
-    "website:serve": "docula serve",
+    "website:dev": "docula dev",
     "prepare": "pnpm build"
   },
   "keywords": [
@@ -73,7 +72,7 @@
     "@monstermann/tinybench-pretty-printer": "^0.3.0",
     "@types/node": "^25.5.0",
     "@vitest/coverage-v8": "^4.1.2",
-    "docula": "^0.41.1",
+    "docula": "^1.11.0",
     "emittery": "^2.0.0",
     "eventemitter3": "^5.0.4",
     "hookable": "^6.1.0",
