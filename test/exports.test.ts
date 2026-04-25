@@ -135,7 +135,7 @@ describe("Export Verification Tests", () => {
 		});
 
 		test("should have browser IIFE (global) bundle", () => {
-			const iifePath = join(rootDir, "dist/browser/index.global.js");
+			const iifePath = join(rootDir, "dist/browser/index.iife.js");
 			expect(existsSync(iifePath)).toBe(true);
 
 			const content = readFileSync(iifePath, "utf-8");
@@ -145,7 +145,7 @@ describe("Export Verification Tests", () => {
 
 		test("should have browser source maps", () => {
 			const esmMapPath = join(rootDir, "dist/browser/index.js.map");
-			const iifeMapPath = join(rootDir, "dist/browser/index.global.js.map");
+			const iifeMapPath = join(rootDir, "dist/browser/index.iife.js.map");
 
 			expect(existsSync(esmMapPath)).toBe(true);
 			expect(existsSync(iifeMapPath)).toBe(true);
@@ -157,14 +157,14 @@ describe("Export Verification Tests", () => {
 		let cjsContent: string;
 
 		beforeAll(() => {
-			const dtsPath = join(rootDir, "dist/node/index.d.ts");
+			const dtsPath = join(rootDir, "dist/node/index.d.mts");
 			const dctsPath = join(rootDir, "dist/node/index.d.cts");
 			esmContent = readFileSync(dtsPath, "utf-8");
 			cjsContent = readFileSync(dctsPath, "utf-8");
 		});
 
 		test("should have ESM type definitions", () => {
-			expect(existsSync(join(rootDir, "dist/node/index.d.ts"))).toBe(true);
+			expect(existsSync(join(rootDir, "dist/node/index.d.mts"))).toBe(true);
 			expect(esmContent).toContain("Hookified");
 			expect(esmContent).toContain("Eventified");
 		});
@@ -210,7 +210,7 @@ describe("Export Verification Tests", () => {
 
 	describe("Node.js Build Files", () => {
 		test("should have Node.js ESM bundle", () => {
-			const esmPath = join(rootDir, "dist/node/index.js");
+			const esmPath = join(rootDir, "dist/node/index.mjs");
 			expect(existsSync(esmPath)).toBe(true);
 
 			const content = readFileSync(esmPath, "utf-8");
