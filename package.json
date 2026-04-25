@@ -3,9 +3,9 @@
   "version": "2.1.1",
   "description": "Event Emitting and Middleware Hooks",
   "type": "module",
-  "main": "./dist/node/index.mjs",
+  "main": "./dist/node/index.cjs",
   "module": "./dist/node/index.mjs",
-  "types": "./dist/node/index.d.mts",
+  "types": "./dist/node/index.d.cts",
   "exports": {
     ".": {
       "import": {
@@ -72,7 +72,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.9",
     "@monstermann/tinybench-pretty-printer": "^0.3.0",
-    "@types/node": "^25.5.0",
+    "@types/node": "^24.12.2",
     "@vitest/coverage-v8": "^4.1.2",
     "docula": "^1.11.0",
     "emittery": "^2.0.0",
