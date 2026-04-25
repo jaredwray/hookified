@@ -12,6 +12,7 @@ export default defineConfig([
 	{
 		entry: ["src/index.ts"],
 		format: ["esm", "iife"],
+		globalName: "hookified",
 		target: "es2020",
 		outDir: "dist/browser",
 		platform: "browser",
