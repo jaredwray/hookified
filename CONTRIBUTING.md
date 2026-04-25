@@ -60,7 +60,7 @@ Our export verification tests cover:
 - Confirms source maps are generated
 
 ### 4. **TypeScript Definitions**
-- Validates ESM type definitions (`.d.ts`)
+- Validates ESM type definitions (`.d.mts`)
 - Validates CommonJS type definitions (`.d.cts`)
 - Ensures all types (`HookFn`, `IHook`, `HookifiedOptions`, etc.) are exported
 

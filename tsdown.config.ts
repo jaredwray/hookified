@@ -18,5 +18,15 @@ export default defineConfig([
 		sourcemap: true,
 		dts: false,
 		clean: true,
+		outputOptions: (options, format) => {
+			if (format === "iife") {
+				return {
+					...options,
+					entryFileNames: "index.global.js",
+					chunkFileNames: "[name]-[hash].global.js",
+				};
+			}
+			return options;
+		},
 	},
 ]);

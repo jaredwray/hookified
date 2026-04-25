@@ -20,7 +20,7 @@
     },
     "./browser": {
       "import": "./dist/browser/index.js",
-      "default": "./dist/browser/index.iife.js"
+      "default": "./dist/browser/index.global.js"
     }
   },
   "scripts": {
