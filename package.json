@@ -19,6 +19,7 @@
       "default": "./dist/node/index.js"
     },
     "./browser": {
+      "types": "./dist/node/index.d.ts",
       "import": "./dist/browser/index.js",
       "default": "./dist/browser/index.global.js"
     }
