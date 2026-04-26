@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import type {
 	ParallelHookContext,
 	ParallelHookFinalContext,
+	ParallelHookFn,
 	ParallelHookResult,
 } from "../src/index.js";
 import { Hookified, ParallelHook } from "../src/index.js";
@@ -46,13 +47,15 @@ describe("ParallelHook", () => {
 		).toBe(false);
 	});
 
-	test("should call final handler with empty results when no hooks are registered", async () => {
+	test("should call final handler with empty Map when no hooks are registered", async () => {
 		let received: ParallelHookFinalContext | undefined;
 		const ph = new ParallelHook("process", (context) => {
 			received = context;
 		});
 		await ph.handler(42);
-		expect(received).toEqual({ initialArgs: 42, results: [] });
+		expect(received?.initialArgs).toBe(42);
+		expect(received?.results).toBeInstanceOf(Map);
+		expect(received?.results.size).toBe(0);
 	});
 
 	test("should pass a single argument as scalar initialArgs", async () => {
@@ -98,7 +101,7 @@ describe("ParallelHook", () => {
 	});
 
 	test("should run hooks concurrently rather than sequentially", async () => {
-		let finalResults: ParallelHookResult[] = [];
+		let finalResults: Map<ParallelHookFn, ParallelHookResult> | undefined;
 		const ph = new ParallelHook("process", ({ results }) => {
 			finalResults = results;
 		});
@@ -118,12 +121,16 @@ describe("ParallelHook", () => {
 		const elapsed = Date.now() - start;
 
 		expect(elapsed).toBeLessThan(delay * 2);
-		expect(finalResults).toHaveLength(3);
-		expect(finalResults.every((r) => r.status === "fulfilled")).toBe(true);
+		expect(finalResults?.size).toBe(3);
+		expect(
+			[...(finalResults?.values() ?? [])].every(
+				(r) => r.status === "fulfilled",
+			),
+		).toBe(true);
 	});
 
 	test("should handle mixed sync and async hooks", async () => {
-		let finalResults: ParallelHookResult[] = [];
+		let finalResults: Map<ParallelHookFn, ParallelHookResult> | undefined;
 		const ph = new ParallelHook("process", ({ results }) => {
 			finalResults = results;
 		});
@@ -133,14 +140,16 @@ describe("ParallelHook", () => {
 
 		await ph.handler(10);
 		expect(
-			finalResults.map((r) => (r.status === "fulfilled" ? r.result : null)),
+			[...(finalResults?.values() ?? [])].map((r) =>
+				r.status === "fulfilled" ? r.result : null,
+			),
 		).toEqual([11, 30, 8]);
 	});
 
-	test("should include hook references in results", async () => {
+	test("should key results by the hook function reference for direct lookup", async () => {
 		const hook1 = ({ initialArgs }: ParallelHookContext) => initialArgs + 1;
 		const hook2 = ({ initialArgs }: ParallelHookContext) => initialArgs * 2;
-		let finalResults: ParallelHookResult[] = [];
+		let finalResults: Map<ParallelHookFn, ParallelHookResult> | undefined;
 		const ph = new ParallelHook("process", ({ results }) => {
 			finalResults = results;
 		});
@@ -148,67 +157,106 @@ describe("ParallelHook", () => {
 		ph.addHook(hook2);
 
 		await ph.handler(5);
-		expect(finalResults[0].hook).toBe(hook1);
-		expect(finalResults[1].hook).toBe(hook2);
+		expect(finalResults?.get(hook1)).toMatchObject({
+			status: "fulfilled",
+			result: 6,
+		});
+		expect(finalResults?.get(hook2)).toMatchObject({
+			status: "fulfilled",
+			result: 10,
+		});
+	});
+
+	test("should iterate results in registration order", async () => {
+		const hook1 = ({ initialArgs }: ParallelHookContext) => initialArgs;
+		const hook2 = ({ initialArgs }: ParallelHookContext) => initialArgs * 2;
+		const hook3 = ({ initialArgs }: ParallelHookContext) => initialArgs * 3;
+		let keys: ParallelHookFn[] = [];
+		const ph = new ParallelHook("process", ({ results }) => {
+			keys = [...results.keys()];
+		});
+		ph.addHook(hook1);
+		ph.addHook(hook2);
+		ph.addHook(hook3);
+
+		await ph.handler(7);
+		expect(keys).toEqual([hook1, hook2, hook3]);
 	});
 
 	test("should mark each result as fulfilled with the returned value", async () => {
-		let finalResults: ParallelHookResult[] = [];
+		const hook1 = ({ initialArgs }: ParallelHookContext) => initialArgs;
+		const hook2 = async ({ initialArgs }: ParallelHookContext) =>
+			initialArgs * 2;
+		let finalResults: Map<ParallelHookFn, ParallelHookResult> | undefined;
 		const ph = new ParallelHook("process", ({ results }) => {
 			finalResults = results;
 		});
-		ph.addHook(({ initialArgs }: ParallelHookContext) => initialArgs);
-		ph.addHook(async ({ initialArgs }: ParallelHookContext) => initialArgs * 2);
+		ph.addHook(hook1);
+		ph.addHook(hook2);
 
 		await ph.handler(7);
-		expect(finalResults).toMatchObject([
-			{ status: "fulfilled", result: 7 },
-			{ status: "fulfilled", result: 14 },
-		]);
+		expect(finalResults?.get(hook1)).toEqual({
+			status: "fulfilled",
+			result: 7,
+		});
+		expect(finalResults?.get(hook2)).toEqual({
+			status: "fulfilled",
+			result: 14,
+		});
 	});
 
 	test("should collect rejections without rejecting handler()", async () => {
 		const error = new Error("boom");
-		let finalResults: ParallelHookResult[] = [];
+		const hookOk1 = ({ initialArgs }: ParallelHookContext) => initialArgs;
+		const hookFail = async () => {
+			throw error;
+		};
+		const hookOk2 = ({ initialArgs }: ParallelHookContext) => initialArgs * 2;
+		let finalResults: Map<ParallelHookFn, ParallelHookResult> | undefined;
 		const ph = new ParallelHook("process", ({ results }) => {
 			finalResults = results;
 		});
-		ph.addHook(({ initialArgs }: ParallelHookContext) => initialArgs);
-		ph.addHook(async () => {
-			throw error;
-		});
-		ph.addHook(({ initialArgs }: ParallelHookContext) => initialArgs * 2);
+		ph.addHook(hookOk1);
+		ph.addHook(hookFail);
+		ph.addHook(hookOk2);
 
 		await ph.handler(3);
-		expect(finalResults).toHaveLength(3);
-		expect(finalResults[0]).toMatchObject({ status: "fulfilled", result: 3 });
-		expect(finalResults[1]).toMatchObject({
+		expect(finalResults?.size).toBe(3);
+		expect(finalResults?.get(hookOk1)).toEqual({
+			status: "fulfilled",
+			result: 3,
+		});
+		expect(finalResults?.get(hookFail)).toEqual({
 			status: "rejected",
 			reason: error,
 		});
-		expect(finalResults[2]).toMatchObject({ status: "fulfilled", result: 6 });
+		expect(finalResults?.get(hookOk2)).toEqual({
+			status: "fulfilled",
+			result: 6,
+		});
 	});
 
 	test("should capture synchronous throws as rejections", async () => {
 		const error = new Error("sync boom");
-		let finalResults: ParallelHookResult[] = [];
+		const failingHook = () => {
+			throw error;
+		};
+		let finalResults: Map<ParallelHookFn, ParallelHookResult> | undefined;
 		const ph = new ParallelHook("process", ({ results }) => {
 			finalResults = results;
 		});
-		ph.addHook(() => {
-			throw error;
-		});
+		ph.addHook(failingHook);
 
 		await ph.handler("input");
-		expect(finalResults).toHaveLength(1);
-		expect(finalResults[0]).toMatchObject({
+		expect(finalResults?.size).toBe(1);
+		expect(finalResults?.get(failingHook)).toEqual({
 			status: "rejected",
 			reason: error,
 		});
 	});
 
 	test("should still call final handler when every hook rejects", async () => {
-		let finalResults: ParallelHookResult[] = [];
+		let finalResults: Map<ParallelHookFn, ParallelHookResult> | undefined;
 		const ph = new ParallelHook("process", ({ results }) => {
 			finalResults = results;
 		});
@@ -220,8 +268,10 @@ describe("ParallelHook", () => {
 		});
 
 		await ph.handler();
-		expect(finalResults).toHaveLength(2);
-		expect(finalResults.every((r) => r.status === "rejected")).toBe(true);
+		expect(finalResults?.size).toBe(2);
+		expect(
+			[...(finalResults?.values() ?? [])].every((r) => r.status === "rejected"),
+		).toBe(true);
 	});
 
 	test("should propagate errors from the final handler", async () => {
@@ -236,26 +286,32 @@ describe("ParallelHook", () => {
 	test("should integrate with Hookified via onHook (final handler still fires)", async () => {
 		const hookified = new Hookified();
 		const calls: string[] = [];
-		let finalResults: ParallelHookResult[] = [];
+		const hookA = ({ initialArgs }: ParallelHookContext) => {
+			calls.push(`a:${initialArgs}`);
+			return `a:${initialArgs}`;
+		};
+		const hookB = async ({ initialArgs }: ParallelHookContext) => {
+			calls.push(`b:${initialArgs}`);
+			return `b:${initialArgs}`;
+		};
+		let finalResults: Map<ParallelHookFn, ParallelHookResult> | undefined;
 		const ph = new ParallelHook("notify", ({ results }) => {
 			finalResults = results;
 		});
-		ph.addHook(({ initialArgs }: ParallelHookContext) => {
-			calls.push(`a:${initialArgs}`);
-			return `a:${initialArgs}`;
-		});
-		ph.addHook(async ({ initialArgs }: ParallelHookContext) => {
-			calls.push(`b:${initialArgs}`);
-			return `b:${initialArgs}`;
-		});
+		ph.addHook(hookA);
+		ph.addHook(hookB);
 
 		hookified.onHook(ph);
 		await hookified.hook("notify", "ping");
 		expect(calls.sort()).toEqual(["a:ping", "b:ping"]);
-		expect(finalResults).toMatchObject([
-			{ status: "fulfilled", result: "a:ping" },
-			{ status: "fulfilled", result: "b:ping" },
-		]);
+		expect(finalResults?.get(hookA)).toMatchObject({
+			status: "fulfilled",
+			result: "a:ping",
+		});
+		expect(finalResults?.get(hookB)).toMatchObject({
+			status: "fulfilled",
+			result: "b:ping",
+		});
 	});
 
 	test("should integrate with Hookified alongside regular hooks", async () => {
@@ -291,16 +347,20 @@ describe("ParallelHook", () => {
 	});
 
 	test("should expose a discriminated ParallelHookResult type", async () => {
+		const okHook = () => 1;
+		const failHook = () => {
+			throw new Error("nope");
+		};
 		let labels: string[] = [];
 		const ph = new ParallelHook("process", ({ results }) => {
-			labels = results.map((r) =>
-				r.status === "fulfilled" ? `ok:${r.result}` : `err:${r.reason.message}`,
+			labels = [...results.values()].map((r) =>
+				r.status === "fulfilled"
+					? `ok:${r.result}`
+					: `err:${(r.reason as Error).message}`,
 			);
 		});
-		ph.addHook(() => 1);
-		ph.addHook(() => {
-			throw new Error("nope");
-		});
+		ph.addHook(okHook);
+		ph.addHook(failHook);
 
 		await ph.handler();
 		expect(labels).toEqual(["ok:1", "err:nope"]);

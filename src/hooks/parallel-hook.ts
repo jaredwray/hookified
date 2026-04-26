@@ -9,29 +9,43 @@ import type {
 /**
  * A ParallelHook fans a single invocation out to many registered hook
  * functions concurrently via Promise.allSettled, then calls a final
- * handler with the aggregated results — including failures. Each hook
- * receives only the original arguments; hooks do not see each other's
- * results.
+ * handler with the aggregated results — including failures — keyed by
+ * the hook function reference for direct lookup. Each hook receives only
+ * the original arguments; hooks do not see each other's results.
  *
  * Implements IHook for compatibility with Hookified.onHook(); the final
  * handler is called regardless of whether the parallel hook is invoked
  * directly or through Hookified.hook().
+ *
+ * Generics tighten the per-hook signature when every hook in the set
+ * accepts the same `initialArgs` and returns the same result type.
+ * Both default to `any` for backwards compatibility.
+ *
+ * @template TArgs - The shape of `initialArgs` passed to every hook
+ * @template TResult - The result type each hook returns
  */
-export class ParallelHook implements IParallelHook {
+// biome-ignore lint/suspicious/noExplicitAny: defaults preserve untyped use
+export class ParallelHook<TArgs = any, TResult = any>
+	implements IParallelHook<TArgs, TResult>
+{
 	public id?: string;
 	public event: string;
 	public handler: HookFn;
-	public hooks: ParallelHookFn[];
+	public hooks: ParallelHookFn<TArgs, TResult>[];
 
-	private readonly _finalHandler: ParallelHookFinalFn;
+	private readonly _finalHandler: ParallelHookFinalFn<TArgs, TResult>;
 
 	/**
 	 * Creates a new ParallelHook instance
 	 * @param {string} event - The event name for the hook
-	 * @param {ParallelHookFinalFn} finalHandler - Called once with `{ initialArgs, results }` after all parallel hooks settle
+	 * @param {ParallelHookFinalFn<TArgs, TResult>} finalHandler - Called once with `{ initialArgs, results }` after all parallel hooks settle
 	 * @param {string} [id] - Optional unique identifier for the hook
 	 */
-	constructor(event: string, finalHandler: ParallelHookFinalFn, id?: string) {
+	constructor(
+		event: string,
+		finalHandler: ParallelHookFinalFn<TArgs, TResult>,
+		id?: string,
+	) {
 		this.id = id;
 		this.event = event;
 		this.hooks = [];
@@ -39,9 +53,9 @@ export class ParallelHook implements IParallelHook {
 
 		// biome-ignore lint/suspicious/noExplicitAny: this is for any parameter compatibility
 		this.handler = async (...arguments_: any[]) => {
-			// biome-ignore lint/suspicious/noExplicitAny: parallel result type varies per hook
-			const initialArgs: any =
-				arguments_.length === 1 ? arguments_[0] : arguments_;
+			const initialArgs: TArgs = (
+				arguments_.length === 1 ? arguments_[0] : arguments_
+			) as TArgs;
 
 			const settled = await Promise.allSettled(
 				this.hooks.map((hook) =>
@@ -49,12 +63,18 @@ export class ParallelHook implements IParallelHook {
 				),
 			);
 
-			const results: ParallelHookResult[] = this.hooks.map((hook, index) => {
+			const results = new Map<
+				ParallelHookFn<TArgs, TResult>,
+				ParallelHookResult<TResult>
+			>();
+			this.hooks.forEach((hook, index) => {
 				const outcome = settled[index];
-				if (outcome.status === "fulfilled") {
-					return { hook, status: "fulfilled", result: outcome.value };
-				}
-				return { hook, status: "rejected", reason: outcome.reason };
+				results.set(
+					hook,
+					outcome.status === "fulfilled"
+						? { status: "fulfilled", result: outcome.value }
+						: { status: "rejected", reason: outcome.reason },
+				);
 			});
 
 			await this._finalHandler({ initialArgs, results });
@@ -63,18 +83,18 @@ export class ParallelHook implements IParallelHook {
 
 	/**
 	 * Adds a hook function to the parallel set
-	 * @param {ParallelHookFn} hook - The hook function to add
+	 * @param {ParallelHookFn<TArgs, TResult>} hook - The hook function to add
 	 */
-	public addHook(hook: ParallelHookFn): void {
+	public addHook(hook: ParallelHookFn<TArgs, TResult>): void {
 		this.hooks.push(hook);
 	}
 
 	/**
 	 * Removes a specific hook function from the parallel set
-	 * @param {ParallelHookFn} hook - The hook function to remove
+	 * @param {ParallelHookFn<TArgs, TResult>} hook - The hook function to remove
 	 * @returns {boolean} true if the hook was found and removed
 	 */
-	public removeHook(hook: ParallelHookFn): boolean {
+	public removeHook(hook: ParallelHookFn<TArgs, TResult>): boolean {
 		const index = this.hooks.indexOf(hook);
 		if (index !== -1) {
 			this.hooks.splice(index, 1);

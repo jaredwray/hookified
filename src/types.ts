@@ -268,72 +268,65 @@ export interface IWaterfallHook extends IHook {
 	removeHook(hook: WaterfallHookFn): boolean;
 }
 
-export type ParallelHookContext = {
+export type ParallelHookContext<TArgs = any> = {
 	/**
 	 * The original arguments passed to the parallel execution.
 	 * Every hook receives this same value; hooks do not see each other's results.
 	 */
-	initialArgs: any;
+	initialArgs: TArgs;
 };
 
-export type ParallelHookFn = (
-	context: ParallelHookContext,
-) => Promise<any> | any;
+export type ParallelHookFn<TArgs = any, TResult = any> = (
+	context: ParallelHookContext<TArgs>,
+) => Promise<TResult> | TResult;
 
-export type ParallelHookResult =
+export type ParallelHookResult<TResult = any> =
 	| {
-			/**
-			 * The hook function that produced this result
-			 */
-			hook: ParallelHookFn;
 			status: "fulfilled";
 			/**
 			 * The value returned by the hook
 			 */
-			result: any;
+			result: TResult;
 	  }
 	| {
-			/**
-			 * The hook function that produced this rejection
-			 */
-			hook: ParallelHookFn;
 			status: "rejected";
 			/**
-			 * The error or value the hook rejected with
+			 * The error or value the hook rejected with. Errors in JS can be of
+			 * any type, so this stays `unknown` regardless of the result generic.
 			 */
-			reason: any;
+			reason: unknown;
 	  };
 
-export type ParallelHookFinalContext = {
+export type ParallelHookFinalContext<TArgs = any, TResult = any> = {
 	/**
 	 * The original arguments passed to the parallel execution.
 	 */
-	initialArgs: any;
+	initialArgs: TArgs;
 	/**
-	 * Aggregated outcomes from every parallel hook, in registration order.
-	 * Each entry is a discriminated `{ hook, status, result | reason }` union.
+	 * Aggregated outcomes from every parallel hook, keyed by the hook function
+	 * reference for direct lookup. Iteration order matches registration order.
 	 */
-	results: ParallelHookResult[];
+	results: Map<ParallelHookFn<TArgs, TResult>, ParallelHookResult<TResult>>;
 };
 
-export type ParallelHookFinalFn = (
-	context: ParallelHookFinalContext,
+export type ParallelHookFinalFn<TArgs = any, TResult = any> = (
+	context: ParallelHookFinalContext<TArgs, TResult>,
 ) => Promise<void> | void;
 
-export interface IParallelHook extends IHook {
+export interface IParallelHook<TArgs = any, TResult = any> extends IHook {
 	/**
 	 * Array of hook functions that are called concurrently via Promise.allSettled.
 	 * Each hook receives a ParallelHookContext with only initialArgs.
 	 */
-	hooks: ParallelHookFn[];
+	hooks: ParallelHookFn<TArgs, TResult>[];
 	/**
 	 * Adds a hook function to the parallel set
 	 */
-	addHook(hook: ParallelHookFn): void;
+	addHook(hook: ParallelHookFn<TArgs, TResult>): void;
 	/**
 	 * Removes a specific hook function from the parallel set
 	 */
-	removeHook(hook: ParallelHookFn): boolean;
+	removeHook(hook: ParallelHookFn<TArgs, TResult>): boolean;
 }
 
 export type OnHookOptions = {

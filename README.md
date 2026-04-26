@@ -359,16 +359,15 @@ The final handler receives a `ParallelHookFinalContext`:
 | Property | Type | Description |
 |----------|------|-------------|
 | `initialArgs` | `any` | Same value passed to every hook. |
-| `results` | `ParallelHookResult[]` | One entry per registered hook, in registration order. |
+| `results` | `Map<ParallelHookFn, ParallelHookResult>` | One entry per registered hook, keyed by the hook function reference for direct lookup. Iteration order matches registration order. |
 
-Each `ParallelHookResult` is a discriminated union — failures are reported, not thrown:
+Each `ParallelHookResult` value is a discriminated union — failures are reported, not thrown:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `hook` | `ParallelHookFn` | Reference to the hook that produced this entry. |
 | `status` | `"fulfilled" \| "rejected"` | Discriminator. |
-| `result` | `any` | Present when `status === "fulfilled"`. The value the hook returned. |
-| `reason` | `any` | Present when `status === "rejected"`. The error the hook threw. |
+| `result` | `TResult` | Present when `status === "fulfilled"`. The value the hook returned. Defaults to `any`; tighten via the `ParallelHook<TArgs, TResult>` generic. |
+| `reason` | `unknown` | Present when `status === "rejected"`. The error or value the hook threw. Stays `unknown` regardless of the result generic, since errors in JS aren't typed. |
 
 **Basic usage with `Hookified`:**
 
@@ -381,8 +380,19 @@ class MyClass extends Hookified {
 
 const myClass = new MyClass();
 
+const sendEmailHook = async ({ initialArgs }) => sendEmail(initialArgs);
+const sendSlackHook = async ({ initialArgs }) => sendSlack(initialArgs);
+const sendWebhookHook = async ({ initialArgs }) => sendWebhook(initialArgs);
+
 const ph = new ParallelHook('notify', ({ results }) => {
-  for (const r of results) {
+  // Look up a specific hook's outcome by reference
+  const emailOutcome = results.get(sendEmailHook);
+  if (emailOutcome?.status === 'rejected') {
+    console.error('email failed:', emailOutcome.reason);
+  }
+
+  // Or iterate every result in registration order
+  for (const [hook, r] of results) {
     if (r.status === 'fulfilled') {
       console.log('ok:', r.result);
     } else {
@@ -391,9 +401,9 @@ const ph = new ParallelHook('notify', ({ results }) => {
   }
 });
 
-ph.addHook(async ({ initialArgs }) => sendEmail(initialArgs));
-ph.addHook(async ({ initialArgs }) => sendSlack(initialArgs));
-ph.addHook(async ({ initialArgs }) => sendWebhook(initialArgs));
+ph.addHook(sendEmailHook);
+ph.addHook(sendSlackHook);
+ph.addHook(sendWebhookHook);
 
 // Register with Hookified — works because ParallelHook implements IHook
 myClass.onHook(ph);
@@ -402,12 +412,35 @@ myClass.onHook(ph);
 await myClass.hook('notify', { user: 'alice', message: 'hi' });
 ```
 
-You can also call `ph.handler(...)` directly without registering it — the final handler fires the same way either path.
+**Tightening the result type:**
+
+When every hook returns the same shape, pass generics so `result` is fully typed instead of `any`:
+
+```typescript
+import { ParallelHook } from 'hookified';
+
+type NotifyArgs = { user: string; message: string };
+type NotifyResult = { channel: string; messageId: string };
+
+const ph = new ParallelHook<NotifyArgs, NotifyResult>('notify', ({ results }) => {
+  for (const [, r] of results) {
+    if (r.status === 'fulfilled') {
+      console.log(`${r.result.channel}: ${r.result.messageId}`);
+    } else {
+      console.error(r.reason); // still `unknown` — errors aren't typed
+    }
+  }
+});
+
+ph.addHook(async ({ initialArgs }) => ({ channel: 'email', messageId: '1' }));
+```
 
 **Managing hooks:**
 
 ```javascript
-const ph = new ParallelHook('process', ({ results }) => results);
+const ph = new ParallelHook('process', ({ results }) => {
+  console.log(results.size); // number of hooks that ran
+});
 
 const myHook = ({ initialArgs }) => initialArgs + 1;
 ph.addHook(myHook);
