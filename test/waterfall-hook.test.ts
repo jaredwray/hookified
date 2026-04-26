@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import type { WaterfallHookContext } from "../src/index.js";
+import type {
+	WaterfallHookContext,
+	WaterfallHookResult,
+} from "../src/index.js";
 import { Hookified, WaterfallHook } from "../src/index.js";
 
 describe("WaterfallHook", () => {
@@ -88,7 +91,7 @@ describe("WaterfallHook", () => {
 	});
 
 	test("should include hook references in results", async () => {
-		let finalResults: unknown[] = [];
+		let finalResults: WaterfallHookResult[] = [];
 		const hook1 = ({ initialArgs }: WaterfallHookContext) => initialArgs + 1;
 		const hook2 = ({ results }: WaterfallHookContext) =>
 			results[results.length - 1].result * 2;
