@@ -551,10 +551,17 @@ export class Hookified extends Eventified {
 
 export { Eventified } from "./eventified.js";
 export { Hook } from "./hooks/hook.js";
+export { ParallelHook } from "./hooks/parallel-hook.js";
 export { WaterfallHook } from "./hooks/waterfall-hook.js";
 export type {
 	EventEmitterOptions,
 	EventListener,
 	IEventEmitter,
+	IParallelHook,
 	Logger,
+	ParallelHookContext,
+	ParallelHookFinalContext,
+	ParallelHookFinalFn,
+	ParallelHookFn,
+	ParallelHookResult,
 } from "./types.js";

@@ -199,6 +199,18 @@ describe("Export Verification Tests", () => {
 			expect(esmContent).toContain("WaterfallHookFn");
 		});
 
+		test("should export ParallelHook class", () => {
+			expect(esmContent).toContain("ParallelHook");
+		});
+
+		test("should export IParallelHook interface", () => {
+			expect(esmContent).toContain("IParallelHook");
+		});
+
+		test("should export ParallelHookFn type", () => {
+			expect(esmContent).toContain("ParallelHookFn");
+		});
+
 		test("should export HookifiedOptions type", () => {
 			expect(esmContent).toContain("HookifiedOptions");
 		});
