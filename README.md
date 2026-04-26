@@ -20,6 +20,7 @@
 - Deprecation warnings for hooks with `deprecatedHooks`
 - Control deprecated hook execution with `allowDeprecated`
 - WaterfallHook for sequential data transformation pipelines
+- ParallelHook for concurrent fan-out execution with collected results
 - No package dependencies and only 250KB in size
 - Fast and Efficient with [Benchmarks](#benchmarks)
 - Maintained on a regular basis!
@@ -31,7 +32,8 @@
 - [Using it in the Browser](#using-it-in-the-browser)
 - [Hooks](#hooks)
   - [Standard Hook](#standard-hook)
-  - [Waterfall Hook](#waterfallhook)
+  - [Waterfall Hook](#waterfall-hook)
+  - [Parallel Hook](#parallel-hook)
 - [API - Hooks](#api---hooks)
   - [.allowDeprecated](#allowdeprecated)
   - [.deprecatedHooks](#deprecatedhooks)
@@ -340,6 +342,81 @@ wh.removeHook(myHook); // returns true
 
 // Access the hooks array
 console.log(wh.hooks.length); // 0
+```
+
+## Parallel Hook
+
+The `ParallelHook` class fans a single invocation out to many registered hook functions concurrently via `Promise.allSettled`, then calls a final handler with the aggregated outcomes — including failures. Unlike `WaterfallHook`, hooks do not see each other's results: every hook receives the same `initialArgs` and runs in parallel. It implements the `IHook` interface, so it integrates directly with `Hookified.onHook()`, and the final handler still fires whether the hook is invoked directly or through `Hookified.hook()`.
+
+Per-hook functions receive a `ParallelHookContext`:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `initialArgs` | `any` | The original arguments passed to `handler()`. Single argument stays as-is; multiple arguments become an array. |
+
+The final handler receives a `ParallelHookFinalContext`:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `initialArgs` | `any` | Same value passed to every hook. |
+| `results` | `ParallelHookResult[]` | One entry per registered hook, in registration order. |
+
+Each `ParallelHookResult` is a discriminated union — failures are reported, not thrown:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `hook` | `ParallelHookFn` | Reference to the hook that produced this entry. |
+| `status` | `"fulfilled" \| "rejected"` | Discriminator. |
+| `result` | `any` | Present when `status === "fulfilled"`. The value the hook returned. |
+| `reason` | `any` | Present when `status === "rejected"`. The error the hook threw. |
+
+**Basic usage with `Hookified`:**
+
+```javascript
+import { Hookified, ParallelHook } from 'hookified';
+
+class MyClass extends Hookified {
+  constructor() { super(); }
+}
+
+const myClass = new MyClass();
+
+const ph = new ParallelHook('notify', ({ results }) => {
+  for (const r of results) {
+    if (r.status === 'fulfilled') {
+      console.log('ok:', r.result);
+    } else {
+      console.error('failed:', r.reason);
+    }
+  }
+});
+
+ph.addHook(async ({ initialArgs }) => sendEmail(initialArgs));
+ph.addHook(async ({ initialArgs }) => sendSlack(initialArgs));
+ph.addHook(async ({ initialArgs }) => sendWebhook(initialArgs));
+
+// Register with Hookified — works because ParallelHook implements IHook
+myClass.onHook(ph);
+
+// All three notification hooks fire concurrently, then the final handler runs
+await myClass.hook('notify', { user: 'alice', message: 'hi' });
+```
+
+You can also call `ph.handler(...)` directly without registering it — the final handler fires the same way either path.
+
+**Managing hooks:**
+
+```javascript
+const ph = new ParallelHook('process', ({ results }) => results);
+
+const myHook = ({ initialArgs }) => initialArgs + 1;
+ph.addHook(myHook);
+
+// Remove a hook by reference
+ph.removeHook(myHook); // returns true
+
+// Access the hooks array
+console.log(ph.hooks.length); // 0
 ```
 
 # API - Hooks

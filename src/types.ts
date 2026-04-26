@@ -268,6 +268,74 @@ export interface IWaterfallHook extends IHook {
 	removeHook(hook: WaterfallHookFn): boolean;
 }
 
+export type ParallelHookContext = {
+	/**
+	 * The original arguments passed to the parallel execution.
+	 * Every hook receives this same value; hooks do not see each other's results.
+	 */
+	initialArgs: any;
+};
+
+export type ParallelHookFn = (
+	context: ParallelHookContext,
+) => Promise<any> | any;
+
+export type ParallelHookResult =
+	| {
+			/**
+			 * The hook function that produced this result
+			 */
+			hook: ParallelHookFn;
+			status: "fulfilled";
+			/**
+			 * The value returned by the hook
+			 */
+			result: any;
+	  }
+	| {
+			/**
+			 * The hook function that produced this rejection
+			 */
+			hook: ParallelHookFn;
+			status: "rejected";
+			/**
+			 * The error or value the hook rejected with
+			 */
+			reason: any;
+	  };
+
+export type ParallelHookFinalContext = {
+	/**
+	 * The original arguments passed to the parallel execution.
+	 */
+	initialArgs: any;
+	/**
+	 * Aggregated outcomes from every parallel hook, in registration order.
+	 * Each entry is a discriminated `{ hook, status, result | reason }` union.
+	 */
+	results: ParallelHookResult[];
+};
+
+export type ParallelHookFinalFn = (
+	context: ParallelHookFinalContext,
+) => Promise<void> | void;
+
+export interface IParallelHook extends IHook {
+	/**
+	 * Array of hook functions that are called concurrently via Promise.allSettled.
+	 * Each hook receives a ParallelHookContext with only initialArgs.
+	 */
+	hooks: ParallelHookFn[];
+	/**
+	 * Adds a hook function to the parallel set
+	 */
+	addHook(hook: ParallelHookFn): void;
+	/**
+	 * Removes a specific hook function from the parallel set
+	 */
+	removeHook(hook: ParallelHookFn): boolean;
+}
+
 export type OnHookOptions = {
 	/**
 	 * Per-call override for useHookClone.
