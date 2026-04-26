@@ -6,7 +6,6 @@ export default defineConfig([
 		format: ["cjs", "esm"],
 		dts: true,
 		outDir: "dist/node",
-		clean: true,
 		tsconfig: "tsconfig.build.json",
 		outExtensions: ({ format }) => {
 			if (format === "es") {
@@ -22,7 +21,6 @@ export default defineConfig([
 		outDir: "dist/browser",
 		sourcemap: true,
 		dts: false,
-		clean: true,
 		platform: "browser",
 	},
 	{
@@ -32,7 +30,6 @@ export default defineConfig([
 		outDir: "dist/browser",
 		sourcemap: true,
 		dts: false,
-		clean: false,
 		platform: "browser",
 		globalName: "Hookified",
 		outputOptions: {

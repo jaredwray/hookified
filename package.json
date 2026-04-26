@@ -29,7 +29,7 @@
     "test": "pnpm lint && vitest run --coverage",
     "test:ci": "biome check --error-on-warnings && vitest run --coverage",
     "clean": "rimraf ./dist ./coverage ./site/dist",
-    "build": "rimraf ./dist && tsdown",
+    "build": "tsdown",
     "benchmark": "pnpm benchmark:hooks && pnpm benchmark:emit",
     "benchmark:hooks": "pnpm tsx benchmark/hook.ts",
     "benchmark:emit": "pnpm tsx benchmark/emit.ts",
