@@ -11,7 +11,7 @@ export default defineConfig({
 				'vitest.config.ts',
 				'dist/**',
 				'test/**',
-				'tsup.config.ts',
+				'tsdown.config.ts',
 				'src/logger.ts',
 			],
 		},
