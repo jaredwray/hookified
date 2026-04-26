@@ -57,8 +57,13 @@ export class ParallelHook<TArgs = any, TResult = any>
 				arguments_.length === 1 ? arguments_[0] : arguments_
 			) as TArgs;
 
+			// Snapshot hooks at invocation time so concurrent addHook/removeHook
+			// calls during the awaited Promise.allSettled cannot desync the
+			// settled-index → hook mapping below.
+			const snapshot = [...this.hooks];
+
 			const settled = await Promise.allSettled(
-				this.hooks.map((hook) =>
+				snapshot.map((hook) =>
 					Promise.resolve().then(() => hook({ initialArgs })),
 				),
 			);
@@ -67,7 +72,7 @@ export class ParallelHook<TArgs = any, TResult = any>
 				ParallelHookFn<TArgs, TResult>,
 				ParallelHookResult<TResult>
 			>();
-			this.hooks.forEach((hook, index) => {
+			snapshot.forEach((hook, index) => {
 				const outcome = settled[index];
 				results.set(
 					hook,

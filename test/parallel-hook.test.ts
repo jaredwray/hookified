@@ -274,6 +274,39 @@ describe("ParallelHook", () => {
 		).toBe(true);
 	});
 
+	test("should snapshot hooks at invocation so in-flight runs survive concurrent removeHook", async () => {
+		const slowHook = () =>
+			new Promise<string>((resolve) =>
+				setTimeout(() => resolve("slow-done"), 25),
+			);
+		const fastHook = () => "fast-done";
+		let finalResults: Map<ParallelHookFn, ParallelHookResult> | undefined;
+		const ph = new ParallelHook("process", ({ results }) => {
+			finalResults = results;
+		});
+		ph.addHook(slowHook);
+		ph.addHook(fastHook);
+
+		const inFlight = ph.handler();
+		// Mutate the registration set while hooks are still running.
+		ph.removeHook(slowHook);
+		ph.addHook(() => "added-after");
+
+		await inFlight;
+
+		// The final handler still sees both originally-registered hooks, and
+		// only those — the post-invocation addHook is excluded.
+		expect(finalResults?.size).toBe(2);
+		expect(finalResults?.get(slowHook)).toEqual({
+			status: "fulfilled",
+			result: "slow-done",
+		});
+		expect(finalResults?.get(fastHook)).toEqual({
+			status: "fulfilled",
+			result: "fast-done",
+		});
+	});
+
 	test("should propagate errors from the final handler", async () => {
 		const ph = new ParallelHook("process", () => {
 			throw new Error("final handler error");
