@@ -22,6 +22,7 @@ export default defineConfig([
 		sourcemap: true,
 		dts: false,
 		platform: "browser",
+		tsconfig: "tsconfig.build.json",
 	},
 	{
 		entry: ["src/index.ts"],
@@ -32,6 +33,7 @@ export default defineConfig([
 		dts: false,
 		platform: "browser",
 		globalName: "Hookified",
+		tsconfig: "tsconfig.build.json",
 		outputOptions: {
 			entryFileNames: "index.global.js",
 		},
