@@ -61,7 +61,7 @@ Base class providing EventEmitter-like functionality:
 ## Key Considerations
 
 - The library has zero dependencies
-- Supports both Node.js (20+) and browsers via CDN
+- Supports both Node.js (22.18+) and browsers via CDN
 - Browser builds are available at `dist/browser/index.js` (ESM) and `dist/browser/index.global.js` (UMD)
 - Hooks can be async or sync - use `hook()` for async execution, `hookSync()` for sync-only
 - Logger integration supports Pino, Winston, Bunyan, or any compatible logger
