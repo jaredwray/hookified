@@ -71,21 +71,21 @@
   },
   "homepage": "https://github.com/jaredwray/hookified#readme",
   "devDependencies": {
-    "@biomejs/biome": "^2.4.13",
+    "@biomejs/biome": "^2.4.15",
     "@monstermann/tinybench-pretty-printer": "^0.3.0",
     "@types/node": "^24.12.2",
-    "@vitest/coverage-v8": "^4.1.5",
+    "@vitest/coverage-v8": "^4.1.7",
     "docula": "^1.14.0",
     "emittery": "^2.0.0",
     "eventemitter3": "^5.0.4",
     "hookable": "^6.1.1",
     "pino": "^10.3.1",
     "rimraf": "^6.1.3",
-    "tinybench": "^6.0.0",
+    "tinybench": "^6.0.2",
     "tsdown": "^0.21.10",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.7"
   },
   "files": [
     "dist",
