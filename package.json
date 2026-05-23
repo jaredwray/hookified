@@ -70,6 +70,9 @@
     "url": "https://github.com/jaredwray/hookified/issues"
   },
   "homepage": "https://github.com/jaredwray/hookified#readme",
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
     "@monstermann/tinybench-pretty-printer": "^0.3.0",
