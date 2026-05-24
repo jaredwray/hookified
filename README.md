@@ -12,7 +12,7 @@
 # Features
 - Simple replacement for EventEmitter
 - Async / Sync Middleware Hooks for Your Methods 
-- ESM / CJS with Types and Nodejs 20+
+- ESM / CJS with Types
 - Browser Support and Delivered via CDN
 - Ability to throw errors in hooks
 - Ability to pass in a logger (such as Pino) for errors
