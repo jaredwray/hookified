@@ -22,18 +22,20 @@ jobs:
       with:
         node-version: 24
 
-    - name: Install Dependencies
-      run: npm install pnpm -g && pnpm install
+    - name: Enable Corepack
+      run: corepack enable
 
-    - name: Build    
+    - name: Install Dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Build
       run: pnpm build
 
-    - name: Testing    
+    - name: Testing
       run: pnpm test
-      
+
     - name: Code Coverage
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage/lcov.info
-

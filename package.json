@@ -73,11 +73,12 @@
   "engines": {
     "node": ">=22.18.0"
   },
+  "packageManager": "pnpm@11.3.0",
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
     "@monstermann/tinybench-pretty-printer": "^0.3.0",
     "@types/node": "^24.12.2",
-    "@vitest/coverage-v8": "^4.1.7",
+    "@vitest/coverage-v8": "^4.1.0",
     "docula": "^2.0.0",
     "emittery": "^2.0.0",
     "eventemitter3": "^5.0.4",
@@ -86,9 +87,9 @@
     "rimraf": "^6.1.3",
     "tinybench": "^6.0.2",
     "tsdown": "^0.22.0",
-    "tsx": "^4.22.3",
+    "tsx": "^4.19.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.0"
   },
   "files": [
     "dist",
