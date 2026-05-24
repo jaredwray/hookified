@@ -1,11 +1,12 @@
+minimumReleaseAge: 10080
+minimumReleaseAgeStrict: true
+minimumReleaseAgeIgnoreMissingTime: false
+blockExoticSubdeps: true
+strictDepBuilds: true
+dangerouslyAllowAllBuilds: false
+
 allowBuilds:
   esbuild: true
   sharp: true
   unrs-resolver: true
   workerd: true
-minimumReleaseAge: 2880
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
-  - unrs-resolver
-  - workerd
