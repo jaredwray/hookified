@@ -28,6 +28,7 @@
 # Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
+- [Migrating from v2 to v3](#migrating-from-v2-to-v3)
 - [Migrating from v1 to v2](#migrating-from-v1-to-v2)
 - [Using it in the Browser](#using-it-in-the-browser)
 - [Hooks](#hooks)
@@ -1362,6 +1363,22 @@ This shows how on par `hookified` is to the native `EventEmitter` and popular `e
 |  Emittery (v2.0.0)        |   -92%    |       1M  |    792ns  |  ±0.01%  |       1M  |
 
 _Note: the `EventEmitter` version is Nodejs versioning._
+
+# Migrating from v2 to v3
+
+v3 has no API changes. The only breaking change is the minimum Node.js version requirement.
+
+## Breaking Changes
+
+| Change | Summary |
+|---|---|
+| Node.js version | Minimum required version is now `>=22.18.0` (previously no `engines` constraint) |
+
+### Node.js >=22.18.0 required
+
+The `engines` field in `package.json` now requires Node.js 22.18.0 or later. Node.js 20 reached end-of-life in April 2026.
+
+**Migration:** Upgrade to Node.js 22 LTS or Node.js 24+. No code changes are required — the library API is identical to v2.
 
 # Migrating from v1 to v2
 
