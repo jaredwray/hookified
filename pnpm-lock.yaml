@@ -21,8 +21,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.6(vitest@4.1.6)
       docula:
-        specifier: ^1.14.0
-        version: 1.14.0(zod@4.4.3)
+        specifier: ^2.0.0
+        version: 2.0.0(zod@4.4.3)
       emittery:
         specifier: ^2.0.0
         version: 2.0.0
@@ -868,9 +868,9 @@ packages:
   doctypes@1.1.0:
     resolution: {integrity: sha512-LLBi6pEqS6Do3EKQ3J0NqHWV5hhb78Pi8vvESYwyOy2c31ZEZVdtitdzsQsKb7878PEERhzUk0ftqGhG6Mz+pQ==}
 
-  docula@1.14.0:
-    resolution: {integrity: sha512-PqBbR95wgsdeakclH4k0NczqdpwadH40ziggAn8Ka+grPDYhgya582iHv26HWv9IMluOwoZJIMm1CmJKyW8BLQ==}
-    engines: {node: '>=20'}
+  docula@2.0.0:
+    resolution: {integrity: sha512-yhPcVGggRi0NKpyyQXkHcMW48x9IO1L6zuCGt6fXaphJebNsRX7YlCqC9o5MXvNfxswxgmHkZNxM64kmzl6Uxw==}
+    engines: {node: ^22.18.0 || >=24.0.0}
     hasBin: true
 
   dom-serializer@3.1.1:
@@ -2905,7 +2905,7 @@ snapshots:
 
   doctypes@1.1.0: {}
 
-  docula@1.14.0(zod@4.4.3):
+  docula@2.0.0(zod@4.4.3):
     dependencies:
       '@ai-sdk/anthropic': 3.0.78(zod@4.4.3)
       '@ai-sdk/google': 3.0.75(zod@4.4.3)

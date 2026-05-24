@@ -5,6 +5,9 @@ blockExoticSubdeps: true
 strictDepBuilds: true
 dangerouslyAllowAllBuilds: false
 
+minimumReleaseAgeExclude:
+  - docula@2.0.0
+
 allowBuilds:
   esbuild: true
   sharp: true
