@@ -194,6 +194,25 @@ describe("Hookified", () => {
 		]);
 	});
 
+	test("removeHook with undefined handler does not remove a normal hook", () => {
+		const hookified = new Hookified();
+
+		const handler = () => {};
+		hookified.onHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(1);
+
+		// A normal hook has no _originalHandler; an undefined handler must not match it
+		const removed = hookified.removeHook({
+			event: "event",
+			handler: undefined as unknown as () => void,
+		});
+		expect(removed).toBeUndefined();
+		expect(hookified.getHooks("event")?.length).toEqual(1);
+		expect(hookified.getHooks("event")).toMatchObject([
+			{ event: "event", handler },
+		]);
+	});
+
 	test("onHook with Clear", async () => {
 		const hookified = new Hookified();
 

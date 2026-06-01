@@ -221,6 +221,19 @@ describe("Eventified", () => {
 		t.expect(emitter.listeners("test-event")).toEqual([other]);
 	});
 
+	test("off with undefined target does not remove a normal listener", (t) => {
+		const emitter = new Eventified();
+		const listener = () => {};
+
+		emitter.on("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+
+		// A normal listener has no _originalListener; passing undefined must not match it
+		emitter.off("test-event", undefined as unknown as () => void);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+		t.expect(emitter.listeners("test-event")).toEqual([listener]);
+	});
+
 	test("removeListener removes a prependOnceListener via original reference", (t) => {
 		const emitter = new Eventified();
 		let called = 0;

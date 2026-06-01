@@ -283,7 +283,16 @@ export class Eventified implements IEventEmitter {
 		stored: EventListener,
 		target: EventListener,
 	): boolean {
-		return stored === target || (stored as any)._originalListener === target;
+		if (stored === target) {
+			return true;
+		}
+
+		// Only treat this as a once-wrapper match when an original listener was
+		// actually recorded. Without this guard, calling off() with an undefined
+		// target would match any normal listener (whose _originalListener is also
+		// undefined) and remove it.
+		const original = (stored as any)._originalListener;
+		return original !== undefined && original === target;
 	}
 
 	/**
