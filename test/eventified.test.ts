@@ -189,6 +189,55 @@ describe("Eventified", () => {
 		t.expect(dataReceived).toBe(1);
 	});
 
+	test("off removes a once listener when called with the original reference", (t) => {
+		const emitter = new Eventified();
+		let called = 0;
+		const listener = () => {
+			called++;
+		};
+
+		emitter.once("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+
+		// Remove using the original listener reference before it fires
+		emitter.off("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(0);
+
+		emitter.emit("test-event");
+		t.expect(called).toBe(0);
+	});
+
+	test("off removes a once listener from a multi-listener array via original reference", (t) => {
+		const emitter = new Eventified();
+		const other = () => {};
+		const listener = () => {};
+
+		emitter.on("test-event", other);
+		emitter.once("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(2);
+
+		emitter.off("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+		t.expect(emitter.listeners("test-event")).toEqual([other]);
+	});
+
+	test("removeListener removes a prependOnceListener via original reference", (t) => {
+		const emitter = new Eventified();
+		let called = 0;
+		const listener = () => {
+			called++;
+		};
+
+		emitter.prependOnceListener("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+
+		emitter.removeListener("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(0);
+
+		emitter.emit("test-event");
+		t.expect(called).toBe(0);
+	});
+
 	test("get listener count", (t) => {
 		const emitter = new Eventified();
 		const listener = () => {};

@@ -101,6 +101,10 @@ export class Eventified implements IEventEmitter {
 			listener(...arguments_);
 		};
 
+		// Keep a reference to the original listener so that off()/removeListener()
+		// can remove the once wrapper when called with the original reference.
+		(onceListener as any)._originalListener = listener;
+
 		this.on(eventName as string, onceListener);
 		return this;
 	}
@@ -192,6 +196,10 @@ export class Eventified implements IEventEmitter {
 			listener(...arguments_);
 		};
 
+		// Keep a reference to the original listener so that off()/removeListener()
+		// can remove the once wrapper when called with the original reference.
+		(onceListener as any)._originalListener = listener;
+
 		this.prependListener(eventName as string, onceListener);
 		return this;
 	}
@@ -264,6 +272,21 @@ export class Eventified implements IEventEmitter {
 	}
 
 	/**
+	 * Determines whether a stored listener matches the listener provided to off().
+	 * A match occurs when the references are identical, or when the stored listener
+	 * is a once-wrapper whose original listener equals the provided reference.
+	 * @param {EventListener} stored - the listener currently stored
+	 * @param {EventListener} target - the listener passed to off()
+	 * @returns {boolean} true if the stored listener should be removed
+	 */
+	private matchesListener(
+		stored: EventListener,
+		target: EventListener,
+	): boolean {
+		return stored === target || (stored as any)._originalListener === target;
+	}
+
+	/**
 	 * Removes a listener for a specific event
 	 * @param {string | symbol} event
 	 * @param {EventListener} listener
@@ -276,14 +299,16 @@ export class Eventified implements IEventEmitter {
 		}
 
 		if (typeof entry === "function") {
-			if (entry === listener) {
+			if (this.matchesListener(entry, listener)) {
 				this._eventListeners.delete(event);
 			}
 
 			return this;
 		}
 
-		const index = entry.indexOf(listener);
+		const index = entry.findIndex((stored) =>
+			this.matchesListener(stored, listener),
+		);
 		if (index !== -1) {
 			if (entry.length === 2) {
 				this._eventListeners.set(event, entry[1 - index]);

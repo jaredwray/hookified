@@ -141,6 +141,59 @@ describe("Hookified", () => {
 		expect(hookified.getHooks("event")).toBeUndefined();
 	});
 
+	test("removeHook removes a once hook when called with the original handler", async () => {
+		const hookified = new Hookified();
+
+		let called = 0;
+		const handler = () => {
+			called++;
+		};
+		hookified.onceHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(1);
+
+		// Remove using the original handler reference before it fires
+		const removed = hookified.removeHook({ event: "event", handler });
+		expect(removed).toBeDefined();
+		expect(hookified.getHooks("event")).toBeUndefined();
+
+		await hookified.hook("event");
+		expect(called).toBe(0);
+	});
+
+	test("removeHook removes a prependOnceHook when called with the original handler", async () => {
+		const hookified = new Hookified();
+
+		let called = 0;
+		const handler = () => {
+			called++;
+		};
+		hookified.prependOnceHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(1);
+
+		const removed = hookified.removeHook({ event: "event", handler });
+		expect(removed).toBeDefined();
+		expect(hookified.getHooks("event")).toBeUndefined();
+
+		await hookified.hook("event");
+		expect(called).toBe(0);
+	});
+
+	test("removeHook leaves other hooks intact when removing a once hook by original handler", async () => {
+		const hookified = new Hookified();
+
+		const other = () => {};
+		const handler = () => {};
+		hookified.onHook({ event: "event", handler: other });
+		hookified.onceHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(2);
+
+		hookified.removeHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(1);
+		expect(hookified.getHooks("event")).toMatchObject([
+			{ event: "event", handler: other },
+		]);
+	});
+
 	test("onHook with Clear", async () => {
 		const hookified = new Hookified();
 
