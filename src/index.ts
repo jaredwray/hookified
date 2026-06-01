@@ -313,18 +313,20 @@ export class Hookified extends Eventified {
 		this.validateHookName(hook.event);
 		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			const index = eventHandlers.findIndex((h) => {
-				if (h.handler === hook.handler) {
-					return true;
-				}
-
-				// Match once-wrappers by their original handler reference. The
-				// undefined guard prevents a normal hook (whose _originalHandler is
-				// also undefined) from matching when hook.handler is undefined.
-				// biome-ignore lint/suspicious/noExplicitAny: wrapper metadata lookup
-				const original = (h.handler as any)._originalHandler;
-				return original !== undefined && original === hook.handler;
-			});
+			// Prefer an exact handler match before falling back to once-wrapper
+			// matching, so a normal hook is never left behind when an identical
+			// once-wrapper happens to precede it in the array.
+			let index = eventHandlers.findIndex((h) => h.handler === hook.handler);
+			if (index === -1) {
+				index = eventHandlers.findIndex((h) => {
+					// Match once-wrappers by their original handler reference. The
+					// undefined guard prevents a normal hook (whose _originalHandler
+					// is also undefined) from matching when hook.handler is undefined.
+					// biome-ignore lint/suspicious/noExplicitAny: wrapper metadata lookup
+					const original = (h.handler as any)._originalHandler;
+					return original !== undefined && original === hook.handler;
+				});
+			}
 			if (index !== -1) {
 				eventHandlers.splice(index, 1);
 				if (eventHandlers.length === 0) {

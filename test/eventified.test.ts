@@ -221,6 +221,28 @@ describe("Eventified", () => {
 		t.expect(emitter.listeners("test-event")).toEqual([other]);
 	});
 
+	test("off prefers the exact listener over an identical earlier once wrapper", (t) => {
+		const emitter = new Eventified();
+		let onceFired = 0;
+		const shared = () => {
+			onceFired++;
+		};
+
+		// Same reference registered as a once wrapper first, then as a normal listener
+		emitter.once("test-event", shared);
+		emitter.on("test-event", shared);
+		t.expect(emitter.listenerCount("test-event")).toBe(2);
+
+		// off() must remove the exact on() listener, leaving the once wrapper intact
+		emitter.off("test-event", shared);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+
+		// The surviving listener is the once wrapper: emitting fires it once then removes it
+		emitter.emit("test-event");
+		t.expect(onceFired).toBe(1);
+		t.expect(emitter.listenerCount("test-event")).toBe(0);
+	});
+
 	test("off with undefined target does not remove a normal listener", (t) => {
 		const emitter = new Eventified();
 		const listener = () => {};

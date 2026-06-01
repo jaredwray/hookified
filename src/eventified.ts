@@ -315,9 +315,16 @@ export class Eventified implements IEventEmitter {
 			return this;
 		}
 
-		const index = entry.findIndex((stored) =>
-			this.matchesListener(stored, listener),
-		);
+		// Prefer an exact reference match before falling back to once-wrapper
+		// matching, so a normal listener is never left behind when an identical
+		// once-wrapper happens to precede it in the array.
+		let index = entry.indexOf(listener);
+		if (index === -1) {
+			index = entry.findIndex((stored) =>
+				this.matchesListener(stored, listener),
+			);
+		}
+
 		if (index !== -1) {
 			if (entry.length === 2) {
 				this._eventListeners.set(event, entry[1 - index]);
