@@ -273,6 +273,54 @@ describe("Eventified", () => {
 		t.expect(called).toBe(0);
 	});
 
+	test("emit does not crash when a listener removes another listener mid-emit", (t) => {
+		const emitter = new Eventified();
+		const calls: string[] = [];
+		const b = () => {
+			calls.push("B");
+		};
+		const a = () => {
+			calls.push("A");
+			emitter.off("test-event", b);
+		};
+		const c = () => {
+			calls.push("C");
+		};
+
+		emitter.on("test-event", a);
+		emitter.on("test-event", b);
+		emitter.on("test-event", c);
+
+		// Iterating a snapshot means the in-flight emit is unaffected by the removal
+		t.expect(() => emitter.emit("test-event")).not.toThrow();
+		t.expect(calls).toEqual(["A", "B", "C"]);
+		// The removal still took effect for subsequent emits
+		t.expect(emitter.listenerCount("test-event")).toBe(2);
+	});
+
+	test("emit does not crash when a listener removes a once listener by original reference mid-emit", (t) => {
+		const emitter = new Eventified();
+		const calls: string[] = [];
+		const b = () => {
+			calls.push("B");
+		};
+		const a = () => {
+			calls.push("A");
+			emitter.off("test-event", b);
+		};
+		const c = () => {
+			calls.push("C");
+		};
+
+		emitter.on("test-event", a);
+		emitter.once("test-event", b);
+		emitter.on("test-event", c);
+
+		t.expect(() => emitter.emit("test-event")).not.toThrow();
+		t.expect(calls).toEqual(["A", "B", "C"]);
+		t.expect(emitter.listenerCount("test-event")).toBe(2);
+	});
+
 	test("get listener count", (t) => {
 		const emitter = new Eventified();
 		const listener = () => {};

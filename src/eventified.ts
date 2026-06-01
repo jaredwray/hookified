@@ -361,14 +361,20 @@ export class Eventified implements IEventEmitter {
 					entry(...arguments_);
 				}
 			} else {
-				const len = entry.length;
+				// Iterate a snapshot so listeners removed (or added) during the
+				// emit — e.g. a once wrapper removing itself, or a listener calling
+				// off() — cannot corrupt the in-flight iteration. This matches
+				// Node's EventEmitter behavior. The single-listener fast path above
+				// needs no copy since it cannot be mid-iteration mutated.
+				const listeners = entry.slice();
+				const len = listeners.length;
 				for (let i = 0; i < len; i++) {
 					if (argumentLength === 1) {
-						entry[i](arguments_[0]);
+						listeners[i](arguments_[0]);
 					} else if (argumentLength === 2) {
-						entry[i](arguments_[0], arguments_[1]);
+						listeners[i](arguments_[0], arguments_[1]);
 					} else {
-						entry[i](...arguments_);
+						listeners[i](...arguments_);
 					}
 				}
 			}
