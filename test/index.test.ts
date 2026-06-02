@@ -141,6 +141,101 @@ describe("Hookified", () => {
 		expect(hookified.getHooks("event")).toBeUndefined();
 	});
 
+	test("removeHook removes a once hook when called with the original handler", async () => {
+		const hookified = new Hookified();
+
+		let called = 0;
+		const handler = () => {
+			called++;
+		};
+		hookified.onceHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(1);
+
+		// Remove using the original handler reference before it fires
+		const removed = hookified.removeHook({ event: "event", handler });
+		expect(removed).toBeDefined();
+		expect(hookified.getHooks("event")).toBeUndefined();
+
+		await hookified.hook("event");
+		expect(called).toBe(0);
+	});
+
+	test("removeHook removes a prependOnceHook when called with the original handler", async () => {
+		const hookified = new Hookified();
+
+		let called = 0;
+		const handler = () => {
+			called++;
+		};
+		hookified.prependOnceHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(1);
+
+		const removed = hookified.removeHook({ event: "event", handler });
+		expect(removed).toBeDefined();
+		expect(hookified.getHooks("event")).toBeUndefined();
+
+		await hookified.hook("event");
+		expect(called).toBe(0);
+	});
+
+	test("removeHook leaves other hooks intact when removing a once hook by original handler", async () => {
+		const hookified = new Hookified();
+
+		const other = () => {};
+		const handler = () => {};
+		hookified.onHook({ event: "event", handler: other });
+		hookified.onceHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(2);
+
+		hookified.removeHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(1);
+		expect(hookified.getHooks("event")).toMatchObject([
+			{ event: "event", handler: other },
+		]);
+	});
+
+	test("removeHook prefers the exact handler over an identical earlier once wrapper", async () => {
+		const hookified = new Hookified();
+
+		let onceFired = 0;
+		const handler = () => {
+			onceFired++;
+		};
+
+		// Same handler registered as a once hook first, then as a normal hook
+		hookified.onceHook({ event: "event", handler });
+		hookified.onHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(2);
+
+		// removeHook must remove the exact onHook entry, leaving the once wrapper intact
+		hookified.removeHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(1);
+
+		// The surviving hook is the once wrapper: firing runs it once then removes it
+		await hookified.hook("event");
+		expect(onceFired).toBe(1);
+		expect(hookified.getHooks("event")).toBeUndefined();
+	});
+
+	test("removeHook with undefined handler does not remove a normal hook", () => {
+		const hookified = new Hookified();
+
+		const handler = () => {};
+		hookified.onHook({ event: "event", handler });
+		expect(hookified.getHooks("event")?.length).toEqual(1);
+
+		// A normal hook has no _originalHandler; an undefined handler must not match it
+		const removed = hookified.removeHook({
+			event: "event",
+			handler: undefined as unknown as () => void,
+		});
+		expect(removed).toBeUndefined();
+		expect(hookified.getHooks("event")?.length).toEqual(1);
+		expect(hookified.getHooks("event")).toMatchObject([
+			{ event: "event", handler },
+		]);
+	});
+
 	test("onHook with Clear", async () => {
 		const hookified = new Hookified();
 

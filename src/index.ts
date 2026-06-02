@@ -270,6 +270,11 @@ export class Hookified extends Eventified {
 			return hook.handler(...arguments_);
 		};
 
+		// Keep a reference to the original handler so removeHook() can remove the
+		// once wrapper when called with the original handler reference.
+		// biome-ignore lint/suspicious/noExplicitAny: attaching metadata to the wrapper
+		(wrappedHandler as any)._originalHandler = hook.handler;
+
 		return this.onHook(
 			{ id: hook.id, event: hook.event, handler: wrappedHandler },
 			{ ...options, position: "Top" },
@@ -291,6 +296,11 @@ export class Hookified extends Eventified {
 			return hook.handler(...arguments_);
 		};
 
+		// Keep a reference to the original handler so removeHook() can remove the
+		// once wrapper when called with the original handler reference.
+		// biome-ignore lint/suspicious/noExplicitAny: attaching metadata to the wrapper
+		(wrappedHandler as any)._originalHandler = hook.handler;
+
 		this.onHook({ id: hook.id, event: hook.event, handler: wrappedHandler });
 	}
 
@@ -303,7 +313,20 @@ export class Hookified extends Eventified {
 		this.validateHookName(hook.event);
 		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
-			const index = eventHandlers.findIndex((h) => h.handler === hook.handler);
+			// Prefer an exact handler match before falling back to once-wrapper
+			// matching, so a normal hook is never left behind when an identical
+			// once-wrapper happens to precede it in the array.
+			let index = eventHandlers.findIndex((h) => h.handler === hook.handler);
+			if (index === -1) {
+				index = eventHandlers.findIndex((h) => {
+					// Match once-wrappers by their original handler reference. The
+					// undefined guard prevents a normal hook (whose _originalHandler
+					// is also undefined) from matching when hook.handler is undefined.
+					// biome-ignore lint/suspicious/noExplicitAny: wrapper metadata lookup
+					const original = (h.handler as any)._originalHandler;
+					return original !== undefined && original === hook.handler;
+				});
+			}
 			if (index !== -1) {
 				eventHandlers.splice(index, 1);
 				if (eventHandlers.length === 0) {

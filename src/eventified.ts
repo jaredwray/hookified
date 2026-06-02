@@ -101,6 +101,10 @@ export class Eventified implements IEventEmitter {
 			listener(...arguments_);
 		};
 
+		// Keep a reference to the original listener so that off()/removeListener()
+		// can remove the once wrapper when called with the original reference.
+		(onceListener as any)._originalListener = listener;
+
 		this.on(eventName as string, onceListener);
 		return this;
 	}
@@ -192,6 +196,10 @@ export class Eventified implements IEventEmitter {
 			listener(...arguments_);
 		};
 
+		// Keep a reference to the original listener so that off()/removeListener()
+		// can remove the once wrapper when called with the original reference.
+		(onceListener as any)._originalListener = listener;
+
 		this.prependListener(eventName as string, onceListener);
 		return this;
 	}
@@ -264,6 +272,30 @@ export class Eventified implements IEventEmitter {
 	}
 
 	/**
+	 * Determines whether a stored listener matches the listener provided to off().
+	 * A match occurs when the references are identical, or when the stored listener
+	 * is a once-wrapper whose original listener equals the provided reference.
+	 * @param {EventListener} stored - the listener currently stored
+	 * @param {EventListener} target - the listener passed to off()
+	 * @returns {boolean} true if the stored listener should be removed
+	 */
+	private matchesListener(
+		stored: EventListener,
+		target: EventListener,
+	): boolean {
+		if (stored === target) {
+			return true;
+		}
+
+		// Only treat this as a once-wrapper match when an original listener was
+		// actually recorded. Without this guard, calling off() with an undefined
+		// target would match any normal listener (whose _originalListener is also
+		// undefined) and remove it.
+		const original = (stored as any)._originalListener;
+		return original !== undefined && original === target;
+	}
+
+	/**
 	 * Removes a listener for a specific event
 	 * @param {string | symbol} event
 	 * @param {EventListener} listener
@@ -276,14 +308,23 @@ export class Eventified implements IEventEmitter {
 		}
 
 		if (typeof entry === "function") {
-			if (entry === listener) {
+			if (this.matchesListener(entry, listener)) {
 				this._eventListeners.delete(event);
 			}
 
 			return this;
 		}
 
-		const index = entry.indexOf(listener);
+		// Prefer an exact reference match before falling back to once-wrapper
+		// matching, so a normal listener is never left behind when an identical
+		// once-wrapper happens to precede it in the array.
+		let index = entry.indexOf(listener);
+		if (index === -1) {
+			index = entry.findIndex((stored) =>
+				this.matchesListener(stored, listener),
+			);
+		}
+
 		if (index !== -1) {
 			if (entry.length === 2) {
 				this._eventListeners.set(event, entry[1 - index]);
@@ -320,14 +361,20 @@ export class Eventified implements IEventEmitter {
 					entry(...arguments_);
 				}
 			} else {
-				const len = entry.length;
+				// Iterate a snapshot so listeners removed (or added) during the
+				// emit — e.g. a once wrapper removing itself, or a listener calling
+				// off() — cannot corrupt the in-flight iteration. This matches
+				// Node's EventEmitter behavior. The single-listener fast path above
+				// needs no copy since it cannot be mid-iteration mutated.
+				const listeners = entry.slice();
+				const len = listeners.length;
 				for (let i = 0; i < len; i++) {
 					if (argumentLength === 1) {
-						entry[i](arguments_[0]);
+						listeners[i](arguments_[0]);
 					} else if (argumentLength === 2) {
-						entry[i](arguments_[0], arguments_[1]);
+						listeners[i](arguments_[0], arguments_[1]);
 					} else {
-						entry[i](...arguments_);
+						listeners[i](...arguments_);
 					}
 				}
 			}

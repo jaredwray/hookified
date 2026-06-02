@@ -189,6 +189,138 @@ describe("Eventified", () => {
 		t.expect(dataReceived).toBe(1);
 	});
 
+	test("off removes a once listener when called with the original reference", (t) => {
+		const emitter = new Eventified();
+		let called = 0;
+		const listener = () => {
+			called++;
+		};
+
+		emitter.once("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+
+		// Remove using the original listener reference before it fires
+		emitter.off("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(0);
+
+		emitter.emit("test-event");
+		t.expect(called).toBe(0);
+	});
+
+	test("off removes a once listener from a multi-listener array via original reference", (t) => {
+		const emitter = new Eventified();
+		const other = () => {};
+		const listener = () => {};
+
+		emitter.on("test-event", other);
+		emitter.once("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(2);
+
+		emitter.off("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+		t.expect(emitter.listeners("test-event")).toEqual([other]);
+	});
+
+	test("off prefers the exact listener over an identical earlier once wrapper", (t) => {
+		const emitter = new Eventified();
+		let onceFired = 0;
+		const shared = () => {
+			onceFired++;
+		};
+
+		// Same reference registered as a once wrapper first, then as a normal listener
+		emitter.once("test-event", shared);
+		emitter.on("test-event", shared);
+		t.expect(emitter.listenerCount("test-event")).toBe(2);
+
+		// off() must remove the exact on() listener, leaving the once wrapper intact
+		emitter.off("test-event", shared);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+
+		// The surviving listener is the once wrapper: emitting fires it once then removes it
+		emitter.emit("test-event");
+		t.expect(onceFired).toBe(1);
+		t.expect(emitter.listenerCount("test-event")).toBe(0);
+	});
+
+	test("off with undefined target does not remove a normal listener", (t) => {
+		const emitter = new Eventified();
+		const listener = () => {};
+
+		emitter.on("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+
+		// A normal listener has no _originalListener; passing undefined must not match it
+		emitter.off("test-event", undefined as unknown as () => void);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+		t.expect(emitter.listeners("test-event")).toEqual([listener]);
+	});
+
+	test("removeListener removes a prependOnceListener via original reference", (t) => {
+		const emitter = new Eventified();
+		let called = 0;
+		const listener = () => {
+			called++;
+		};
+
+		emitter.prependOnceListener("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(1);
+
+		emitter.removeListener("test-event", listener);
+		t.expect(emitter.listenerCount("test-event")).toBe(0);
+
+		emitter.emit("test-event");
+		t.expect(called).toBe(0);
+	});
+
+	test("emit does not crash when a listener removes another listener mid-emit", (t) => {
+		const emitter = new Eventified();
+		const calls: string[] = [];
+		const b = () => {
+			calls.push("B");
+		};
+		const a = () => {
+			calls.push("A");
+			emitter.off("test-event", b);
+		};
+		const c = () => {
+			calls.push("C");
+		};
+
+		emitter.on("test-event", a);
+		emitter.on("test-event", b);
+		emitter.on("test-event", c);
+
+		// Iterating a snapshot means the in-flight emit is unaffected by the removal
+		t.expect(() => emitter.emit("test-event")).not.toThrow();
+		t.expect(calls).toEqual(["A", "B", "C"]);
+		// The removal still took effect for subsequent emits
+		t.expect(emitter.listenerCount("test-event")).toBe(2);
+	});
+
+	test("emit does not crash when a listener removes a once listener by original reference mid-emit", (t) => {
+		const emitter = new Eventified();
+		const calls: string[] = [];
+		const b = () => {
+			calls.push("B");
+		};
+		const a = () => {
+			calls.push("A");
+			emitter.off("test-event", b);
+		};
+		const c = () => {
+			calls.push("C");
+		};
+
+		emitter.on("test-event", a);
+		emitter.once("test-event", b);
+		emitter.on("test-event", c);
+
+		t.expect(() => emitter.emit("test-event")).not.toThrow();
+		t.expect(calls).toEqual(["A", "B", "C"]);
+		t.expect(emitter.listenerCount("test-event")).toBe(2);
+	});
+
 	test("get listener count", (t) => {
 		const emitter = new Eventified();
 		const listener = () => {};
