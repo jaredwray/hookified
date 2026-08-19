@@ -28,12 +28,9 @@ jobs:
         node-version: 24
 
     - name: Enable Corepack
-      run: corepack enable && corepack prepare
-      env:
-        HTTP_PROXY: ""
-        HTTPS_PROXY: ""
-        http_proxy: ""
-        https_proxy: ""
+      run: |
+        unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy
+        corepack enable && corepack prepare
 
     - name: Install Dependencies
       run: sfw pnpm install --frozen-lockfile
