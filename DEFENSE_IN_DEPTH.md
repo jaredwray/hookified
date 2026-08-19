@@ -31,7 +31,7 @@ Profile: npm library · public
 - [ ] Every action pinned to a full commit SHA (`npx actions-up`) (PR #180 pending)
 - [ ] Every job installs Socket Firewall (`SocketDev/action` SHA-pinned, `firewall-version` pinned); `pnpm install` / `npm install` run as `sfw pnpm install` / `sfw npm install` (PR #181 pending)
 - [ ] `.github/workflows/check-workflows.yaml` lints workflows with zizmor on every PR
-- [ ] `persist-credentials: false` on checkouts that don't push (PR pending)
+- [ ] `persist-credentials: false` on checkouts that don't push (PR #182 pending)
 - [x] No `pull_request_target` on workflows that run untrusted PR code — verified
 - [ ] Artifact-publishing workflows disable `actions/setup-node` default caching (`package-manager-cache: false`) to prevent cache poisoning
 - [x] No npm tokens (or other registry credentials) in Actions secrets — verified (no npm/registry tokens in workflow YAML; publish uses OIDC `id-token`)
