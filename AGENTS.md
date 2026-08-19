@@ -65,3 +65,11 @@ Base class providing EventEmitter-like functionality:
 - Browser builds are available at `dist/browser/index.js` (ESM) and `dist/browser/index.global.js` (UMD)
 - Hooks can be async or sync - use `hook()` for async execution, `hookSync()` for sync-only
 - Logger integration supports Pino, Winston, Bunyan, or any compatible logger
+
+## Safe Chain
+
+Package installs in this environment go through Aikido Safe Chain shims. Never bypass them:
+
+- Keep `~/.safe-chain/shims` first on `PATH`.
+- Do not call unshimmed `npm`, `pnpm`, `npx`, or `pnpx`.
+- Do not install packages with `curl | sh` or by pointing at a package manager outside the shim directory.
