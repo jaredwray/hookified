@@ -6,6 +6,10 @@ strictDepBuilds: true
 dangerouslyAllowAllBuilds: false
 trustPolicy: no-downgrade
 
+# Pin first-party writr to a provenance-attested release (6.1.2 has none).
+overrides:
+  writr: 6.1.5
+
 allowBuilds:
   esbuild: true
   sharp: true
