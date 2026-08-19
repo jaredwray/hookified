@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         node-version: ['22', '24', '26']
 
@@ -32,7 +33,12 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: Enable Corepack
-      run: corepack enable
+      run: corepack enable && corepack prepare
+      env:
+        HTTP_PROXY: ""
+        HTTPS_PROXY: ""
+        http_proxy: ""
+        https_proxy: ""
 
     - name: Install Dependencies
       run: sfw pnpm install --frozen-lockfile
