@@ -18,7 +18,7 @@ Profile: npm library · public
 
 - [x] `packageManager: pnpm@11.3+` pinned in `package.json` — verified `pnpm@11.3.0`
 - [x] 7-day cooldown: `minimumReleaseAge: 10080`, `minimumReleaseAgeStrict: true`, `minimumReleaseAgeIgnoreMissingTime: false`; no first-party `minimumReleaseAgeExclude` — PR #186
-- [ ] `trustPolicy: no-downgrade`; no first-party `trustPolicyExclude` (PR #187 pending)
+- [x] `trustPolicy: no-downgrade`; no first-party `trustPolicyExclude` — PR #187
 - [x] Lifecycle scripts blocked: `strictDepBuilds: true`, `dangerouslyAllowAllBuilds: false`, `allowBuilds: {}` baseline — verified (third-party `allowBuilds` exceptions: esbuild, sharp, unrs-resolver, workerd)
 - [x] `blockExoticSubdeps: true` — verified
 - [x] Lockfile committed; CI installs with `pnpm install --frozen-lockfile` — verified
@@ -28,7 +28,7 @@ Profile: npm library · public
 
 - [x] `permissions: contents: read` (or `{}` + per-job grants) on every workflow — verified
 - [x] No `contents: write` except jobs whose purpose is mutating the repo (GitHub Release, Changesets version PR); generated output is a workflow artifact, never committed back from CI — verified
-- [ ] Every action pinned to a full commit SHA (`npx actions-up`)
+- [ ] Every action pinned to a full commit SHA (`npx actions-up`) (PR pending)
 - [ ] Every job installs Socket Firewall (`SocketDev/action` SHA-pinned, `firewall-version` pinned); `pnpm install` / `npm install` run as `sfw pnpm install` / `sfw npm install`
 - [ ] `.github/workflows/check-workflows.yaml` lints workflows with zizmor on every PR
 - [ ] `persist-credentials: false` on checkouts that don't push
