@@ -54,7 +54,7 @@ importers:
         specifier: ^4.1.10
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/coverage-v8@4.1.10)(vite@8.0.13(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
       wrangler:
-        specifier: 4.120.1
+        specifier: ^4.120.1
         version: 4.120.1
 
 packages:
