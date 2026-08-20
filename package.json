@@ -74,7 +74,7 @@
   "engines": {
     "node": ">=22.18.0"
   },
-  "packageManager": "pnpm@11.3.0",
+  "packageManager": "pnpm@11.21.0",
   "devDependencies": {
     "@biomejs/biome": "^2.5.8",
     "@monstermann/tinybench-pretty-printer": "^0.3.0",
