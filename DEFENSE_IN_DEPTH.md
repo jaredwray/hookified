@@ -38,21 +38,21 @@ Profile: npm library · public
 
 ## 5. npm publishing — npm libraries only
 
-- [ ] OIDC trusted publishing configured **stage-only** on npmjs.com for the publish workflow — it can stage, never publish live (manual)
+- [x] OIDC trusted publishing configured **stage-only** on npmjs.com for the publish workflow — it can stage, never publish live — verified (maintainer)
 - [x] `.github/workflows/release.yaml` packs then stages with `pnpm stage publish ./packed/*.tgz --no-git-checks` — PR #193
-- [ ] Maintainer promotes staged versions with 2FA (manual)
-- [ ] Drydock connected — staged releases reviewed before promotion (manual)
-- [ ] No direct publish rights: package requires 2FA and disallows tokens (manual)
+- [x] Maintainer promotes staged versions with 2FA — verified (maintainer)
+- [x] Drydock connected — staged releases reviewed before promotion — verified (maintainer)
+- [x] No direct publish rights: package requires 2FA and disallows tokens — verified (maintainer)
 - [x] `package.json` `repository.url` accurate so provenance maps to this repo — verified
 
 ## 6. Security tooling
 
 - [x] Aikido runs on every build — verified (Aikido Security GitHub app on pull requests)
-- [ ] Aikido release gate: the release workflow's stage-publish job `needs:` a passing `scan-release` (PR #194 pending)
+- [x] Aikido release gate: the release workflow's stage-publish job `needs:` a passing `scan-release` — PR #194
 - [x] Socket reviews every PR that changes dependencies — verified (Socket Security GitHub app on pull requests)
 
 ## 7. Repository lockdown
 
-- [ ] `lockdown-repo.sh` applied; `--check` with `--required-checks` and `--allowed-actions` passes (PRs required on the default branch, merges blocked unless required status checks pass, tag ruleset, immutable releases, fork-PR approval, read-only workflow tokens, Actions allowlist, secret scanning, Dependabot disabled, private vulnerability reporting as applicable)
-- [ ] Phishing-resistant 2FA (passkeys / hardware keys) on the GitHub and npm accounts (manual)
-- [ ] Recovery codes stored offline in a password manager (manual)
+- [x] `lockdown-repo.sh` applied; `--check` with `--required-checks "test,zizmor"` and `--allowed-actions "codecov/*,cloudflare/*"` passes (PRs required on the default branch, merges blocked unless required status checks pass, tag ruleset, immutable releases, fork-PR approval, read-only workflow tokens, Actions allowlist, secret scanning, Dependabot disabled, private vulnerability reporting as applicable) — PR #195
+- [x] Phishing-resistant 2FA (passkeys / hardware keys) on the GitHub and npm accounts — verified (maintainer)
+- [x] Recovery codes stored offline in a password manager — verified (maintainer)
