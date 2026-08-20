@@ -47,11 +47,4 @@ jobs:
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        # wrangler-action otherwise runs `pnpm add wrangler@4` and takes the
-        # newest 4.x that passes the 7-day cooldown. 4.123.0 (v3.0.3 deploy)
-        # failed Pages project lookup with API 10000 on this Account API Token;
-        # 4.120.1 was the last version that succeeded on this account
-        # (qified v0.13.1, 2026-08-17).
-        wranglerVersion: "4.120.1"
-        packageManager: pnpm
         command: pages deploy site/dist --project-name=hookified --branch=main
