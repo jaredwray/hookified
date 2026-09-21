@@ -11,15 +11,16 @@ Profile: npm library · public
 
 ## 2. CODEOWNERS and cloud bootstrap
 
-- [x] `.github/CODEOWNERS` covers `/.github/`, `/.cursor/`, `/.devcontainer/`, `/scripts/` with owners the maintainer names — PR #184
+- [ ] `.github/CODEOWNERS` covers `/.github/`, `/.vscode/`, `/.cursor/`, `/.devcontainer/`, `/scripts/` with owners the maintainer names (PR #212 pending)
 - [x] Codespaces and Cursor Cloud Agents bootstrap Aikido Safe Chain via scripts/setup-cloud-environment.sh (--ci shims, frozen lockfile) — PR #185
+- [x] Dev Container `image` pinned by digest (`name:<tag>@sha256:<digest>`; not a floating tag) — PR #208
 
 ## 3. Dependencies (pnpm)
 
 - [x] `packageManager: pnpm@11.3+` pinned in `package.json` — verified `pnpm@12.4.1+sha512.2e81e399d73fe8390dab25e06aa788ab7a5908248d2f5a370f82b481147a6a7a367bf8048f9a6fdb6460f21a66f0542dedb8b94ca2c8723596741920b1656d4c`
 - [x] 7-day cooldown: `minimumReleaseAge: 10080`, `minimumReleaseAgeStrict: true`, `minimumReleaseAgeIgnoreMissingTime: false`; no first-party `minimumReleaseAgeExclude` — PR #186
 - [x] `trustPolicy: no-downgrade`; no first-party `trustPolicyExclude` — PR #187
-- [x] Lifecycle scripts blocked: `strictDepBuilds: true`, `dangerouslyAllowAllBuilds: false`, `allowBuilds: {}` baseline — verified (third-party `allowBuilds` exceptions: esbuild, sharp, unrs-resolver, workerd)
+- [x] Lifecycle scripts blocked: `strictDepBuilds: true`, `dangerouslyAllowAllBuilds: false`, `allowBuilds: {}` baseline — verified (third-party `allowBuilds` exceptions: esbuild, sharp, workerd)
 - [x] `blockExoticSubdeps: true` — verified
 - [x] Lockfile committed; CI installs with `pnpm install --frozen-lockfile` — verified
 - [x] No `.github/dependabot.yml`; other dependency-update tools (if any) open PRs only — never auto-merge — verified
@@ -31,6 +32,7 @@ Profile: npm library · public
 - [x] Every action pinned to a full commit SHA (`npx actions-up`) — PR #188
 - [x] Every job installs Socket Firewall (`SocketDev/action` SHA-pinned, `firewall-version` pinned); `pnpm install` / `npm install` run as `sfw pnpm install` / `sfw npm install` — PR #189
 - [x] `.github/workflows/check-workflows.yaml` lints workflows with zizmor on every PR — PR #190
+- [ ] Workflow `name:` and job `name:` contain no spaces (kebab-case) so they can be set as required status checks (PR #212 pending)
 - [x] `persist-credentials: false` on checkouts that don't push — PR #191
 - [x] No `pull_request_target` on workflows that run untrusted PR code — verified
 - [x] Artifact-publishing workflows disable `actions/setup-node` default caching (`package-manager-cache: false`) to prevent cache poisoning — PR #192
@@ -38,11 +40,11 @@ Profile: npm library · public
 
 ## 5. npm publishing — npm libraries only
 
-- [x] OIDC trusted publishing configured **stage-only** on npmjs.com for the publish workflow — it can stage, never publish live — verified (maintainer)
+- [x] OIDC trusted publishing configured **stage-only** on npmjs.com for the publish workflow — it can stage, never publish live (manual) — verified (maintainer)
 - [x] `.github/workflows/release.yaml` packs then stages with `pnpm stage publish ./packed/*.tgz --no-git-checks` — PR #193
-- [x] Maintainer promotes staged versions with 2FA — verified (maintainer)
-- [x] Drydock connected — staged releases reviewed before promotion — verified (maintainer)
-- [x] No direct publish rights: package requires 2FA and disallows tokens — verified (maintainer)
+- [x] Maintainer promotes staged versions with 2FA (manual) — verified (maintainer)
+- [x] Drydock connected — staged releases reviewed before promotion (manual) — verified (maintainer)
+- [x] No direct publish rights: package requires 2FA and disallows tokens (manual) — verified (maintainer)
 - [x] `package.json` `repository.url` accurate so provenance maps to this repo — verified
 
 ## 6. Security tooling
@@ -53,6 +55,6 @@ Profile: npm library · public
 
 ## 7. Repository lockdown
 
-- [x] `lockdown-repo.sh` applied; `--check` with `--required-checks "test,zizmor"` and `--allowed-actions "codecov/*,cloudflare/*"` passes (PRs required on the default branch, merges blocked unless required status checks pass, tag ruleset, immutable releases, fork-PR approval, read-only workflow tokens, Actions allowlist, secret scanning, Dependabot disabled, private vulnerability reporting as applicable) — PR #195
-- [x] Phishing-resistant 2FA (passkeys / hardware keys) on the GitHub and npm accounts — verified (maintainer)
-- [x] Recovery codes stored offline in a password manager — verified (maintainer)
+- [x] Phishing-resistant 2FA (passkeys / hardware keys) on the GitHub and npm accounts (manual) — verified (maintainer)
+- [x] Recovery codes stored offline in a password manager (manual) — verified (maintainer)
+- [x] `lockdown-repo.sh` applied by a repo admin (never committed to this repo) — PR #195. Latest `--check` (`--required-checks "test,zizmor"`, `--allowed-actions "codecov/*,cloudflare/*"`) still fails the branch ruleset: it has no owner `pull_request` bypass. The tag ruleset has no repository-admin bypass. Remaining settings were unreadable here (non-admin token, HTTP 403). Admin re-apply is still required.
