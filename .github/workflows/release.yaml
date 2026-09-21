@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   aikido-gate:
-    name: Aikido release gate
+    name: aikido-gate
     runs-on: ubuntu-latest
     permissions:
       contents: read
