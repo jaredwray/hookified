@@ -11,8 +11,9 @@ Profile: npm library · public
 
 ## 2. CODEOWNERS and cloud bootstrap
 
-- [x] `.github/CODEOWNERS` covers `/.github/`, `/.cursor/`, `/.devcontainer/`, `/scripts/` with owners the maintainer names — PR #184
+- [ ] `.github/CODEOWNERS` covers `/.github/`, `/.vscode/`, `/.cursor/`, `/.devcontainer/`, `/scripts/` with owners the maintainer names (PR pending)
 - [x] Codespaces and Cursor Cloud Agents bootstrap Aikido Safe Chain via scripts/setup-cloud-environment.sh (--ci shims, frozen lockfile) — PR #185
+- [x] Dev Container `image` pinned by digest (`name:<tag>@sha256:<digest>`; not a floating tag) — PR #208
 
 ## 3. Dependencies (pnpm)
 
@@ -31,6 +32,7 @@ Profile: npm library · public
 - [x] Every action pinned to a full commit SHA (`npx actions-up`) — PR #188
 - [x] Every job installs Socket Firewall (`SocketDev/action` SHA-pinned, `firewall-version` pinned); `pnpm install` / `npm install` run as `sfw pnpm install` / `sfw npm install` — PR #189
 - [x] `.github/workflows/check-workflows.yaml` lints workflows with zizmor on every PR — PR #190
+- [ ] Workflow `name:` and job `name:` contain no spaces (kebab-case) so they can be set as required status checks
 - [x] `persist-credentials: false` on checkouts that don't push — PR #191
 - [x] No `pull_request_target` on workflows that run untrusted PR code — verified
 - [x] Artifact-publishing workflows disable `actions/setup-node` default caching (`package-manager-cache: false`) to prevent cache poisoning — PR #192
@@ -38,11 +40,11 @@ Profile: npm library · public
 
 ## 5. npm publishing — npm libraries only
 
-- [x] OIDC trusted publishing configured **stage-only** on npmjs.com for the publish workflow — it can stage, never publish live — verified (maintainer)
+- [x] OIDC trusted publishing configured **stage-only** on npmjs.com for the publish workflow — it can stage, never publish live (manual) — verified (maintainer)
 - [x] `.github/workflows/release.yaml` packs then stages with `pnpm stage publish ./packed/*.tgz --no-git-checks` — PR #193
-- [x] Maintainer promotes staged versions with 2FA — verified (maintainer)
-- [x] Drydock connected — staged releases reviewed before promotion — verified (maintainer)
-- [x] No direct publish rights: package requires 2FA and disallows tokens — verified (maintainer)
+- [x] Maintainer promotes staged versions with 2FA (manual) — verified (maintainer)
+- [x] Drydock connected — staged releases reviewed before promotion (manual) — verified (maintainer)
+- [x] No direct publish rights: package requires 2FA and disallows tokens (manual) — verified (maintainer)
 - [x] `package.json` `repository.url` accurate so provenance maps to this repo — verified
 
 ## 6. Security tooling
@@ -53,6 +55,6 @@ Profile: npm library · public
 
 ## 7. Repository lockdown
 
-- [x] `lockdown-repo.sh` applied; `--check` with `--required-checks "test,zizmor"` and `--allowed-actions "codecov/*,cloudflare/*"` passes (PRs required on the default branch, merges blocked unless required status checks pass, tag ruleset, immutable releases, fork-PR approval, read-only workflow tokens, Actions allowlist, secret scanning, Dependabot disabled, private vulnerability reporting as applicable) — PR #195
-- [x] Phishing-resistant 2FA (passkeys / hardware keys) on the GitHub and npm accounts — verified (maintainer)
-- [x] Recovery codes stored offline in a password manager — verified (maintainer)
+- [x] Phishing-resistant 2FA (passkeys / hardware keys) on the GitHub and npm accounts (manual) — verified (maintainer)
+- [x] Recovery codes stored offline in a password manager (manual) — verified (maintainer)
+- [x] `lockdown-repo.sh` applied by a repo admin (never committed to this repo) — PR #195. Latest `--check` (`--required-checks "test,zizmor"`, `--allowed-actions "codecov/*,cloudflare/*"`) still fails the branch ruleset: it has no owner `pull_request` bypass. The tag ruleset has no repository-admin bypass. Remaining settings were unreadable here (non-admin token, HTTP 403). Admin re-apply is still required.
