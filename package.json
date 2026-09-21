@@ -91,7 +91,7 @@
     "tsx": "^4.23.13",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0",
-    "wrangler": "^4.120.1"
+    "wrangler": "^4.131.2"
   },
   "files": [
     "dist",
