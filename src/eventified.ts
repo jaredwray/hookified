@@ -55,7 +55,7 @@ export class Eventified implements IEventEmitter {
 	}
 
 	/**
-	 * Gets whether an error should be thrown when an emit throws an error. Default is false and only emits an error event.
+	 * Gets whether an error should be thrown when emitting 'error' event, even if there are listeners. Listeners are still called first. Default is false.
 	 * @returns {boolean}
 	 */
 	public get throwOnEmitError(): boolean {
@@ -63,7 +63,7 @@ export class Eventified implements IEventEmitter {
 	}
 
 	/**
-	 * Sets whether an error should be thrown when an emit throws an error. Default is false and only emits an error event.
+	 * Sets whether an error should be thrown when emitting 'error' event, even if there are listeners. Listeners are still called first. Default is false.
 	 * @param {boolean} value
 	 */
 	public set throwOnEmitError(value: boolean) {
@@ -71,7 +71,7 @@ export class Eventified implements IEventEmitter {
 	}
 
 	/**
-	 * Gets whether an error should be thrown when emitting 'error' event with no listeners. Default is false.
+	 * Gets whether an error should be thrown when emitting 'error' event with no listeners. Default is true.
 	 * @returns {boolean}
 	 */
 	public get throwOnEmptyListeners(): boolean {
@@ -79,7 +79,7 @@ export class Eventified implements IEventEmitter {
 	}
 
 	/**
-	 * Sets whether an error should be thrown when emitting 'error' event with no listeners. Default is false.
+	 * Sets whether an error should be thrown when emitting 'error' event with no listeners. Default is true.
 	 * @param {boolean} value
 	 */
 	public set throwOnEmptyListeners(value: boolean) {
@@ -387,15 +387,18 @@ export class Eventified implements IEventEmitter {
 			this.sendToEventLogger(event, arguments_);
 		}
 
-		if (!result && event === ERROR_EVENT) {
+		// throwOnEmitError throws even after listeners have handled the error,
+		// while throwOnEmptyListeners only throws when there were no listeners.
+		if (
+			event === ERROR_EVENT &&
+			(this._throwOnEmitError || (!result && this._throwOnEmptyListeners))
+		) {
 			const error =
 				arguments_[0] instanceof Error
 					? arguments_[0]
 					: new Error(`${arguments_[0]}`);
 
-			if (this._throwOnEmitError || this._throwOnEmptyListeners) {
-				throw error;
-			}
+			throw error;
 		}
 
 		return result;

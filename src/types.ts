@@ -15,7 +15,8 @@ export type EventEmitterOptions = {
 	 */
 	eventLogger?: Logger;
 	/**
-	 * Whether to throw an error when emit 'error' and there are no listeners. Default is false and only emits an error event.
+	 * Whether to throw when emitting 'error', even if there are listeners. Listeners are still called before the error is thrown.
+	 * @default false
 	 */
 	throwOnEmitError?: boolean;
 

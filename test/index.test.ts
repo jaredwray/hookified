@@ -617,7 +617,7 @@ describe("Hookified", () => {
 			}).toThrow("test error");
 		});
 
-		test("should not throw error when emitting 'error' event with listeners", () => {
+		test("should throw error when emitting 'error' event with listeners", () => {
 			const hookified = new Hookified({ throwOnEmitError: true });
 			let errorCaught: Error | undefined;
 
@@ -627,9 +627,30 @@ describe("Hookified", () => {
 
 			expect(() => {
 				hookified.emit("error", new Error("test error"));
-			}).not.toThrow();
+			}).toThrow("test error");
 
 			expect(errorCaught?.message).toBe("test error");
+		});
+
+		test("should throw hook errors even with error listeners", async () => {
+			const hookified = new Hookified({ throwOnEmitError: true });
+			let errorCaught: Error | undefined;
+
+			hookified.on("error", (error: Error) => {
+				errorCaught = error;
+			});
+
+			hookified.onHook({
+				event: "event",
+				handler: () => {
+					throw new Error("handler error");
+				},
+			});
+
+			await expect(hookified.hook("event")).rejects.toThrow(
+				"event: handler error",
+			);
+			expect(errorCaught?.message).toBe("event: handler error");
 		});
 
 		test("should not throw error when throwOnEmitError is false", () => {
