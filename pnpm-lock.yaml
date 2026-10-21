@@ -185,8 +185,8 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2(supports-color@10.2.2)(zod@4.4.3)
       emittery:
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.1.0
+        version: 2.1.0
       eventemitter3:
         specifier: ^5.0.4
         version: 5.0.4
@@ -1462,8 +1462,8 @@ packages:
     engines: {node: '>=0.12.18'}
     hasBin: true
 
-  emittery@2.0.0:
-    resolution: {integrity: sha512-FLtgn/CGBXiX3ZtPAm5q4LWWepHChOt55J9u01WFu3dyap2U7IwptlrqoE1COR/kxwdy/DOxIBALSxIW449I1g==}
+  emittery@2.1.0:
+    resolution: {integrity: sha512-cPP/ddRdWhEQz7+R/QJi22O2iA73YuNWJRgDM2SUVEKA3XRPiv9f5cfGb508s+124sEBlnewHq/CiSOuIyewHg==}
     engines: {node: '>=22'}
 
   emoji-regex@10.6.0:
@@ -3729,7 +3729,7 @@ snapshots:
 
   ejs@6.0.1: {}
 
-  emittery@2.0.0: {}
+  emittery@2.1.0: {}
 
   emoji-regex@10.6.0: {}
 

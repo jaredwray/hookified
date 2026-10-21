@@ -81,7 +81,7 @@
     "@types/node": "^24.19.2",
     "@vitest/coverage-v8": "^5.0.4",
     "docula": "^3.0.2",
-    "emittery": "^2.0.0",
+    "emittery": "^2.1.0",
     "eventemitter3": "^5.0.4",
     "hookable": "^6.1.2",
     "pino": "^10.3.1",
