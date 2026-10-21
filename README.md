@@ -8,6 +8,7 @@
 [![npm](https://img.shields.io/npm/dm/hookified)](https://npmjs.com/package/hookified)
 [![jsDelivr](https://data.jsdelivr.com/v1/package/npm/hookified/badge)](https://www.jsdelivr.com/package/npm/hookified)
 [![npm](https://img.shields.io/npm/v/hookified)](https://npmjs.com/package/hookified)
+[![Drydock review](https://img.shields.io/endpoint?url=https%3A%2F%2Fdrydock.org%2Fpublic%2Fbadge%2Fnpm%2Fhookified)](https://drydock.org/diff/hookified)
 
 # Features
 - Simple replacement for EventEmitter
