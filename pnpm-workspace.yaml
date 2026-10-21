@@ -7,8 +7,8 @@ dangerouslyAllowAllBuilds: false
 trustPolicy: no-downgrade
 
 overrides:
-  # miniflare pins undici 7.29.x exactly, so that range cannot reach 7.30.1.
-  "undici@>=7.0.0 <7.30.1": ">=7.30.1 <8.0.0"
+  # miniflare pins undici 7.29.1 exactly, so that request cannot reach a patched release on its own.
+  "undici@>=7.0.0 <7.30.1": "8.12.2"
 
 # These releases are inside the 7-day minimumReleaseAge window.
 # 8.12.3 (2026-10-19) is not excluded, so undici 8 stays on 8.12.2.
