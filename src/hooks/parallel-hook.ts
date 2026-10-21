@@ -30,6 +30,7 @@ export class ParallelHook<TArgs = any, TResult = any>
 {
 	public id?: string;
 	public event: string;
+	public tags?: string[];
 	public handler: HookFn;
 	public hooks: ParallelHookFn<TArgs, TResult>[];
 
@@ -40,14 +41,17 @@ export class ParallelHook<TArgs = any, TResult = any>
 	 * @param {string} event - The event name for the hook
 	 * @param {ParallelHookFinalFn<TArgs, TResult>} finalHandler - Called once with `{ initialArgs, results }` after all parallel hooks settle
 	 * @param {string} [id] - Optional unique identifier for the hook
+	 * @param {string[]} [tags] - Optional tags used to group and look up the hook
 	 */
 	constructor(
 		event: string,
 		finalHandler: ParallelHookFinalFn<TArgs, TResult>,
 		id?: string,
+		tags?: string[],
 	) {
 		this.id = id;
 		this.event = event;
+		this.tags = tags;
 		this.hooks = [];
 		this._finalHandler = finalHandler;
 

@@ -15,6 +15,7 @@ import type {
 export class WaterfallHook implements IWaterfallHook {
 	public id?: string;
 	public event: string;
+	public tags?: string[];
 	public handler: HookFn;
 	public hooks: WaterfallHookFn[];
 
@@ -25,10 +26,17 @@ export class WaterfallHook implements IWaterfallHook {
 	 * @param {string} event - The event name for the hook
 	 * @param {WaterfallHookFn} finalHandler - The final handler function that receives the transformed result
 	 * @param {string} [id] - Optional unique identifier for the hook
+	 * @param {string[]} [tags] - Optional tags used to group and look up the hook
 	 */
-	constructor(event: string, finalHandler: WaterfallHookFn, id?: string) {
+	constructor(
+		event: string,
+		finalHandler: WaterfallHookFn,
+		id?: string,
+		tags?: string[],
+	) {
 		this.id = id;
 		this.event = event;
+		this.tags = tags;
 		this.hooks = [];
 		this._finalHandler = finalHandler;
 

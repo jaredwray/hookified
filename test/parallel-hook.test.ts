@@ -13,12 +13,34 @@ describe("ParallelHook", () => {
 		expect(ph.event).toBe("process");
 		expect(ph.hooks).toEqual([]);
 		expect(ph.id).toBeUndefined();
+		expect(ph.tags).toBeUndefined();
 	});
 
 	test("should create a ParallelHook with event, final handler, and id", () => {
 		const ph = new ParallelHook("process", () => {}, "my-id");
 		expect(ph.event).toBe("process");
 		expect(ph.id).toBe("my-id");
+		expect(ph.tags).toBeUndefined();
+	});
+
+	test("should store tags and run through Hookified", async () => {
+		const hookified = new Hookified();
+		let called = false;
+		const ph = new ParallelHook(
+			"process",
+			() => {
+				called = true;
+			},
+			"ph-id",
+			["fanout"],
+		);
+		expect(ph.id).toBe("ph-id");
+		expect(ph.tags).toEqual(["fanout"]);
+
+		hookified.onHook(ph);
+		expect(hookified.getHooksByTag("fanout")[0]?.handler).toBe(ph.handler);
+		await hookified.hook("process", 1);
+		expect(called).toBe(true);
 	});
 
 	test("should add hooks to the parallel set", () => {

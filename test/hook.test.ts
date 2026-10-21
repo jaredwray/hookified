@@ -7,6 +7,7 @@ describe("Hook", () => {
 		const hook = new Hook("beforeSave", handler);
 		expect(hook.event).toBe("beforeSave");
 		expect(hook.handler).toBe(handler);
+		expect(hook.tags).toBeUndefined();
 	});
 
 	test("should work with an async handler", () => {
@@ -53,6 +54,27 @@ describe("Hook", () => {
 		hookified.removeHooks([hook]);
 		await hookified.hook("test");
 		expect(called).toBe(false);
+	});
+
+	test("should store an optional id and tags", () => {
+		const handler = () => {};
+		const withId = new Hook("beforeSave", handler, "hook-id");
+		expect(withId.id).toBe("hook-id");
+		expect(withId.tags).toBeUndefined();
+
+		const tagged = new Hook("beforeSave", handler, "audit-hook", ["audit"]);
+		expect(tagged.tags).toEqual(["audit"]);
+	});
+
+	test("should be found by tag after registration", () => {
+		const hookified = new Hookified();
+		const handler = () => {};
+		const hook = new Hook("test", handler, undefined, ["a"]);
+		hookified.onHook(hook);
+
+		expect(hookified.getHooksByTag("a")).toMatchObject([
+			{ event: "test", handler, tags: ["a"] },
+		]);
 	});
 
 	test("should work with handler that receives arguments", async () => {

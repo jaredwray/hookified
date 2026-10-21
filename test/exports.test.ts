@@ -218,6 +218,12 @@ describe("Export Verification Tests", () => {
 		test("should export OnHookOptions type", () => {
 			expect(esmContent).toContain("OnHookOptions");
 		});
+
+		test("should export hook tag lookup", () => {
+			expect(esmContent).toMatch(/tags\?:\s*string\[\]/);
+			expect(esmContent).toContain("getHooksByTag");
+			expect(esmContent).toContain("getTaggedHooks");
+		});
 	});
 
 	describe("Node.js Build Files", () => {

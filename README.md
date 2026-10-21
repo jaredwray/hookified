@@ -21,6 +21,7 @@
 - Control deprecated hook execution with `allowDeprecated`
 - WaterfallHook for sequential data transformation pipelines
 - ParallelHook for concurrent fan-out execution with collected results
+- Tag hooks and look them up across events with `getHooksByTag` and `getTaggedHooks`
 - No package dependencies and only 250KB in size
 - Fast and Efficient with [Benchmarks](#benchmarks)
 - Maintained on a regular basis!
@@ -50,6 +51,8 @@
   - [.clearHooks()](#clearhooks)
   - [.getHook(id)](#gethookid)
   - [.getHooks(eventName)](#gethookseventname)
+  - [.getHooksByTag(tag)](#gethooksbytagtag)
+  - [.getTaggedHooks()](#gettaggedhooks)
   - [.hook(eventName, ...args)](#hookeventname-args)
   - [.hookSync(eventName, ...args)](#hooksync-eventname-args)
   - [.onHook(hook, options?)](#onhookhook-options)
@@ -199,8 +202,11 @@ The `IHook` interface has the following properties:
 | `id` | `string` | No | Unique identifier for the hook. Auto-generated via `crypto.randomUUID()` if not provided. |
 | `event` | `string` | Yes | The event name for the hook. |
 | `handler` | `HookFn` | Yes | The handler function for the hook. |
+| `tags` | `string[]` | No | Tags for grouping and looking up hooks across events. |
 
 When a hook is registered, it is assigned an `id` (auto-generated if not provided). The `id` can be used to look up or remove hooks via `getHook` and `removeHookById`. If you register a hook with the same `id` on the same event, it will replace the existing hook in-place (preserving its position).
+
+Hooks can also carry `tags`, an optional array of strings used to group and look them up across events. When a hook is registered, tags are validated, copied, and de-duplicated while keeping the first-seen order. Matching is exact and case-sensitive: `"audit"`, `"Audit"`, and `" audit"` are three different tags. An empty string, a non-string, or a non-array throws a `TypeError` and the hook is not registered. Changing the array you passed in after registering has no effect, because the stored tags are a copy. Tags are not trimmed or lowercased. With `useHookClone: false`, the `tags` property on your hook object is replaced with that normalized copy, the same way `id` is assigned onto it.
 
 **Using the `Hook` class:**
 
@@ -222,6 +228,11 @@ const hook = new Hook('before:save', async (data) => {
 const hook2 = new Hook('after:save', async (data) => {
   console.log('saved');
 }, 'my-after-save-hook');
+
+// With id and tags
+const hook3 = new Hook('before:save', async (data) => {
+  data.audited = true;
+}, 'audit-hook', ['audit']);
 
 // Register with onHook
 myClass.onHook(hook);
@@ -251,6 +262,7 @@ const myClass = new MyClass();
 const hook: IHook = {
   id: 'my-validation-hook', // optional — auto-generated if omitted
   event: 'before:save',
+  tags: ['validation', 'audit'],
   handler: async (data) => {
     data.validated = true;
   },
@@ -258,6 +270,7 @@ const hook: IHook = {
 
 const stored = myClass.onHook(hook);
 console.log(stored?.id); // 'my-validation-hook'
+console.log(myClass.getHooksByTag('audit').map((entry) => entry.id)); // ['my-validation-hook']
 
 // Later, remove by id
 myClass.removeHookById('my-validation-hook');
@@ -265,7 +278,7 @@ myClass.removeHookById('my-validation-hook');
 
 ## Waterfall Hook
 
-The `WaterfallHook` class chains multiple hook functions sequentially in a waterfall pipeline. Each hook receives a context containing the original arguments and the accumulated results from all previous hooks. It implements the `IHook` interface, so it integrates directly with `Hookified.onHook()`.
+The `WaterfallHook` class chains multiple hook functions sequentially in a waterfall pipeline. Each hook receives a context containing the original arguments and the accumulated results from all previous hooks. It implements the `IHook` interface, so it integrates directly with `Hookified.onHook()`. The constructor is `new WaterfallHook(event, finalHandler, id?, tags?)`. `id` and `tags` behave as they do on `IHook`.
 
 The `WaterfallHookContext` has the following properties:
 
@@ -347,7 +360,7 @@ console.log(wh.hooks.length); // 0
 
 ## Parallel Hook
 
-The `ParallelHook` class fans a single invocation out to many registered hook functions concurrently via `Promise.allSettled`, then calls a final handler with the aggregated outcomes — including failures. Unlike `WaterfallHook`, hooks do not see each other's results: every hook receives the same `initialArgs` and runs in parallel. It implements the `IHook` interface, so it integrates directly with `Hookified.onHook()`, and the final handler still fires whether the hook is invoked directly or through `Hookified.hook()`.
+The `ParallelHook` class fans a single invocation out to many registered hook functions concurrently via `Promise.allSettled`, then calls a final handler with the aggregated outcomes — including failures. Unlike `WaterfallHook`, hooks do not see each other's results: every hook receives the same `initialArgs` and runs in parallel. It implements the `IHook` interface, so it integrates directly with `Hookified.onHook()`, and the final handler still fires whether the hook is invoked directly or through `Hookified.hook()`. The constructor is `new ParallelHook(event, finalHandler, id?, tags?)`. `id` and `tags` behave as they do on `IHook`.
 
 Per-hook functions receive a `ParallelHookContext`:
 
@@ -800,6 +813,44 @@ myClass.onHook({ event: 'before:myMethod2', handler: async (data) => {
 console.log(myClass.getHooks('before:myMethod2')); // [{ event: 'before:myMethod2', handler: [Function] }]
 ```
 
+## .getHooksByTag(tag)
+
+Get every hook that has a tag, searching across all events. Pass one tag or an array of tags. An array matches hooks that have any of those tags, and each hook is returned once even if it matches more than one. Results follow storage order: events in insertion order, then hooks in execution order within each event. The query order does not change the result order. Matching is exact and case-sensitive. Returns a new `IHook[]` array, or `[]` when nothing matches.
+
+```javascript
+myClass.onHook({
+  id: 'validate',
+  event: 'before:save',
+  tags: ['validation', 'audit'],
+  handler: async (data) => { data.validated = true; },
+});
+myClass.onHook({
+  id: 'log',
+  event: 'after:save',
+  tags: ['audit'],
+  handler: async () => {},
+});
+myClass.onHook({
+  id: 'notify',
+  event: 'after:save',
+  handler: async () => {},
+});
+
+console.log(myClass.getHooksByTag('audit').map((hook) => hook.id)); // ['validate', 'log']
+console.log(myClass.getHooksByTag(['validation', 'audit']).map((hook) => hook.id)); // ['validate', 'log']
+console.log(myClass.getHooksByTag('missing')); // []
+```
+
+## .getTaggedHooks()
+
+Get a `Map<string, IHook[]>` of every tag to the hooks that have that tag. A hook with several tags appears under each of them. Hooks without tags are left out. Keys are in order of first appearance, and each array is in storage order. Every call returns a new `Map`.
+
+```javascript
+const tagged = myClass.getTaggedHooks();
+console.log([...tagged.keys()]); // ['validation', 'audit']
+console.log(tagged.get('audit').map((hook) => hook.id)); // ['validate', 'log']
+```
+
 ## .hook(eventName, ...args)
 
 Run a hook event.
@@ -854,6 +905,8 @@ Returns the stored `IHook` (with `id` assigned), or `undefined` if the hook was 
 
 If the hook has an `id`, it will be used as-is. If not, a UUID is auto-generated via `crypto.randomUUID()`. If a hook with the same `id` already exists on the same event, it will be **replaced in-place** (preserving its position in the array).
 
+If the hook includes `tags`, they are validated, copied, and de-duplicated before the hook is stored. Invalid tags throw a `TypeError` and nothing is registered. Replacing a hook by `id` replaces its tags rather than merging them; registering the same `id` again without tags clears them.
+
 **Options (`OnHookOptions`)**:
 - `useHookClone` (boolean, optional) — Per-call override for the instance-level `useHookClone` setting. When `true`, the hook object is cloned before storing. When `false`, the original reference is stored directly. When omitted, falls back to the instance-level setting.
 - `position` (`"Top"` | `"Bottom"` | `number`, optional) — Controls where the hook is inserted in the handlers array. `"Top"` inserts at the beginning, `"Bottom"` appends to the end (default). A number inserts at that index, clamped to the array bounds.
@@ -874,6 +927,15 @@ const stored2 = myClass.onHook({
   event: 'before:save',
   handler: async (data) => { data.validated = true; },
 });
+
+// With tags — duplicates are removed, order of first occurrence is kept
+myClass.onHook({
+  id: 'audit-save',
+  event: 'before:save',
+  tags: ['audit', 'audit', 'validation'],
+  handler: async (data) => { data.audited = true; },
+});
+// stored tags are ['audit', 'validation']
 
 // Replace hook by registering with the same id
 myClass.onHook({
@@ -1366,7 +1428,7 @@ _Note: the `EventEmitter` version is Nodejs versioning._
 
 # Migrating from v2 to v3
 
-v3 has no API changes. The only breaking change is the minimum Node.js version requirement.
+v3 has no breaking API changes. The only breaking change is the minimum Node.js version requirement.
 
 ## Breaking Changes
 
@@ -1378,7 +1440,26 @@ v3 has no API changes. The only breaking change is the minimum Node.js version r
 
 The `engines` field in `package.json` now requires Node.js 22.18.0 or later. Node.js 20 reached end-of-life in April 2026.
 
-**Migration:** Upgrade to Node.js 22 LTS or Node.js 24+. No code changes are required — the library API is identical to v2.
+**Migration:** Upgrade to Node.js 22 LTS or Node.js 24+. No code changes are required — all v2 code works unchanged on v3.
+
+## New Features
+
+### Hook tags
+
+Hook tags are additive. `IHook.tags` is optional, existing constructors still work, existing `IHook` implementations stay valid, untagged hooks are unchanged, and `removeHook` still returns `{ event, handler }`. If you previously attached your own `tags` property to hook objects, it must now be a `string[]` of non-empty strings (or omitted); `null` or other values throw a `TypeError` on registration.
+
+```javascript
+myClass.onHook({
+  id: 'validate',
+  event: 'before:save',
+  tags: ['validation', 'audit'],
+  handler: async (data) => { data.validated = true; },
+});
+
+myClass.getHooksByTag('audit'); // hooks tagged "audit", across events
+myClass.getHooksByTag(['validation', 'audit']); // hooks with any of these tags
+myClass.getTaggedHooks(); // Map { 'validation' => [...], 'audit' => [...] }
+```
 
 # Migrating from v1 to v2
 
