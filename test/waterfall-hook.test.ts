@@ -12,6 +12,7 @@ describe("WaterfallHook", () => {
 		expect(wh.event).toBe("process");
 		expect(wh.hooks).toEqual([]);
 		expect(wh.id).toBeUndefined();
+		expect(wh.tags).toBeUndefined();
 	});
 
 	test("should create a WaterfallHook with event, handler, and id", () => {
@@ -19,6 +20,27 @@ describe("WaterfallHook", () => {
 		const wh = new WaterfallHook("process", handler, "my-id");
 		expect(wh.event).toBe("process");
 		expect(wh.id).toBe("my-id");
+		expect(wh.tags).toBeUndefined();
+	});
+
+	test("should store tags and run through Hookified", async () => {
+		const hookified = new Hookified();
+		let called = false;
+		const wh = new WaterfallHook(
+			"process",
+			() => {
+				called = true;
+			},
+			"wf-id",
+			["pipeline"],
+		);
+		expect(wh.id).toBe("wf-id");
+		expect(wh.tags).toEqual(["pipeline"]);
+
+		hookified.onHook(wh);
+		expect(hookified.getHooksByTag("pipeline")[0]?.handler).toBe(wh.handler);
+		await hookified.hook("process", 1);
+		expect(called).toBe(true);
 	});
 
 	test("should add hooks to the waterfall chain", () => {

@@ -224,6 +224,11 @@ export interface IHook {
 	 * The handler function for the hook
 	 */
 	handler: HookFn;
+	/**
+	 * Optional tags used to group and look up hooks across events.
+	 * When registered, tags are validated, copied, and de-duplicated (order preserved). Matching is exact and case-sensitive.
+	 */
+	tags?: string[];
 }
 
 export type WaterfallHookResult = {

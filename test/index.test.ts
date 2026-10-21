@@ -2689,4 +2689,660 @@ describe("Hookified", () => {
 			expect(hookified.hooks.get("event1")).toBeUndefined();
 		});
 	});
+
+	describe("hook tags", () => {
+		test("should store a copy of tags on the returned entry and getHooks", () => {
+			const hookified = new Hookified();
+			const tags = ["audit"];
+			const hook: IHook = {
+				event: "event",
+				handler: () => {},
+				tags,
+			};
+			const stored = hookified.onHook(hook);
+
+			expect(stored?.tags).toEqual(["audit"]);
+			expect(stored?.tags).not.toBe(tags);
+			expect(hook.tags).toBe(tags);
+			expect(hookified.getHooks("event")?.[0]?.tags).toEqual(["audit"]);
+			expect(hookified.getHooks("event")?.[0]?.tags).not.toBe(tags);
+
+			tags.push("extra");
+			expect(stored?.tags).toEqual(["audit"]);
+			expect(hookified.getHooksByTag("extra")).toEqual([]);
+		});
+
+		test("should replace tags with a de-duplicated copy when cloning is disabled", () => {
+			const hookified = new Hookified({ useHookClone: false });
+			const tags = ["b", "a", "b"];
+			const hook: IHook = {
+				event: "event",
+				handler: () => {},
+				tags,
+			};
+
+			const stored = hookified.onHook(hook, { useHookClone: false });
+
+			expect(stored).toBe(hook);
+			expect(hook.tags).not.toBe(tags);
+			expect(hook.tags).toEqual(["b", "a"]);
+			expect(tags).toEqual(["b", "a", "b"]);
+		});
+
+		test("should de-duplicate tags and preserve first-seen order", () => {
+			const hookified = new Hookified();
+			const stored = hookified.onHook({
+				event: "event",
+				handler: () => {},
+				tags: ["b", "a", "b", "c", "a"],
+			});
+
+			expect(stored?.tags).toEqual(["b", "a", "c"]);
+		});
+
+		test("should keep case-sensitive tags without trimming", () => {
+			const hookified = new Hookified();
+			const stored = hookified.onHook({
+				event: "event",
+				handler: () => {},
+				tags: ["Audit", "audit", " audit"],
+			});
+
+			expect(stored?.tags).toEqual(["Audit", "audit", " audit"]);
+			expect(hookified.getHooksByTag("audit")).toHaveLength(1);
+			expect(hookified.getHooksByTag("AUDIT")).toEqual([]);
+			expect(hookified.getHooksByTag("audit ")).toEqual([]);
+		});
+
+		test("should leave tags undefined when none are provided", () => {
+			const hookified = new Hookified();
+			const objectForm = hookified.onHook({
+				event: "event",
+				handler: () => {},
+			});
+			const shorthand = hookified.onHook("event2", () => {});
+			hookified.addHook("event3", () => {});
+
+			expect(objectForm?.tags).toBeUndefined();
+			expect(shorthand?.tags).toBeUndefined();
+			expect(hookified.getHooks("event3")?.[0]?.tags).toBeUndefined();
+			expect(hookified.getTaggedHooks().size).toBe(0);
+		});
+
+		test("should store an empty tag list and exclude the hook from lookups", () => {
+			const hookified = new Hookified();
+			const stored = hookified.onHook({
+				event: "event",
+				handler: () => {},
+				tags: [],
+			});
+
+			expect(stored?.tags).toEqual([]);
+			expect(hookified.getHooksByTag("anything")).toEqual([]);
+			expect(hookified.getTaggedHooks().size).toBe(0);
+		});
+
+		test("should throw and register nothing for invalid tags", () => {
+			const message = "Hook tags must be an array of non-empty strings";
+			const invalidTags: unknown[] = ["audit", null, ["a", 1], ["a", ""]];
+
+			for (const tags of invalidTags) {
+				for (const useHookClone of [true, false]) {
+					const hookified = new Hookified();
+					const hook = {
+						event: "event",
+						handler: () => {},
+					} as IHook;
+					(hook as { tags: unknown }).tags = tags;
+
+					expect(() => hookified.onHook(hook, { useHookClone })).toThrow(
+						new TypeError(message),
+					);
+					expect(hookified.getHooks("event")).toBeUndefined();
+					expect(hook.id).toBeUndefined();
+				}
+			}
+		});
+
+		test("should skip tag validation when a deprecated hook is blocked", () => {
+			const hookified = new Hookified({
+				deprecatedHooks: new Map([["oldHook", "Use newHook instead"]]),
+				allowDeprecated: false,
+			});
+			const hook = {
+				event: "oldHook",
+				handler: () => {},
+			} as IHook;
+			(hook as { tags: unknown }).tags = "audit";
+
+			expect(hookified.onHook(hook)).toBeUndefined();
+			expect(hookified.getHooks("oldHook")).toBeUndefined();
+		});
+
+		test("onHooks should keep tags on each hook", () => {
+			const hookified = new Hookified();
+			hookified.onHooks([
+				{ event: "event1", handler: () => {}, tags: ["a"] },
+				{ event: "event2", handler: () => {}, tags: ["b", "b"] },
+			]);
+
+			expect(hookified.getHooks("event1")?.[0]?.tags).toEqual(["a"]);
+			expect(hookified.getHooks("event2")?.[0]?.tags).toEqual(["b"]);
+		});
+
+		test("prependHook should keep tags and insert at the start", () => {
+			const hookified = new Hookified();
+			hookified.onHook({
+				event: "event",
+				handler: () => {},
+				tags: ["later"],
+			});
+			const prepended = hookified.prependHook({
+				event: "event",
+				handler: () => {},
+				tags: ["first"],
+			});
+
+			expect(prepended?.tags).toEqual(["first"]);
+			expect(hookified.getHooks("event")?.[0]).toBe(prepended);
+		});
+
+		test("onceHook should keep tags until the hook runs", async () => {
+			const hookified = new Hookified();
+			hookified.onceHook({
+				event: "event",
+				handler: () => {},
+				tags: ["once"],
+			});
+
+			expect(hookified.getHooks("event")?.[0]?.tags).toEqual(["once"]);
+			expect(hookified.getHooksByTag("once")).toHaveLength(1);
+
+			await hookified.hook("event");
+
+			expect(hookified.getHooksByTag("once")).toEqual([]);
+			expect(hookified.getTaggedHooks().has("once")).toBe(false);
+		});
+
+		test("prependOnceHook should return the stored hook with tags and remove them after running", async () => {
+			const hookified = new Hookified();
+			const result = hookified.prependOnceHook({
+				event: "event",
+				handler: () => {},
+				tags: ["pre"],
+			});
+
+			expect(result?.tags).toEqual(["pre"]);
+			expect(hookified.getHooks("event")?.[0]).toBe(result);
+
+			await hookified.hook("event");
+
+			expect(hookified.getHooksByTag("pre")).toEqual([]);
+			expect(hookified.getTaggedHooks().has("pre")).toBe(false);
+		});
+
+		test("onceHook and prependOnceHook should reject invalid tags and store nothing", () => {
+			const message = "Hook tags must be an array of non-empty strings";
+
+			for (const register of [
+				(hookified: Hookified, hook: IHook) => hookified.onceHook(hook),
+				(hookified: Hookified, hook: IHook) => hookified.prependOnceHook(hook),
+			]) {
+				const hookified = new Hookified();
+				const hook = {
+					event: "event",
+					handler: () => {},
+				} as IHook;
+				(hook as { tags: unknown }).tags = ["ok", ""];
+
+				expect(() => register(hookified, hook)).toThrow(new TypeError(message));
+				expect(hookified.getHooks("event")).toBeUndefined();
+				expect(hookified.getHooksByTag("ok")).toEqual([]);
+			}
+		});
+
+		test("onceHook should keep tags when cloning is disabled", () => {
+			const hookified = new Hookified({ useHookClone: false });
+			hookified.onceHook({
+				event: "event",
+				handler: () => {},
+				tags: ["once"],
+			});
+
+			expect(hookified.getHooksByTag("once")[0]?.tags).toEqual(["once"]);
+		});
+
+		test("removeHook should drop a once hook from tag lookups", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			hookified.onceHook({ event: "event", handler, tags: ["once"] });
+
+			hookified.removeHook({ event: "event", handler });
+
+			expect(hookified.getHooksByTag("once")).toEqual([]);
+		});
+
+		test("replacing by id should replace tags instead of merging them", () => {
+			const hookified = new Hookified();
+			hookified.onHook({
+				id: "same",
+				event: "event",
+				handler: () => {},
+				tags: ["a"],
+			});
+			const replaced = hookified.onHook({
+				id: "same",
+				event: "event",
+				handler: () => {},
+				tags: ["b"],
+			});
+
+			expect(hookified.getHooks("event")).toEqual([replaced]);
+			expect(hookified.getHooksByTag("a")).toEqual([]);
+			expect(hookified.getHooksByTag("b")).toEqual([replaced]);
+		});
+
+		test("replacing by id without tags should clear previous tags", () => {
+			const hookified = new Hookified();
+			hookified.onHook({
+				id: "same",
+				event: "event",
+				handler: () => {},
+				tags: ["a"],
+			});
+			const replaced = hookified.onHook({
+				id: "same",
+				event: "event",
+				handler: () => {},
+			});
+
+			expect(replaced?.tags).toBeUndefined();
+			expect(hookified.getTaggedHooks().size).toBe(0);
+		});
+	});
+
+	describe("getHooksByTag", () => {
+		test("should return hooks across events in storage order", () => {
+			const hookified = new Hookified();
+			const first = hookified.onHook({
+				id: "h1",
+				event: "event1",
+				handler: () => {},
+				tags: ["a"],
+			});
+			const second = hookified.onHook({
+				id: "h2",
+				event: "event2",
+				handler: () => {},
+				tags: ["a"],
+			});
+			const third = hookified.onHook({
+				id: "h3",
+				event: "event1",
+				handler: () => {},
+				tags: ["a"],
+			});
+
+			expect(hookified.getHooksByTag("a")).toEqual([first, third, second]);
+		});
+
+		test("should return the same hook for each of its tags", () => {
+			const hookified = new Hookified();
+			const stored = hookified.onHook({
+				id: "both",
+				event: "event",
+				handler: () => {},
+				tags: ["a", "b"],
+			});
+
+			expect(hookified.getHooksByTag("a")[0]).toBe(stored);
+			expect(hookified.getHooksByTag("b")[0]).toBe(stored);
+		});
+
+		test("should return an empty array when nothing matches", () => {
+			const hookified = new Hookified();
+			expect(hookified.getHooksByTag("missing")).toEqual([]);
+			expect(hookified.getHooksByTag("missing")).not.toBeUndefined();
+
+			hookified.onHook({ event: "event", handler: () => {} });
+			expect(hookified.getHooksByTag("missing")).toEqual([]);
+		});
+
+		test("should not return hooks that have no tags", () => {
+			const hookified = new Hookified();
+			hookified.onHook({ id: "plain", event: "event", handler: () => {} });
+			const tagged = hookified.onHook({
+				id: "tagged",
+				event: "event",
+				handler: () => {},
+				tags: ["a"],
+			});
+
+			expect(hookified.getHooksByTag("a")).toEqual([tagged]);
+		});
+
+		test("should return the union of an array of tags with each hook once", () => {
+			const hookified = new Hookified();
+			const both = hookified.onHook({
+				id: "both",
+				event: "event1",
+				handler: () => {},
+				tags: ["a", "b"],
+			});
+			const onlyB = hookified.onHook({
+				id: "only-b",
+				event: "event2",
+				handler: () => {},
+				tags: ["b"],
+			});
+			hookified.onHook({
+				id: "only-c",
+				event: "event2",
+				handler: () => {},
+				tags: ["c"],
+			});
+
+			expect(hookified.getHooksByTag(["a", "b"])).toEqual([both, onlyB]);
+			expect(hookified.getHooksByTag(["a", "a"])).toEqual([both]);
+			expect(hookified.getHooksByTag(["b", "a"])).toEqual([both, onlyB]);
+			expect(hookified.getHooksByTag([])).toEqual([]);
+		});
+
+		test("should return a new array whose elements are the stored hooks", () => {
+			const hookified = new Hookified();
+			const stored = hookified.onHook({
+				id: "h1",
+				event: "event1",
+				handler: () => {},
+				tags: ["a"],
+			});
+			const first = hookified.getHooksByTag("a");
+			first.pop();
+
+			expect(hookified.getHooksByTag("a")).toEqual([stored]);
+			expect(hookified.getHooks("event1")?.length).toBe(1);
+			expect(hookified.getHooksByTag("a")[0]).toBe(hookified.getHook("h1"));
+		});
+
+		test("should return both hooks when the same id is used on different events", () => {
+			const hookified = new Hookified();
+			hookified.onHook({
+				id: "same",
+				event: "event1",
+				handler: () => {},
+				tags: ["a"],
+			});
+			hookified.onHook({
+				id: "same",
+				event: "event2",
+				handler: () => {},
+				tags: ["a"],
+			});
+
+			expect(hookified.getHooksByTag("a")).toHaveLength(2);
+		});
+
+		test("should follow prependHook and numeric position order", () => {
+			const hookified = new Hookified();
+			hookified.onHook({
+				id: "first",
+				event: "event",
+				handler: () => {},
+				tags: ["t"],
+			});
+			hookified.onHook({
+				id: "second",
+				event: "event",
+				handler: () => {},
+				tags: ["t"],
+			});
+			hookified.onHook(
+				{
+					id: "inserted",
+					event: "event",
+					handler: () => {},
+					tags: ["t"],
+				},
+				{ position: 1 },
+			);
+			hookified.prependHook({
+				id: "prepended",
+				event: "event",
+				handler: () => {},
+				tags: ["t"],
+			});
+
+			expect(hookified.getHooksByTag("t").map((hook) => hook.id)).toEqual([
+				"prepended",
+				"first",
+				"inserted",
+				"second",
+			]);
+		});
+
+		test("should drop hooks removed by removeHook and keep the narrow return shape", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			hookified.onHook({ event: "event", handler, tags: ["a"] });
+
+			const removed = hookified.removeHook({ event: "event", handler });
+
+			expect(removed?.tags).toBeUndefined();
+			expect(hookified.getHooksByTag("a")).toEqual([]);
+		});
+
+		test("should drop hooks removed by removeHooks", () => {
+			const hookified = new Hookified();
+			const handler = () => {};
+			hookified.onHook({ event: "event", handler, tags: ["a"] });
+
+			hookified.removeHooks([{ event: "event", handler }]);
+
+			expect(hookified.getHooksByTag("a")).toEqual([]);
+		});
+
+		test("should drop hooks removed by removeHookById and return their tags", () => {
+			const hookified = new Hookified();
+			hookified.onHook({
+				id: "one",
+				event: "event1",
+				handler: () => {},
+				tags: ["a"],
+			});
+			hookified.onHook({
+				id: "two",
+				event: "event2",
+				handler: () => {},
+				tags: ["a", "b"],
+			});
+
+			const removedOne = hookified.removeHookById("one");
+			expect(!Array.isArray(removedOne) && removedOne?.tags).toEqual(["a"]);
+			expect(hookified.getHooksByTag("a")).toHaveLength(1);
+
+			const removed = hookified.removeHookById(["two"]);
+			const removedArray = removed as IHook[];
+			expect(removedArray[0]?.tags).toEqual(["a", "b"]);
+			expect(hookified.getHooksByTag("a")).toEqual([]);
+			expect(hookified.getHooksByTag("b")).toEqual([]);
+		});
+
+		test("should drop hooks removed by removeEventHooks and return their tags", () => {
+			const hookified = new Hookified();
+			hookified.onHook({
+				event: "event",
+				handler: () => {},
+				tags: ["a"],
+			});
+
+			const removed = hookified.removeEventHooks("event");
+
+			expect(removed[0]?.tags).toEqual(["a"]);
+			expect(hookified.getHooksByTag("a")).toEqual([]);
+		});
+
+		test("should drop hooks removed by clearHooks", () => {
+			const hookified = new Hookified();
+			hookified.onHook({ event: "event", handler: () => {}, tags: ["a"] });
+
+			hookified.clearHooks();
+
+			expect(hookified.getHooksByTag("a")).toEqual([]);
+		});
+
+		test("should reflect edits to the stored tags array", () => {
+			const hookified = new Hookified();
+			const stored = hookified.onHook({
+				id: "h",
+				event: "event",
+				handler: () => {},
+				tags: ["a"],
+			});
+
+			stored?.tags?.push("b");
+			expect(hookified.getHooksByTag("b")[0]).toBe(stored);
+
+			if (stored) {
+				stored.tags = ["c"];
+			}
+			expect(hookified.getHooksByTag("a")).toEqual([]);
+			expect(hookified.getHooksByTag("c")[0]).toBe(stored);
+
+			if (stored) {
+				stored.tags = undefined;
+			}
+			expect(hookified.getHooksByTag("c")).toEqual([]);
+		});
+
+		test("should return deprecated hooks without emitting a warning", () => {
+			const hookified = new Hookified({
+				deprecatedHooks: new Map([["oldHook", "Use newHook instead"]]),
+			});
+			hookified.onHook({
+				event: "oldHook",
+				handler: () => {},
+				tags: ["audit"],
+			});
+			hookified.allowDeprecated = false;
+			const warn = vi.fn();
+			hookified.on("warn", warn);
+
+			expect(hookified.getHooksByTag("audit")).toHaveLength(1);
+			expect(warn).not.toHaveBeenCalled();
+		});
+
+		test("should not validate the tag as an event name", () => {
+			const hookified = new Hookified({ enforceBeforeAfter: true });
+			hookified.onHook({
+				event: "before:save",
+				handler: () => {},
+				tags: ["not-before-after"],
+			});
+
+			expect(() => hookified.getHooksByTag("not-before-after")).not.toThrow();
+			expect(hookified.getHooksByTag("not-before-after")).toHaveLength(1);
+		});
+	});
+
+	describe("getTaggedHooks", () => {
+		test("should return an empty map when no hooks are tagged", () => {
+			const hookified = new Hookified();
+			expect(hookified.getTaggedHooks()).toEqual(new Map());
+
+			hookified.onHook({ event: "event", handler: () => {} });
+			expect(hookified.getTaggedHooks()).toEqual(new Map());
+		});
+
+		test("should map each tag to its hooks in storage order", () => {
+			const hookified = new Hookified();
+			const first = hookified.onHook({
+				id: "h1",
+				event: "event1",
+				handler: () => {},
+				tags: ["a", "b"],
+			});
+			hookified.onHook({ id: "h3", event: "event1", handler: () => {} });
+			const second = hookified.onHook({
+				id: "h2",
+				event: "event2",
+				handler: () => {},
+				tags: ["b", "c"],
+			});
+
+			const tagged = hookified.getTaggedHooks();
+			expect([...tagged.keys()]).toEqual(["a", "b", "c"]);
+			expect(tagged.get("a")).toEqual([first]);
+			expect(tagged.get("b")).toEqual([first, second]);
+			expect(tagged.get("c")).toEqual([second]);
+			expect(tagged.get("b")?.[0]).toBe(first);
+			expect(tagged.get("b")?.[1]).toBe(second);
+			expect(
+				[...tagged.values()].every((hooks) =>
+					hooks.every((hook) => hook.id !== "h3"),
+				),
+			).toBe(true);
+
+			for (const key of tagged.keys()) {
+				expect(tagged.get(key)).toEqual(hookified.getHooksByTag(key));
+			}
+		});
+
+		test("should return a new map on every call", () => {
+			const hookified = new Hookified();
+			hookified.onHook({
+				event: "event",
+				handler: () => {},
+				tags: ["a", "b"],
+			});
+
+			const tagged = hookified.getTaggedHooks();
+			tagged.delete("a");
+			tagged.get("b")?.splice(0, tagged.get("b")?.length ?? 0);
+
+			const again = hookified.getTaggedHooks();
+			expect(again.has("a")).toBe(true);
+			expect(again.get("b")).toHaveLength(1);
+		});
+
+		test("should drop a tag key when its last hook is removed", () => {
+			const hookified = new Hookified();
+			hookified.onHook({
+				id: "h1",
+				event: "event",
+				handler: () => {},
+				tags: ["a", "b"],
+			});
+			hookified.onHook({
+				id: "h2",
+				event: "event",
+				handler: () => {},
+				tags: ["b"],
+			});
+
+			hookified.removeHookById("h1");
+			const tagged = hookified.getTaggedHooks();
+
+			expect(tagged.has("a")).toBe(false);
+			expect(tagged.get("b")).toHaveLength(1);
+			expect([...tagged.values()].every((hooks) => hooks.length > 0)).toBe(
+				true,
+			);
+
+			hookified.clearHooks();
+			expect(hookified.getTaggedHooks()).toEqual(new Map());
+		});
+
+		test("should list a hook once when stored tags contain duplicates", () => {
+			const hookified = new Hookified();
+			const stored = hookified.onHook({
+				event: "event",
+				handler: () => {},
+				tags: ["a"],
+			});
+			stored?.tags?.push("a");
+
+			const tagged = hookified.getTaggedHooks();
+			expect(tagged.get("a")).toEqual([stored]);
+		});
+	});
 });

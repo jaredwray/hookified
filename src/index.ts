@@ -186,10 +186,16 @@ export class Hookified extends Eventified {
 			return undefined; // Skip registration if deprecated hooks are not allowed
 		}
 
+		const tags =
+			hook.tags === undefined ? undefined : this.normalizeTags(hook.tags);
 		const shouldClone = options?.useHookClone ?? this._useHookClone;
 		const entry: IHook = shouldClone
 			? { id: hook.id, event: hook.event, handler: hook.handler }
 			: hook;
+
+		if (tags !== undefined) {
+			entry.tags = tags;
+		}
 
 		entry.id = entry.id ?? crypto.randomUUID();
 
@@ -276,7 +282,12 @@ export class Hookified extends Eventified {
 		(wrappedHandler as any)._originalHandler = hook.handler;
 
 		return this.onHook(
-			{ id: hook.id, event: hook.event, handler: wrappedHandler },
+			{
+				id: hook.id,
+				event: hook.event,
+				handler: wrappedHandler,
+				tags: hook.tags,
+			},
 			{ ...options, position: "Top" },
 		);
 	}
@@ -301,7 +312,12 @@ export class Hookified extends Eventified {
 		// biome-ignore lint/suspicious/noExplicitAny: attaching metadata to the wrapper
 		(wrappedHandler as any)._originalHandler = hook.handler;
 
-		this.onHook({ id: hook.id, event: hook.event, handler: wrappedHandler });
+		this.onHook({
+			id: hook.id,
+			event: hook.event,
+			handler: wrappedHandler,
+			tags: hook.tags,
+		});
 	}
 
 	/**
@@ -479,6 +495,56 @@ export class Hookified extends Eventified {
 	}
 
 	/**
+	 * Gets all hooks that have a specific tag, or any of an array of tags, searching across all events
+	 * @param {string | string[]} tag - the tag or array of tags to match
+	 * @returns {IHook[]} the matching hooks in storage order (events in insertion order, then handlers in execution order), each at most once, or an empty array if none match
+	 */
+	public getHooksByTag(tag: string | string[]): IHook[] {
+		const query = new Set(Array.isArray(tag) ? tag : [tag]);
+		const matches: IHook[] = [];
+
+		for (const eventHandlers of this._hooks.values()) {
+			for (const entry of eventHandlers) {
+				if (
+					Array.isArray(entry.tags) &&
+					entry.tags.some((entryTag) => query.has(entryTag))
+				) {
+					matches.push(entry);
+				}
+			}
+		}
+
+		return matches;
+	}
+
+	/**
+	 * Gets a map of every tag to the hooks that have that tag, searching across all events
+	 * @returns {Map<string, IHook[]>} a new map of tag to hooks; hooks without tags are not included
+	 */
+	public getTaggedHooks(): Map<string, IHook[]> {
+		const tagged = new Map<string, IHook[]>();
+
+		for (const eventHandlers of this._hooks.values()) {
+			for (const entry of eventHandlers) {
+				if (!Array.isArray(entry.tags)) {
+					continue;
+				}
+
+				for (const entryTag of new Set(entry.tags)) {
+					const hooks = tagged.get(entryTag);
+					if (hooks) {
+						hooks.push(entry);
+					} else {
+						tagged.set(entryTag, [entry]);
+					}
+				}
+			}
+		}
+
+		return tagged;
+	}
+
+	/**
 	 * Removes one or more hooks by id, searching across all events
 	 * @param {string | string[]} id - the hook id or array of hook ids to remove
 	 * @returns {IHook | IHook[] | undefined} the removed hook(s), or undefined/empty array if not found
@@ -569,6 +635,33 @@ export class Hookified extends Eventified {
 			return this._allowDeprecated;
 		}
 		return true;
+	}
+
+	/**
+	 * Validates hook tags and returns a de-duplicated copy, preserving order
+	 * @param {unknown} tags - The tags to normalize
+	 * @returns {string[]} a new array of unique tags
+	 * @throws {TypeError} If tags is not an array of non-empty strings
+	 */
+	private normalizeTags(tags: unknown): string[] {
+		if (!Array.isArray(tags)) {
+			throw new TypeError("Hook tags must be an array of non-empty strings");
+		}
+
+		const normalized: string[] = [];
+		const seen = new Set<string>();
+		for (const tag of tags) {
+			if (typeof tag !== "string" || tag.length === 0) {
+				throw new TypeError("Hook tags must be an array of non-empty strings");
+			}
+
+			if (!seen.has(tag)) {
+				seen.add(tag);
+				normalized.push(tag);
+			}
+		}
+
+		return normalized;
 	}
 }
 

@@ -7,6 +7,7 @@ import type { HookFn, IHook } from "../types.js";
 export class Hook implements IHook {
 	public id?: string;
 	public event: string;
+	public tags?: string[];
 	public handler: HookFn;
 
 	/**
@@ -14,10 +15,12 @@ export class Hook implements IHook {
 	 * @param {string} event - The event name for the hook
 	 * @param {HookFn} handler - The handler function for the hook
 	 * @param {string} [id] - Optional unique identifier for the hook
+	 * @param {string[]} [tags] - Optional tags used to group and look up the hook
 	 */
-	constructor(event: string, handler: HookFn, id?: string) {
+	constructor(event: string, handler: HookFn, id?: string, tags?: string[]) {
 		this.id = id;
 		this.event = event;
+		this.tags = tags;
 		this.handler = handler;
 	}
 }
