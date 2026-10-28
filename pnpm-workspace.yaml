@@ -12,10 +12,13 @@ overrides:
 
 # These releases are inside the 7-day minimumReleaseAge window.
 # 8.12.3 (2026-10-19) is not excluded, so undici 8 stays on 8.12.2.
+# @jaredwray/fumanchu@4.7.5 (2026-10-26) is excluded so markdown-it can resolve to >=15.0.3.
+# Needs Jared's sign-off.
 minimumReleaseAgeExclude:
   - docula@3.0.2
   - undici@7.30.1
   - undici@8.12.2
+  - '@jaredwray/fumanchu@4.7.5'
 
 allowBuilds:
   esbuild: true
