@@ -11,8 +11,12 @@
 
 set -euo pipefail
 
-export SAFE_CHAIN_VERSION="1.5.15"
-SAFE_CHAIN_INSTALLER_SHA256="de0565e3d6346407a604e84e639e95fea8758748063da2216bbfdca5feda5dd2"
+# Safe Chain 1.5.20 adds pnpm 12 support.
+# An older release cannot install packages with the pnpm 12 pin in package.json.
+# Release 1.5.29 is the newest release that is at least 7 days old.
+# Do not export this variable. The installer treats it as a legacy pin.
+SAFE_CHAIN_VERSION="1.5.29"
+SAFE_CHAIN_INSTALLER_SHA256="e9bfa05430bca0efcf26e5a0f06d09b9da8cc21de2e0ffab03f512dde649ebbe"
 SAFE_CHAIN_INSTALLER_URL="https://github.com/AikidoSec/safe-chain/releases/download/${SAFE_CHAIN_VERSION}/install-safe-chain.sh"
 SAFE_CHAIN_SHIMS="${HOME}/.safe-chain/shims"
 SAFE_CHAIN_BIN="${HOME}/.safe-chain/bin"
@@ -165,11 +169,13 @@ trap 'rm -f "$installer"' EXIT
 curl -fsSL "$SAFE_CHAIN_INSTALLER_URL" -o "$installer"
 echo "${SAFE_CHAIN_INSTALLER_SHA256}  ${installer}" | sha256sum -c -
 
-# NVM auto-selects from the current directory when sourced. Run outside the
-# repository so .nvmrc cannot break the installer's optional legacy scan.
+# The installer selects the legacy linux build when SAFE_CHAIN_VERSION is set.
+# That build cannot proxy pnpm 12. The version stays in the installer URL.
+# Remove the variable for this command.
+# Run the installer outside the repository so NVM does not read .nvmrc.
 (
   cd /
-  sh "$installer" --ci
+  env -u SAFE_CHAIN_VERSION sh "$installer" --ci
 )
 
 export PATH="${SAFE_CHAIN_SHIMS}:${SAFE_CHAIN_BIN}:${PATH}"
@@ -206,6 +212,13 @@ for lockfile in ${lockfiles[@]+"${lockfiles[@]}"}; do
   root=$(dirname "$lockfile")
   case "${lockfile##*/}" in
     pnpm-lock.yaml)
+      # Require the Safe Chain pnpm shim. A local script named safe-chain-verify
+      # must not satisfy this gate.
+      resolved_pnpm="$(command -v pnpm || true)"
+      if [[ ! -x "${SAFE_CHAIN_SHIMS}/pnpm" || "$resolved_pnpm" != "${SAFE_CHAIN_SHIMS}/pnpm" ]]; then
+        echo "error: pnpm resolves to '${resolved_pnpm}', not the Safe Chain shim; refusing to install" >&2
+        exit 1
+      fi
       pnpm safe-chain-verify
       (cd "$root" && pnpm install --frozen-lockfile)
       ;;
