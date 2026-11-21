@@ -2139,6 +2139,60 @@ describe("Hookified", () => {
 			// Only the sync part executes immediately
 			expect(results).toEqual(["sync-part"]);
 		});
+
+		const collectUnhandledRejections = async (run: () => void) => {
+			const unhandled: unknown[] = [];
+			const onUnhandled = (reason: unknown) => {
+				unhandled.push(reason);
+			};
+			process.on("unhandledRejection", onUnhandled);
+			try {
+				run();
+				// Node.js reports an unhandled rejection before the next timer.
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			} finally {
+				process.off("unhandledRejection", onUnhandled);
+			}
+
+			return unhandled;
+		};
+
+		test("should emit an error when a returned promise rejects", async () => {
+			const hookified = new Hookified();
+			const messages: string[] = [];
+			hookified.on("error", (error: Error) => {
+				messages.push(error.message);
+			});
+			hookified.onHook({
+				event: "event",
+				handler: () => Promise.reject(new Error("late failure")),
+			});
+			hookified.onHook({
+				event: "event",
+				handler: () => Promise.reject("plain reason"),
+			});
+
+			const unhandled = await collectUnhandledRejections(() => {
+				hookified.hookSync("event");
+			});
+
+			expect(messages).toEqual(["event: late failure", "event: plain reason"]);
+			expect(unhandled).toEqual([]);
+		});
+
+		test("should contain a returned promise rejection when no error listener exists", async () => {
+			const hookified = new Hookified();
+			hookified.onHook({
+				event: "event",
+				handler: () => Promise.reject(new Error("late failure")),
+			});
+
+			const unhandled = await collectUnhandledRejections(() => {
+				hookified.hookSync("event");
+			});
+
+			expect(unhandled).toEqual([]);
+		});
 	});
 
 	describe("useHookClone", () => {

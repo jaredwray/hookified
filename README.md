@@ -897,6 +897,10 @@ myClass.onHook({ event: 'before:myMethod', handler: async (data) => {
 this.hookSync('before:myMethod', data); // Only sync handler runs
 ```
 
+A handler that is not declared with the `async` keyword can return a promise. `.hookSync()` does not wait for that promise. If the promise rejects, `.hookSync()` emits the `error` event with the hook name and the message of the rejection.
+
+The `throwOnHookError` option does not apply to that rejection, because `.hookSync()` returned before the rejection. Add an `error` listener or set an `eventLogger` to get the error. If there is no `error` listener and no `eventLogger`, Hookified does not report the rejection.
+
 ## .onHook(hook, options?) / .onHook(event, handler)
 
 Subscribe to a hook event. Supports two calling styles:
