@@ -359,6 +359,8 @@ wh.removeHook(myHook); // returns true
 console.log(wh.hooks.length); // 0
 ```
 
+A run uses the hooks that were in the chain at the start of the run. If you call `addHook()` or `removeHook()` during a run, the change applies to the next run.
+
 ## Parallel Hook
 
 The `ParallelHook` class fans a single invocation out to many registered hook functions concurrently via `Promise.allSettled`, then calls a final handler with the aggregated outcomes — including failures. Unlike `WaterfallHook`, hooks do not see each other's results: every hook receives the same `initialArgs` and runs in parallel. It implements the `IHook` interface, so it integrates directly with `Hookified.onHook()`, and the final handler still fires whether the hook is invoked directly or through `Hookified.hook()`. The constructor is `new ParallelHook(event, finalHandler, id?, tags?)`. `id` and `tags` behave as they do on `IHook`.
