@@ -355,6 +355,215 @@ export type OnHookOptions = {
 
 export type PrependHookOptions = Omit<OnHookOptions, "position">;
 
+export type HookDurationStats = {
+	/**
+	 * Number of duration samples.
+	 */
+	count: number;
+	/**
+	 * Total duration in milliseconds, to 3 decimal places.
+	 */
+	sum: number;
+	/**
+	 * Shortest duration in milliseconds, to 3 decimal places. Value is 0 when count is 0.
+	 */
+	min: number;
+	/**
+	 * Longest duration in milliseconds, to 3 decimal places.
+	 */
+	max: number;
+	/**
+	 * Last duration sample in milliseconds, to 3 decimal places.
+	 */
+	last: number;
+	/**
+	 * Mean duration in milliseconds, to 3 decimal places.
+	 */
+	mean: number;
+};
+
+export type HookStatsTotals = {
+	/**
+	 * Total count of dispatches.
+	 */
+	calls: number;
+	/**
+	 * Total count of hook errors.
+	 */
+	errors: number;
+	/**
+	 * Total count of async handlers that hookSync skips.
+	 */
+	skipped: number;
+	/**
+	 * Total count of dispatches that deprecation rules block.
+	 */
+	blocked: number;
+	/**
+	 * Count of active dispatches.
+	 */
+	pending: number;
+	/**
+	 * Dispatch duration stats.
+	 */
+	duration: HookDurationStats;
+};
+
+export type HookHandlerStats = {
+	/**
+	 * Identifier of the live hook, if set.
+	 */
+	id?: string;
+	/**
+	 * Count of starts for the handler.
+	 */
+	calls: number;
+	/**
+	 * Count of errors from the handler.
+	 */
+	errors: number;
+	/**
+	 * Count of times hookSync skips the handler.
+	 */
+	skipped: number;
+	/**
+	 * Count of active runs for the handler.
+	 */
+	pending: number;
+	/**
+	 * Duration stats for the handler.
+	 */
+	duration: HookDurationStats;
+};
+
+export type HookEventStats = {
+	/**
+	 * Name of the hook event.
+	 */
+	event: string;
+	/**
+	 * Live count of handlers for the event.
+	 */
+	handlers: number;
+	/**
+	 * Count of dispatches for the event.
+	 */
+	calls: number;
+	/**
+	 * Count of errors for the event.
+	 */
+	errors: number;
+	/**
+	 * Count of async handlers that hookSync skips for the event.
+	 */
+	skipped: number;
+	/**
+	 * Count of dispatches that deprecation rules block for the event.
+	 */
+	blocked: number;
+	/**
+	 * Count of active dispatches for the event.
+	 */
+	pending: number;
+	/**
+	 * Duration stats for the event.
+	 */
+	duration: HookDurationStats;
+	/**
+	 * Live hook rows in execution order.
+	 */
+	hooks: HookHandlerStats[];
+};
+
+export type HookRegistrationStats = {
+	/**
+	 * Count of new hooks that onHook inserts.
+	 */
+	registered: number;
+	/**
+	 * Count of hooks that onHook replaces by id.
+	 */
+	replaced: number;
+	/**
+	 * Count of hooks that removal methods delete.
+	 */
+	removed: number;
+	/**
+	 * Count of single-hook removal calls with no match.
+	 */
+	removeMisses: number;
+};
+
+export type HookCallRank = {
+	/**
+	 * Name of the hook event.
+	 */
+	event: string;
+	/**
+	 * Identifier of the live hook, if set.
+	 */
+	id?: string;
+	/**
+	 * Count of starts for the handler.
+	 */
+	calls: number;
+	/**
+	 * Count of errors from the handler.
+	 */
+	errors: number;
+	/**
+	 * Count of times hookSync skips the handler.
+	 */
+	skipped: number;
+	/**
+	 * Duration stats for the handler.
+	 */
+	duration: HookDurationStats;
+};
+
+export type HookStatsJSON = {
+	/**
+	 * True when stats collection is on.
+	 */
+	enabled: boolean;
+	/**
+	 * Total count of dispatches across all events.
+	 */
+	calls: number;
+	/**
+	 * Total count of errors across all events.
+	 */
+	errors: number;
+	/**
+	 * Total count of skipped async handlers across all events.
+	 */
+	skipped: number;
+	/**
+	 * Total count of blocked dispatches across all events.
+	 */
+	blocked: number;
+	/**
+	 * Total count of active dispatches across all events.
+	 */
+	pending: number;
+	/**
+	 * Dispatch duration stats across all events.
+	 */
+	duration: HookDurationStats;
+	/**
+	 * Stats for each tracked event.
+	 */
+	events: HookEventStats[];
+	/**
+	 * Totals for events after the first 1000 distinct names.
+	 */
+	overflow?: HookStatsTotals;
+	/**
+	 * Hook registration counters.
+	 */
+	registration: HookRegistrationStats;
+};
+
 export type HookifiedOptions = {
 	/**
 	 * Whether an error should be thrown when a hook throws an error. Default is false and only emits an error event.
@@ -385,4 +594,10 @@ export type HookifiedOptions = {
 	 * @default true
 	 */
 	useHookClone?: boolean;
+	/**
+	 * Whether hook stats collection is enabled. Default is false.
+	 * @type {boolean}
+	 * @default false
+	 */
+	enableStats?: boolean;
 } & EventEmitterOptions;
