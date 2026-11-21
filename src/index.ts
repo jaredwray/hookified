@@ -436,7 +436,11 @@ export class Hookified extends Eventified {
 				let eventElapsed = 0;
 				try {
 					for (const hook of [...eventHandlers]) {
-						const handlerRecord = stats.startHandler(state, isOverflow, hook);
+						const handlerRecord = stats.startHandler(
+							eventRecord,
+							isOverflow,
+							hook,
+						);
 						const start = performance.now();
 						try {
 							await hook.handler(...arguments_);
@@ -513,11 +517,15 @@ export class Hookified extends Eventified {
 					for (const hook of [...eventHandlers]) {
 						// Skip async functions silently
 						if (hook.handler.constructor.name === "AsyncFunction") {
-							stats.recordHandlerSkip(state, eventRecord, isOverflow, hook);
+							stats.recordHandlerSkip(eventRecord, isOverflow, hook);
 							continue;
 						}
 
-						const handlerRecord = stats.startHandler(state, isOverflow, hook);
+						const handlerRecord = stats.startHandler(
+							eventRecord,
+							isOverflow,
+							hook,
+						);
 						const start = performance.now();
 						try {
 							const result: unknown = hook.handler(...arguments_);

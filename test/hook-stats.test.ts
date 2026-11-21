@@ -1354,6 +1354,33 @@ describe("HookStats", () => {
 		expect(hookified.stats.events).toEqual([]);
 	});
 
+	test("keeps separate handler stats when one hook object is live on two events", async () => {
+		const hookified = new Hookified({
+			enableStats: true,
+			useHookClone: false,
+		});
+		const hook = {
+			id: "shared",
+			event: "one",
+			handler: () => {},
+		};
+		hookified.onHook(hook, { useHookClone: false });
+		hook.event = "two";
+		hookified.onHook(hook, { useHookClone: false });
+
+		await hookified.hook("one");
+		await hookified.hook("two");
+		await hookified.hook("two");
+
+		const one = hookified.stats.events.find((row) => row.event === "one");
+		const two = hookified.stats.events.find((row) => row.event === "two");
+		expect(one?.calls).toBe(1);
+		expect(two?.calls).toBe(2);
+		expect(one?.hooks[0]?.calls).toBe(1);
+		expect(two?.hooks[0]?.calls).toBe(2);
+		expect(hookified.stats.topCalls().map((row) => row.calls)).toEqual([2, 1]);
+	});
+
 	test("supports subclasses that overwrite _stats and define their own stats getter", async () => {
 		const nowSpy = vi.spyOn(performance, "now");
 

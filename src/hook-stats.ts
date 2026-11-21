@@ -33,11 +33,11 @@ export type EventRecord = {
 	skipped: number;
 	blocked: number;
 	duration: DurationRecord;
+	handlers: WeakMap<IHook, HandlerRecord>;
 };
 
 export type StatsState = {
 	events: Map<string, EventRecord>;
-	handlers: WeakMap<IHook, HandlerRecord>;
 	overflow: EventRecord | undefined;
 	lastDuration: number;
 	registered: number;
@@ -89,13 +89,13 @@ function createEventRecord(): EventRecord {
 		skipped: 0,
 		blocked: 0,
 		duration: createDurationRecord(),
+		handlers: new WeakMap(),
 	};
 }
 
 function createStatsState(): StatsState {
 	return {
 		events: new Map(),
-		handlers: new WeakMap(),
 		overflow: undefined,
 		lastDuration: 0,
 		registered: 0,
@@ -212,14 +212,14 @@ class HookStatsRecorder {
 	}
 
 	public recordRegister(event: string, entry: IHook, replaced: boolean): void {
-		const { state, isOverflow } = this.getOrCreateEvent(event);
+		const { state, eventRecord, isOverflow } = this.getOrCreateEvent(event);
 		if (replaced) {
 			state.replaced += 1;
 		} else {
 			state.registered += 1;
 		}
 		if (!isOverflow) {
-			state.handlers.set(entry, createHandlerRecord());
+			eventRecord.handlers.set(entry, createHandlerRecord());
 		}
 	}
 
@@ -241,27 +241,26 @@ class HookStatsRecorder {
 	}
 
 	public startHandler(
-		state: StatsState,
+		eventRecord: EventRecord,
 		isOverflow: boolean,
 		hook: IHook,
 	): HandlerRecord | undefined {
 		if (isOverflow) {
 			return undefined;
 		}
-		const handlerRecord = this.getOrCreateHandler(state, hook);
+		const handlerRecord = this.getOrCreateHandler(eventRecord, hook);
 		handlerRecord.calls += 1;
 		return handlerRecord;
 	}
 
 	public recordHandlerSkip(
-		state: StatsState,
 		eventRecord: EventRecord,
 		isOverflow: boolean,
 		hook: IHook,
 	): void {
 		eventRecord.skipped += 1;
 		if (!isOverflow) {
-			const handlerRecord = this.getOrCreateHandler(state, hook);
+			const handlerRecord = this.getOrCreateHandler(eventRecord, hook);
 			handlerRecord.skipped += 1;
 		}
 	}
@@ -315,11 +314,14 @@ class HookStatsRecorder {
 		return { state, eventRecord: state.overflow, isOverflow: true };
 	}
 
-	private getOrCreateHandler(state: StatsState, hook: IHook): HandlerRecord {
-		let record = state.handlers.get(hook);
+	private getOrCreateHandler(
+		eventRecord: EventRecord,
+		hook: IHook,
+	): HandlerRecord {
+		let record = eventRecord.handlers.get(hook);
 		if (!record) {
 			record = createHandlerRecord();
-			state.handlers.set(hook, record);
+			eventRecord.handlers.set(hook, record);
 		}
 		return record;
 	}
@@ -469,7 +471,7 @@ export class HookStats {
 			const hooks: HookHandlerStats[] = [];
 
 			for (const hook of liveHooks) {
-				const metrics = getHandlerMetrics(state.handlers.get(hook));
+				const metrics = getHandlerMetrics(eventRecord.handlers.get(hook));
 				hooks.push({
 					...(hook.id !== undefined ? { id: hook.id } : {}),
 					...metrics,
@@ -620,34 +622,32 @@ export class HookStats {
 
 	/**
 	 * Marks a handler as started and returns its record. Overflow handlers have no row.
-	 * @param {StatsState} state - The stats state captured for this dispatch
+	 * @param {EventRecord} eventRecord - The event record for this dispatch
 	 * @param {boolean} isOverflow - True when the event is past the name cap
 	 * @param {IHook} hook - The handler that is about to run
 	 * @returns {HandlerRecord | undefined}
 	 */
 	public startHandler(
-		state: StatsState,
+		eventRecord: EventRecord,
 		isOverflow: boolean,
 		hook: IHook,
 	): HandlerRecord | undefined {
-		return this._recorder.startHandler(state, isOverflow, hook);
+		return this._recorder.startHandler(eventRecord, isOverflow, hook);
 	}
 
 	/**
 	 * Counts an async handler that hookSync did not run.
-	 * @param {StatsState} state - The stats state captured for this dispatch
 	 * @param {EventRecord} eventRecord - The event or overflow record
 	 * @param {boolean} isOverflow - True when the event is past the name cap
 	 * @param {IHook} hook - The skipped handler
 	 * @returns {void}
 	 */
 	public recordHandlerSkip(
-		state: StatsState,
 		eventRecord: EventRecord,
 		isOverflow: boolean,
 		hook: IHook,
 	): void {
-		this._recorder.recordHandlerSkip(state, eventRecord, isOverflow, hook);
+		this._recorder.recordHandlerSkip(eventRecord, isOverflow, hook);
 	}
 
 	/**
@@ -742,14 +742,14 @@ export class HookStats {
 		const { state } = this._recorder;
 		const rows: HookCallRank[] = [];
 
-		for (const event of state.events.keys()) {
+		for (const [event, eventRecord] of state.events.entries()) {
 			const liveHooks = this._hooks.get(event);
 			if (!liveHooks) {
 				continue;
 			}
 
 			for (const hook of liveHooks) {
-				const metrics = getHandlerMetrics(state.handlers.get(hook));
+				const metrics = getHandlerMetrics(eventRecord.handlers.get(hook));
 				rows.push({
 					event,
 					...(hook.id !== undefined ? { id: hook.id } : {}),
