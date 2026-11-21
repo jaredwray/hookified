@@ -1,7 +1,15 @@
 import { Eventified } from "./eventified.js";
+import { HookStats } from "./hook-stats.js";
 import type {
+	HookCallRank,
+	HookDurationStats,
+	HookEventStats,
 	HookFn,
+	HookHandlerStats,
 	HookifiedOptions,
+	HookRegistrationStats,
+	HookStatsJSON,
+	HookStatsTotals,
 	IHook,
 	IWaterfallHook,
 	OnHookOptions,
@@ -12,8 +20,15 @@ import type {
 } from "./types.js";
 
 export type {
+	HookCallRank,
+	HookDurationStats,
+	HookEventStats,
 	HookFn,
+	HookHandlerStats,
 	HookifiedOptions,
+	HookRegistrationStats,
+	HookStatsJSON,
+	HookStatsTotals,
 	IHook,
 	IWaterfallHook,
 	OnHookOptions,
@@ -25,6 +40,7 @@ export type {
 
 export class Hookified extends Eventified {
 	private readonly _hooks: Map<string, IHook[]>;
+	private readonly _stats: HookStats;
 	private _throwOnHookError = false;
 	private _enforceBeforeAfter = false;
 	private _deprecatedHooks: Map<string, string>;
@@ -38,6 +54,7 @@ export class Hookified extends Eventified {
 			throwOnEmptyListeners: options?.throwOnEmptyListeners,
 		});
 		this._hooks = new Map();
+		this._stats = new HookStats(options?.enableStats ?? false, this._hooks);
 		this._deprecatedHooks = options?.deprecatedHooks
 			? new Map(options.deprecatedHooks)
 			: new Map();
@@ -65,6 +82,14 @@ export class Hookified extends Eventified {
 	 */
 	public get hooks() {
 		return this._hooks;
+	}
+
+	/**
+	 * Gets the hook stats collector.
+	 * @returns {HookStats}
+	 */
+	public get stats(): HookStats {
+		return this._stats;
 	}
 
 	/**
@@ -199,12 +224,14 @@ export class Hookified extends Eventified {
 
 		entry.id = entry.id ?? crypto.randomUUID();
 
+		let replaced = false;
 		const eventHandlers = this._hooks.get(hook.event);
 		if (eventHandlers) {
 			// Check for duplicate id — replace in-place if found
 			const existingIndex = eventHandlers.findIndex((h) => h.id === entry.id);
 			if (existingIndex !== -1) {
 				eventHandlers[existingIndex] = entry;
+				replaced = true;
 			} else {
 				const position = options?.position ?? "Bottom";
 				if (position === "Top") {
@@ -218,6 +245,11 @@ export class Hookified extends Eventified {
 			}
 		} else {
 			this._hooks.set(hook.event, [entry]);
+		}
+
+		const stats = this._stats;
+		if (stats instanceof HookStats && stats.enabled) {
+			stats.recordRegister(hook.event, entry, replaced);
 		}
 
 		return entry;
@@ -349,8 +381,18 @@ export class Hookified extends Eventified {
 					this._hooks.delete(hook.event);
 				}
 
+				const stats = this._stats;
+				if (stats instanceof HookStats && stats.enabled) {
+					stats.recordRemove(1);
+				}
+
 				return { event: hook.event, handler: hook.handler };
 			}
+		}
+
+		const stats = this._stats;
+		if (stats instanceof HookStats && stats.enabled) {
+			stats.recordRemoveMiss();
 		}
 
 		return undefined;
@@ -381,6 +423,45 @@ export class Hookified extends Eventified {
 	 */
 	public async hook<T>(event: string, ...arguments_: T[]) {
 		this.validateHookName(event);
+		const stats = this._stats;
+		if (stats instanceof HookStats && stats.enabled) {
+			if (!this.checkDeprecatedHook(event)) {
+				stats.recordBlocked(event);
+				return;
+			}
+			const eventHandlers = this._hooks.get(event);
+			if (eventHandlers && eventHandlers.length > 0) {
+				const { state, eventRecord, isOverflow } = stats.beginDispatch(event);
+				eventRecord.calls += 1;
+				let eventElapsed = 0;
+				try {
+					for (const hook of [...eventHandlers]) {
+						const handlerRecord = stats.startHandler(state, isOverflow, hook);
+						const start = performance.now();
+						try {
+							await hook.handler(...arguments_);
+						} catch (error) {
+							const elapsed = performance.now() - start;
+							eventElapsed += elapsed;
+							stats.recordHandlerError(eventRecord, handlerRecord, elapsed);
+							const message = `${event}: ${(error as Error).message}`;
+							this.emit("error", new Error(message));
+
+							if (this._throwOnHookError) {
+								throw new Error(message);
+							}
+							continue;
+						}
+						const elapsed = performance.now() - start;
+						eventElapsed += elapsed;
+						stats.recordHandlerDuration(handlerRecord, elapsed);
+					}
+				} finally {
+					stats.endDispatch(state, eventRecord, eventElapsed);
+				}
+			}
+			return;
+		}
 		if (!this.checkDeprecatedHook(event)) {
 			return; // Skip execution if deprecated hooks are not allowed
 		}
@@ -417,6 +498,59 @@ export class Hookified extends Eventified {
 	 */
 	public hookSync<T>(event: string, ...arguments_: T[]): void {
 		this.validateHookName(event);
+		const stats = this._stats;
+		if (stats instanceof HookStats && stats.enabled) {
+			if (!this.checkDeprecatedHook(event)) {
+				stats.recordBlocked(event);
+				return;
+			}
+			const eventHandlers = this._hooks.get(event);
+			if (eventHandlers && eventHandlers.length > 0) {
+				const { state, eventRecord, isOverflow } = stats.beginDispatch(event);
+				eventRecord.calls += 1;
+				let eventElapsed = 0;
+				try {
+					for (const hook of [...eventHandlers]) {
+						// Skip async functions silently
+						if (hook.handler.constructor.name === "AsyncFunction") {
+							stats.recordHandlerSkip(state, eventRecord, isOverflow, hook);
+							continue;
+						}
+
+						const handlerRecord = stats.startHandler(state, isOverflow, hook);
+						const start = performance.now();
+						try {
+							const result: unknown = hook.handler(...arguments_);
+							const elapsed = performance.now() - start;
+							// A handler that is not declared async can return a promise.
+							// hookSync does not wait for it, but must not drop a rejection.
+							// Keep this inside the try so a throw here matches stats off.
+							if (result instanceof Promise) {
+								result.catch((error: unknown) => {
+									stats.recordLateError(eventRecord, handlerRecord);
+									this.emitLateHookError(event, error);
+								});
+							}
+							eventElapsed += elapsed;
+							stats.recordHandlerDuration(handlerRecord, elapsed);
+						} catch (error) {
+							const elapsed = performance.now() - start;
+							eventElapsed += elapsed;
+							stats.recordHandlerError(eventRecord, handlerRecord, elapsed);
+							const message = `${event}: ${(error as Error).message}`;
+							this.emit("error", new Error(message));
+
+							if (this._throwOnHookError) {
+								throw new Error(message);
+							}
+						}
+					}
+				} finally {
+					stats.endDispatch(state, eventRecord, eventElapsed);
+				}
+			}
+			return;
+		}
 		if (!this.checkDeprecatedHook(event)) {
 			return;
 		}
@@ -581,8 +715,18 @@ export class Hookified extends Eventified {
 					this._hooks.delete(event);
 				}
 
+				const stats = this._stats;
+				if (stats instanceof HookStats && stats.enabled) {
+					stats.recordRemove(1);
+				}
+
 				return removed;
 			}
+		}
+
+		const stats = this._stats;
+		if (stats instanceof HookStats && stats.enabled) {
+			stats.recordRemoveMiss();
 		}
 
 		return undefined;
@@ -593,6 +737,14 @@ export class Hookified extends Eventified {
 	 * @returns {void}
 	 */
 	public clearHooks() {
+		const stats = this._stats;
+		if (stats instanceof HookStats && stats.enabled) {
+			let count = 0;
+			for (const eventHandlers of this._hooks.values()) {
+				count += eventHandlers.length;
+			}
+			stats.recordRemove(count);
+		}
 		this._hooks.clear();
 	}
 
@@ -607,6 +759,10 @@ export class Hookified extends Eventified {
 		if (eventHandlers) {
 			const removed = [...eventHandlers];
 			this._hooks.delete(event);
+			const stats = this._stats;
+			if (stats instanceof HookStats && stats.enabled) {
+				stats.recordRemove(removed.length);
+			}
 			return removed;
 		}
 
@@ -693,6 +849,7 @@ export class Hookified extends Eventified {
 }
 
 export { Eventified } from "./eventified.js";
+export { HookStats } from "./hook-stats.js";
 export { Hook } from "./hooks/hook.js";
 export { ParallelHook } from "./hooks/parallel-hook.js";
 export { WaterfallHook } from "./hooks/waterfall-hook.js";

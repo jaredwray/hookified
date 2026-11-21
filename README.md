@@ -23,6 +23,7 @@
 - WaterfallHook for sequential data transformation pipelines
 - ParallelHook for concurrent fan-out execution with collected results
 - Tag hooks and look them up across events with `getHooksByTag` and `getTaggedHooks`
+- Optional hook stats, off by default unless you set `enableStats` or `stats.enabled`
 - No package dependencies and only 250KB in size
 - Fast and Efficient with [Benchmarks](#benchmarks)
 - Maintained on a regular basis!
@@ -44,6 +45,10 @@
   - [.eventLogger](#eventlogger)
   - [.hooks](#hooks-1)
   - [.throwOnHookError](#throwOnHookError)
+  - [.stats](#stats)
+    - [.stats.resetStats()](#statsresetstats)
+    - [.stats.topCalls()](#statstopcalls)
+    - [.stats.longestCalls()](#statslongestcalls)
   - [.useHookClone](#usehookclone)
   - [.addHook(event, handler)](#addhookevent-handler)
   - [.afterHook(eventName, ...args)](#afterhookeventname-args)
@@ -81,6 +86,7 @@
   - [.listenerCount(eventName?)](#listenercounteventname)
   - [.rawListeners(eventName?)](#rawlistenerseventname)
 - [Logging](#logging)
+- [Hook Stats](#hook-stats)
 - [Benchmarks](#benchmarks)
 - [How to Contribute](#how-to-contribute)
 - [License and Copyright](#license-and-copyright)
@@ -721,6 +727,83 @@ try {
 
 myClass.throwOnHookError = false;
 console.log(myClass.throwOnHookError); // false
+```
+
+## .stats
+
+This getter returns the `HookStats` collector for this instance. Stats collection is off by default. To start collection, pass `enableStats: true` to the constructor, or set `stats.enabled = true`.
+
+Set `stats.enabled = false` to pause collection and keep the current data. Set `stats.enabled = true` again to resume the same collector.
+
+The collector exposes these properties:
+
+- `.enabled` (`boolean`): Reads or sets the collection state.
+- `.calls` (`number`): Total dispatches across all tracked events and overflow.
+- `.errors` (`number`): Total hook errors, plus late rejections from `.hookSync()`.
+- `.skipped` (`number`): Total async handlers that `.hookSync()` skips.
+- `.blocked` (`number`): Total dispatches that deprecation rules block.
+- `.pending` (`number`): Count of active dispatches that do not have a duration sample yet.
+- `.duration` (`HookDurationStats`): Duration stats (`count`, `sum`, `min`, `max`, `last`, `mean`) for all dispatches in milliseconds.
+- `.events` (`HookEventStats[]`): Per-event stats in insertion order, with live per-hook rows in execution order.
+- `.overflow` (`HookStatsTotals | undefined`): Totals for events after the first 1000 distinct names, or `undefined` before that cap.
+- `.registration` (`HookRegistrationStats`): Counts for `registered`, `replaced`, `removed`, and `removeMisses`.
+- `.toJSON()` (`HookStatsJSON`): Returns a plain JSON snapshot. `JSON.stringify(myClass.stats)` uses this method.
+
+```javascript
+const myClass = new MyClass({ enableStats: true });
+
+myClass.onHook({
+  id: 'validate',
+  event: 'before:save',
+  handler: async (data) => {
+    data.validated = true;
+  },
+});
+
+await myClass.hook('before:save', {});
+
+console.log(myClass.stats.calls); // 1
+console.log(myClass.stats.errors); // 0
+console.log(myClass.stats.duration); // { count: 1, sum: ..., min: ..., max: ..., last: ..., mean: ... }
+console.log(myClass.stats.registration); // { registered: 1, replaced: 0, removed: 0, removeMisses: 0 }
+
+// Pause collection and keep current data
+myClass.stats.enabled = false;
+await myClass.hook('before:save', {});
+console.log(myClass.stats.calls); // 1
+
+// Resume collection on the same collector
+myClass.stats.enabled = true;
+await myClass.hook('before:save', {});
+console.log(myClass.stats.calls); // 2
+```
+
+### .stats.resetStats()
+
+This method clears all event, handler, duration, overflow, and registration stats. It leaves `stats.enabled` unchanged.
+
+```javascript
+myClass.stats.resetStats();
+console.log(myClass.stats.calls); // 0
+console.log(myClass.stats.events); // []
+```
+
+### .stats.topCalls()
+
+This method returns up to 20 live hooks. The list sorts by `calls` from high to low, then by `event` and `id` from A to Z. A hook without an `id` sorts before a hook with an `id`.
+
+```javascript
+const busiest = myClass.stats.topCalls();
+console.log(busiest); // [{ event: 'before:save', id: 'validate', calls: 2, errors: 0, skipped: 0, duration: ... }]
+```
+
+### .stats.longestCalls()
+
+This method returns up to 20 live hooks. The list sorts by `duration.max` from high to low, then by `event` and `id` from A to Z. This method excludes hooks with `duration.count === 0`.
+
+```javascript
+const slowest = myClass.stats.longestCalls();
+console.log(slowest); // [{ event: 'before:save', id: 'validate', calls: 2, errors: 0, skipped: 0, duration: ... }]
 ```
 
 ## .useHookClone
@@ -1415,6 +1498,71 @@ service.eventLogger = pino({ level: 'debug' });
 // Or remove the eventLogger
 service.eventLogger = undefined;
 ```
+
+# Hook Stats
+
+Hookified includes an optional `HookStats` collector on `.stats`. Collection is off by default and adds no clock reads or allocations when off. To collect stats, pass `enableStats: true` to the constructor, or set `stats.enabled = true`.
+
+## What Hookified Collects
+
+When `stats.enabled` is `true`, Hookified collects these metrics:
+
+- **Dispatches**: Each call to `.hook()` or `.hookSync()` with at least one handler increments `calls` on the event. Each handler that starts increments its own `calls`. Empty dispatches record nothing.
+- **Errors**: Thrown handler errors and late promise rejections from `.hookSync()` increment `errors` on the handler and event.
+- **Skipped handlers**: Async functions that `.hookSync()` skips increment `skipped`. They do not read the clock or increment handler `calls`. A dispatch whose handlers are all skipped still records one event duration sample of `0`.
+- **Blocked dispatches**: Calls to `.hook()` or `.hookSync()` that `allowDeprecated: false` blocks increment `blocked` on the event. Blocked registrations record nothing.
+- **`pending` dispatches**: Active calls in `.hook()` show `pending` as `calls - duration.count` on the handler, event, and totals until they finish.
+- **Durations**: Each handler runs with two `performance.now()` reads. Each dispatch records one event duration sample equal to the sum of its handler durations.
+- **Registration**: `stats.registration` counts `registered` inserts, `replaced` same-id updates, `removed` hooks (plus `.onceHook()` self-removal), and `removeMisses` on single-hook removals.
+
+## Example
+
+```javascript
+import { Hookified } from 'hookified';
+
+class MyService extends Hookified {
+  constructor() {
+    super({ enableStats: true });
+  }
+}
+
+const service = new MyService();
+
+service.onHook({
+  id: 'validate',
+  event: 'before:save',
+  handler: async (data) => {
+    data.valid = true;
+  },
+});
+
+await service.hook('before:save', { id: 1 });
+
+console.log(service.stats.calls); // 1
+console.log(service.stats.duration.mean); // duration in ms
+console.log(service.stats.events[0].hooks[0]); // { id: 'validate', calls: 1, errors: 0, skipped: 0, pending: 0, duration: ... }
+console.log(service.stats.topCalls()); // top 20 live hooks by calls
+console.log(service.stats.longestCalls()); // top 20 live hooks by duration.max
+console.log(JSON.stringify(service.stats)); // plain JSON snapshot from toJSON()
+```
+
+## Units and Precision
+
+All durations use float milliseconds from `performance.now()`. The collector keeps the unrounded sum internally. On read, the collector rounds `sum`, `min`, `max`, `last`, and `mean` to 3 decimal places. It calculates `mean` from the unrounded sum divided by `count`, then rounds the result. When `count` is `0`, every duration field is `0`.
+
+## Top 20 Leaderboards
+
+`stats.topCalls()` and `stats.longestCalls()` read live hook rows at call time and return at most 20 items. `topCalls()` sorts by `calls` from high to low. `longestCalls()` sorts by `duration.max` from high to low and excludes hooks with `duration.count === 0`. Both methods break ties by `event` and then by `id` from A to Z, with hooks without an `id` first. When you remove a hook, it leaves both lists, while event totals stay.
+
+## 1000-Event Cap
+
+Hookified tracks up to 1000 distinct event names individually while stats are on. A name keeps its slot until `resetStats()`, including after you remove its hooks. Events after the 1000th fold into `stats.overflow`, which stays `undefined` before the 1001st distinct event name. Overflow totals count toward the top-level totals on `stats`, and `registration.registered` still increments. Overflow hooks have no per-hook rows, so they do not appear in `events`, `topCalls()`, or `longestCalls()`.
+
+## Scope Notes
+
+- **Events with `.emit()`**: Hookified does not collect stats for `Eventified.emit()`.
+- **`WaterfallHook` and `ParallelHook`**: Each `WaterfallHook` or `ParallelHook` that you register through `.onHook()` counts as one handler row. A step that throws inside `WaterfallHook` counts as one hook error. A step that rejects inside `ParallelHook` settles internally and counts as zero hook errors.
+- **Subclasses**: `.stats` is a getter. Hookified stores the collector on `_stats`. A subclass that assigns its own `_stats` after `super()` keeps that value. Hook recording runs only when `_stats` is a `HookStats` instance.
 
 # Benchmarks
 
