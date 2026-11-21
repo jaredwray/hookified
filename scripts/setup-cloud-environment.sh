@@ -141,9 +141,15 @@ first_lock() {
   return 1
 }
 
-# True when the tool is on PATH outside the Safe Chain shims.
+# Remove imported shell functions. A function runs before the Safe Chain shim.
+for tool in pip pip3 pipx uv uvx poetry pdm pnpm pnpx npm npx; do
+  unset -f "$tool" 2>/dev/null || :
+done
+
+# True when the executable is on PATH outside the Safe Chain shims.
+# type -P ignores a shell function and an alias.
 real_tool() {
-  PATH="${PATH//${SAFE_CHAIN_SHIMS}:/}" command -v "$1" >/dev/null
+  PATH="${PATH//${SAFE_CHAIN_SHIMS}:/}" type -P "$1" >/dev/null
 }
 
 if pnpm_lock=$(first_lock pnpm-lock.yaml); then
@@ -214,7 +220,7 @@ for lockfile in ${lockfiles[@]+"${lockfiles[@]}"}; do
     pnpm-lock.yaml)
       # Require the Safe Chain pnpm shim. A local script named safe-chain-verify
       # must not satisfy this gate.
-      resolved_pnpm="$(command -v pnpm || true)"
+      resolved_pnpm="$(type -P pnpm || true)"
       if [[ ! -x "${SAFE_CHAIN_SHIMS}/pnpm" || "$resolved_pnpm" != "${SAFE_CHAIN_SHIMS}/pnpm" ]]; then
         echo "error: pnpm resolves to '${resolved_pnpm}', not the Safe Chain shim; refusing to install" >&2
         exit 1
