@@ -1348,6 +1348,13 @@ The logger receives two arguments:
 1. **message**: A string extracted from the event data (error messages, object messages, or JSON stringified data)
 2. **context**: An object containing `{ event: eventName, data: originalData }`
 
+Some loggers use the message as a format string, and some loggers write the message as text lines. Hookified changes the message so that event data cannot change the structure of a log record:
+
+- A percent sign that starts a format specifier, for example `%s` or `%o`, becomes `%%`. A logger that formats the message shows `%`. A logger that does not format the message shows `%%`.
+- A control character or a line separator becomes an escape sequence, for example `\n` or `\u001b`.
+
+The `data` property of the context has the event data with no change.
+
 ## Setting Up a Logger
 
 Any logger that implements the `Logger` interface is compatible. This includes popular loggers like [Pino](https://github.com/pinojs/pino), [Winston](https://github.com/winstonjs/winston), [Bunyan](https://github.com/trentm/node-bunyan), and others.

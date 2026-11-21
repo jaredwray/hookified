@@ -1,5 +1,8 @@
 // biome-ignore-all lint/suspicious/noExplicitAny: this is a test file
 // biome-ignore-all lint/suspicious/noImplicitAnyLet: this is a test file
+import { Console } from "node:console";
+import { Writable } from "node:stream";
+import pino from "pino";
 import { describe, expect, test, vi } from "vitest";
 import { Eventified } from "../src/eventified.js";
 
@@ -789,6 +792,82 @@ describe("Eventified", () => {
 				'[{"key":"value"}]',
 				expect.objectContaining({ event: "info" }),
 			);
+		});
+
+		test("should escape format specifiers and control characters in the message", () => {
+			const logger = {
+				trace: vi.fn(),
+				debug: vi.fn(),
+				info: vi.fn(),
+				warn: vi.fn(),
+				error: vi.fn(),
+				fatal: vi.fn(),
+			};
+			const emitter = new Eventified({ eventLogger: logger });
+			const cases = [
+				// A percent sign that starts a format specifier
+				["rate %d of %s", "rate %%d of %%s"],
+				["width %5d and %.2f", "width %%5d and %%.2f"],
+				// A percent sign that does not start a format specifier
+				["100% done", "100% done"],
+				// Control characters and a line separator
+				["one\r\ntwo\tend", "one\\r\\ntwo\\tend"],
+				["color \u001b[31m \u2028", "color \\u001b[31m \\u2028"],
+			];
+
+			for (const [message, expected] of cases) {
+				emitter.emit("info", { message });
+				// The context has the data with no change.
+				expect(logger.info).toHaveBeenLastCalledWith(expected, {
+					event: "info",
+					data: [{ message }],
+				});
+			}
+
+			// The JSON text of the data gets the same escape.
+			emitter.emit("info", "50%s");
+			expect(logger.info).toHaveBeenLastCalledWith(
+				'["50%%s"]',
+				expect.objectContaining({ event: "info" }),
+			);
+		});
+
+		test("should keep the context of a Console record for hostile event data", () => {
+			let output = "";
+			const stream = new Writable({
+				write(chunk, _encoding, callback) {
+					output += chunk.toString();
+					callback();
+				},
+			});
+			const emitter = new Eventified({
+				eventLogger: new Console(stream) as any,
+			});
+
+			emitter.emit("login-failed", {
+				message: "bad password%c\nINFO login ok user=admin",
+			});
+
+			// %c made the Console drop the context. The line feed added a line.
+			expect(output).toMatch(/^bad password%c\\nINFO login ok user=admin /);
+			expect(output).toContain("event: 'login-failed'");
+			expect(output.split("\n")).not.toContain("INFO login ok user=admin");
+		});
+
+		test("should keep a format specifier as text in a Pino record", () => {
+			const lines: string[] = [];
+			const destination = {
+				write: (line: string) => {
+					lines.push(line);
+				},
+			};
+			const logger = pino({}, destination);
+			const emitter = new Eventified({ eventLogger: logger });
+			emitter.on("error", () => {});
+
+			emitter.emit("error", new Error("upload at 100%o"));
+
+			expect(JSON.parse(lines[0]).msg).toBe("upload at 100%o");
 		});
 	});
 
