@@ -405,6 +405,10 @@ export class Hookified extends Eventified {
 	 * Calls all synchronous handlers for a specific event.
 	 * Async handlers (declared with `async` keyword) are silently skipped.
 	 *
+	 * A handler that is not declared `async` can return a promise. hookSync does not
+	 * wait for that promise. If the promise rejects, hookSync emits the `error` event.
+	 * `throwOnHookError` does not apply to that rejection.
+	 *
 	 * Note: The `hook` method is preferred as it executes both sync and async functions.
 	 * Use `hookSync` only when you specifically need synchronous execution.
 	 * @param {string} event
@@ -426,7 +430,14 @@ export class Hookified extends Eventified {
 				}
 
 				try {
-					hook.handler(...arguments_);
+					const result: unknown = hook.handler(...arguments_);
+					// A handler that is not declared async can return a promise.
+					// hookSync does not wait for it, but must not drop a rejection.
+					if (result instanceof Promise) {
+						result.catch((error: unknown) => {
+							this.emitLateHookError(event, error);
+						});
+					}
 				} catch (error) {
 					const message = `${event}: ${(error as Error).message}`;
 					this.emit("error", new Error(message));
@@ -600,6 +611,22 @@ export class Hookified extends Eventified {
 		}
 
 		return [];
+	}
+
+	/**
+	 * Emits the `error` event for a promise that a hookSync handler returned.
+	 * hookSync returned before the rejection, so no caller can receive a throw.
+	 * @param {string} event - The hook event name
+	 * @param {unknown} error - The rejection reason
+	 * @returns {void}
+	 */
+	private emitLateHookError(event: string, error: unknown): void {
+		try {
+			const detail = error instanceof Error ? error.message : String(error);
+			this.emit("error", new Error(`${event}: ${detail}`));
+		} catch {
+			// emit() can throw. No caller can receive that throw.
+		}
 	}
 
 	/**

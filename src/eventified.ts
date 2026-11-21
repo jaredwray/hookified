@@ -10,6 +10,39 @@ export type { EventEmitterOptions, EventListener, IEventEmitter };
 
 const ERROR_EVENT = "error";
 
+// A logger with printf-style format reads a percent sign as the start of a
+// format specifier only before these characters. Digits and a period can come
+// between the percent sign and the specifier.
+const FORMAT_SPECIFIER = /%(?=[\d.]*[sdifjoOc%])/g;
+
+// Control characters (Cc), the line separator (Zl), and the paragraph
+// separator (Zp). A text logger writes each of these as it is.
+const CONTROL_CHARACTER = /[\p{Cc}\p{Zl}\p{Zp}]/gu;
+
+const CONTROL_ESCAPES = new Map([
+	["\n", "\\n"],
+	["\r", "\\r"],
+	["\t", "\\t"],
+]);
+
+function escapeControlCharacter(character: string): string {
+	const code = character.charCodeAt(0).toString(16);
+	return CONTROL_ESCAPES.get(character) ?? `\\u${code.padStart(4, "0")}`;
+}
+
+/**
+ * Makes text safe as the first argument of a logger. Event data must not
+ * change the structure of a log record. The function escapes each percent sign
+ * that starts a format specifier. It writes each control character and each
+ * line separator as an escape sequence.
+ * @param {string} value - The text from the event data
+ * @returns {string} The text for the logger
+ */
+function toLogMessage(value: string): string {
+	const text = value.replace(FORMAT_SPECIFIER, "%%");
+	return text.replace(CONTROL_CHARACTER, escapeControlCharacter);
+}
+
 export class Eventified implements IEventEmitter {
 	private readonly _eventListeners: Map<
 		string | symbol,
@@ -245,14 +278,14 @@ export class Eventified implements IEventEmitter {
 			this._eventListeners.set(event, arr);
 			if (this._maxListeners > 0 && arr.length > this._maxListeners) {
 				console.warn(
-					`MaxListenersExceededWarning: Possible event memory leak detected. ${arr.length} ${event as string} listeners added. Use setMaxListeners() to increase limit.`,
+					`MaxListenersExceededWarning: Possible event memory leak detected. ${arr.length} ${String(event)} listeners added. Use setMaxListeners() to increase limit.`,
 				);
 			}
 		} else {
 			existing.push(listener);
 			if (this._maxListeners > 0 && existing.length > this._maxListeners) {
 				console.warn(
-					`MaxListenersExceededWarning: Possible event memory leak detected. ${existing.length} ${event as string} listeners added. Use setMaxListeners() to increase limit.`,
+					`MaxListenersExceededWarning: Possible event memory leak detected. ${existing.length} ${String(event)} listeners added. Use setMaxListeners() to increase limit.`,
 				);
 			}
 		}
@@ -494,6 +527,9 @@ export class Eventified implements IEventEmitter {
 		} else {
 			message = JSON.stringify(data);
 		}
+
+		// The context has the data with no change.
+		message = toLogMessage(message);
 
 		switch (eventName) {
 			case "error": {

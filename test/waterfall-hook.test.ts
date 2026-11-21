@@ -324,6 +324,50 @@ describe("WaterfallHook", () => {
 		expect(order).toEqual(["regular-hook", "waterfall-step", "waterfall-done"]);
 	});
 
+	test("should run the next hook when a hook removes itself during a run", async () => {
+		const order: string[] = [];
+		const wh = new WaterfallHook("process", () => {
+			order.push("final");
+		});
+		const runOnce = () => {
+			order.push("run-once");
+			wh.removeHook(runOnce);
+		};
+		wh.addHook(runOnce);
+		wh.addHook(() => {
+			order.push("second");
+		});
+
+		await wh.handler("input");
+		expect(order).toEqual(["run-once", "second", "final"]);
+
+		// The removal applies to the next run.
+		await wh.handler("input");
+		expect(order).toEqual(["run-once", "second", "final", "second", "final"]);
+	});
+
+	test("should not run a hook that was added during the run", async () => {
+		const order: string[] = [];
+		const wh = new WaterfallHook("process", () => {
+			order.push("final");
+		});
+		const late = () => {
+			order.push("late");
+		};
+		wh.addHook(() => {
+			order.push("first");
+			wh.removeHook(late);
+			wh.addHook(late);
+		});
+
+		await wh.handler("input");
+		expect(order).toEqual(["first", "final"]);
+
+		// The added hook is in the chain for the next run.
+		await wh.handler("input");
+		expect(order).toEqual(["first", "final", "first", "late", "final"]);
+	});
+
 	test("should propagate errors from hooks", async () => {
 		const wh = new WaterfallHook("process", () => {});
 		wh.addHook(() => {

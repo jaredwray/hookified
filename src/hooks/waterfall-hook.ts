@@ -47,7 +47,11 @@ export class WaterfallHook implements IWaterfallHook {
 				arguments_.length === 1 ? arguments_[0] : arguments_;
 			const results: WaterfallHookResult[] = [];
 
-			for (const hook of this.hooks) {
+			// Snapshot hooks at invocation time so addHook/removeHook calls
+			// during an awaited hook cannot skip or add a hook in this run.
+			const snapshot = [...this.hooks];
+
+			for (const hook of snapshot) {
 				const result = await hook({ initialArgs, results: [...results] });
 				results.push({ hook, result });
 			}

@@ -359,6 +359,8 @@ wh.removeHook(myHook); // returns true
 console.log(wh.hooks.length); // 0
 ```
 
+A run uses the hooks that were in the chain at the start of the run. If you call `addHook()` or `removeHook()` during a run, the change applies to the next run.
+
 ## Parallel Hook
 
 The `ParallelHook` class fans a single invocation out to many registered hook functions concurrently via `Promise.allSettled`, then calls a final handler with the aggregated outcomes — including failures. Unlike `WaterfallHook`, hooks do not see each other's results: every hook receives the same `initialArgs` and runs in parallel. It implements the `IHook` interface, so it integrates directly with `Hookified.onHook()`, and the final handler still fires whether the hook is invoked directly or through `Hookified.hook()`. The constructor is `new ParallelHook(event, finalHandler, id?, tags?)`. `id` and `tags` behave as they do on `IHook`.
@@ -895,6 +897,10 @@ myClass.onHook({ event: 'before:myMethod', handler: async (data) => {
 this.hookSync('before:myMethod', data); // Only sync handler runs
 ```
 
+A handler that is not declared with the `async` keyword can return a promise. `.hookSync()` does not wait for that promise. If the promise rejects, `.hookSync()` emits the `error` event with the hook name and the message of the rejection.
+
+The `throwOnHookError` option does not apply to that rejection, because `.hookSync()` returned before the rejection. Add an `error` listener or set an `eventLogger` to get the error. If there is no `error` listener and no `eventLogger`, Hookified does not report the rejection.
+
 ## .onHook(hook, options?) / .onHook(event, handler)
 
 Subscribe to a hook event. Supports two calling styles:
@@ -1341,6 +1347,13 @@ When you emit an event, Hookified automatically sends the event data to the conf
 The logger receives two arguments:
 1. **message**: A string extracted from the event data (error messages, object messages, or JSON stringified data)
 2. **context**: An object containing `{ event: eventName, data: originalData }`
+
+Some loggers use the message as a format string, and some loggers write the message as text lines. Hookified changes the message so that event data cannot change the structure of a log record:
+
+- A percent sign that starts a format specifier, for example `%s` or `%o`, becomes `%%`. A logger that formats the message shows `%`. A logger that does not format the message shows `%%`.
+- A control character or a line separator becomes an escape sequence, for example `\n` or `\u001b`.
+
+The `data` property of the context has the event data with no change.
 
 ## Setting Up a Logger
 
