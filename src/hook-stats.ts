@@ -20,14 +20,14 @@ type DurationRecord = {
 	last: number;
 };
 
-export type HandlerRecord = {
+type HandlerRecord = {
 	calls: number;
 	errors: number;
 	skipped: number;
 	duration: DurationRecord;
 };
 
-export type EventRecord = {
+type EventRecord = {
 	calls: number;
 	errors: number;
 	skipped: number;
@@ -36,7 +36,7 @@ export type EventRecord = {
 	handlers: WeakMap<IHook, HandlerRecord>;
 };
 
-export type StatsState = {
+type StatsState = {
 	events: Map<string, EventRecord>;
 	overflow: EventRecord | undefined;
 	lastDuration: number;
@@ -46,7 +46,7 @@ export type StatsState = {
 	removeMisses: number;
 };
 
-export type DispatchContext = {
+type DispatchContext = {
 	state: StatsState;
 	eventRecord: EventRecord;
 	isOverflow: boolean;
@@ -333,7 +333,6 @@ class HookStatsRecorder {
 export class HookStats {
 	private _enabled: boolean;
 	private readonly _hooks: Map<string, IHook[]>;
-	private readonly _recorder = new HookStatsRecorder();
 
 	/**
 	 * Creates a HookStats collector for a Hookified hooks map.
@@ -343,6 +342,7 @@ export class HookStats {
 	constructor(enabled: boolean, hooks: Map<string, IHook[]>) {
 		this._enabled = enabled;
 		this._hooks = hooks;
+		setRecorder(this, new HookStatsRecorder());
 	}
 
 	/**
@@ -401,7 +401,7 @@ export class HookStats {
 	 * @returns {number}
 	 */
 	public get pending(): number {
-		const { state } = this._recorder;
+		const { state } = getRecorder(this);
 		let pending = 0;
 		for (const eventRecord of state.events.values()) {
 			pending += eventRecord.calls - eventRecord.duration.count;
@@ -417,7 +417,7 @@ export class HookStats {
 	 * @returns {HookDurationStats}
 	 */
 	public get duration(): HookDurationStats {
-		const { state } = this._recorder;
+		const { state } = getRecorder(this);
 		let count = 0;
 		let sum = 0;
 		let min = Number.POSITIVE_INFINITY;
@@ -463,7 +463,7 @@ export class HookStats {
 	 * @returns {HookEventStats[]}
 	 */
 	public get events(): HookEventStats[] {
-		const { state } = this._recorder;
+		const { state } = getRecorder(this);
 		const result: HookEventStats[] = [];
 
 		for (const [event, eventRecord] of state.events.entries()) {
@@ -499,7 +499,7 @@ export class HookStats {
 	 * @returns {HookStatsTotals | undefined}
 	 */
 	public get overflow(): HookStatsTotals | undefined {
-		const { overflow } = this._recorder.state;
+		const { overflow } = getRecorder(this).state;
 		if (!overflow) {
 			return undefined;
 		}
@@ -519,7 +519,7 @@ export class HookStats {
 	 * @returns {HookRegistrationStats}
 	 */
 	public get registration(): HookRegistrationStats {
-		const { state } = this._recorder;
+		const { state } = getRecorder(this);
 		return {
 			registered: state.registered,
 			replaced: state.replaced,
@@ -533,7 +533,7 @@ export class HookStats {
 	 * @returns {void}
 	 */
 	public resetStats(): void {
-		this._recorder.reset();
+		getRecorder(this).reset();
 	}
 
 	/**
@@ -574,142 +574,6 @@ export class HookStats {
 	 * Converts stats to a plain JSON object.
 	 * @returns {HookStatsJSON}
 	 */
-	/**
-	 * Records a stored hook registration. A same-id replace starts a new handler row.
-	 * @param {string} event - The event name
-	 * @param {IHook} entry - The stored hook
-	 * @param {boolean} replaced - True when an existing id was replaced
-	 * @returns {void}
-	 */
-	public recordRegister(event: string, entry: IHook, replaced: boolean): void {
-		this._recorder.recordRegister(event, entry, replaced);
-	}
-
-	/**
-	 * Adds to the removed-hook count.
-	 * @param {number} count - How many hooks were removed
-	 * @returns {void}
-	 */
-	public recordRemove(count: number): void {
-		this._recorder.recordRemove(count);
-	}
-
-	/**
-	 * Adds one removal that matched nothing.
-	 * @returns {void}
-	 */
-	public recordRemoveMiss(): void {
-		this._recorder.recordRemoveMiss();
-	}
-
-	/**
-	 * Records a dispatch that deprecation rules blocked.
-	 * @param {string} event - The event name
-	 * @returns {void}
-	 */
-	public recordBlocked(event: string): void {
-		this._recorder.recordBlocked(event);
-	}
-
-	/**
-	 * Opens a dispatch record for an event that has handlers.
-	 * @param {string} event - The event name
-	 * @returns {DispatchContext}
-	 */
-	public beginDispatch(event: string): DispatchContext {
-		return this._recorder.beginDispatch(event);
-	}
-
-	/**
-	 * Marks a handler as started and returns its record. Overflow handlers have no row.
-	 * @param {EventRecord} eventRecord - The event record for this dispatch
-	 * @param {boolean} isOverflow - True when the event is past the name cap
-	 * @param {IHook} hook - The handler that is about to run
-	 * @returns {HandlerRecord | undefined}
-	 */
-	public startHandler(
-		eventRecord: EventRecord,
-		isOverflow: boolean,
-		hook: IHook,
-	): HandlerRecord | undefined {
-		return this._recorder.startHandler(eventRecord, isOverflow, hook);
-	}
-
-	/**
-	 * Counts an async handler that hookSync did not run.
-	 * @param {EventRecord} eventRecord - The event or overflow record
-	 * @param {boolean} isOverflow - True when the event is past the name cap
-	 * @param {IHook} hook - The skipped handler
-	 * @returns {void}
-	 */
-	public recordHandlerSkip(
-		eventRecord: EventRecord,
-		isOverflow: boolean,
-		hook: IHook,
-	): void {
-		this._recorder.recordHandlerSkip(eventRecord, isOverflow, hook);
-	}
-
-	/**
-	 * Adds a completed handler duration. Overflow handlers have no row.
-	 * @param {HandlerRecord | undefined} handlerRecord - The handler row, if it has one
-	 * @param {number} elapsed - Elapsed milliseconds
-	 * @returns {void}
-	 */
-	public recordHandlerDuration(
-		handlerRecord: HandlerRecord | undefined,
-		elapsed: number,
-	): void {
-		this._recorder.recordHandlerDuration(handlerRecord, elapsed);
-	}
-
-	/**
-	 * Counts a handler failure and stores its duration before the error event is emitted.
-	 * @param {EventRecord} eventRecord - The event or overflow record
-	 * @param {HandlerRecord | undefined} handlerRecord - The handler row, if it has one
-	 * @param {number} elapsed - Elapsed milliseconds
-	 * @returns {void}
-	 */
-	public recordHandlerError(
-		eventRecord: EventRecord,
-		handlerRecord: HandlerRecord | undefined,
-		elapsed: number,
-	): void {
-		this._recorder.recordHandlerError(eventRecord, handlerRecord, elapsed);
-	}
-
-	/**
-	 * Stores one dispatch duration sample. The sample is the sum of handler durations.
-	 * @param {StatsState} state - The stats state captured for this dispatch
-	 * @param {EventRecord} eventRecord - The event or overflow record
-	 * @param {number} elapsed - Sum of handler durations in milliseconds
-	 * @returns {void}
-	 */
-	public endDispatch(
-		state: StatsState,
-		eventRecord: EventRecord,
-		elapsed: number,
-	): void {
-		this._recorder.endDispatch(state, eventRecord, elapsed);
-	}
-
-	/**
-	 * Counts a hookSync rejection on the records captured when that call started.
-	 * @param {EventRecord} eventRecord - The event or overflow record from that call
-	 * @param {HandlerRecord | undefined} handlerRecord - The handler row from that call
-	 * @returns {void}
-	 */
-	public recordLateError(
-		eventRecord: EventRecord,
-		handlerRecord: HandlerRecord | undefined,
-	): void {
-		recordLateError(eventRecord, handlerRecord);
-	}
-
-	/**
-	 * Converts stats to a plain JSON object.
-	 * @returns {HookStatsJSON}
-	 */
 	public toJSON(): HookStatsJSON {
 		const overflow = this.overflow;
 		return {
@@ -727,7 +591,7 @@ export class HookStats {
 	}
 
 	private sumField(field: "calls" | "errors" | "skipped" | "blocked"): number {
-		const { state } = this._recorder;
+		const { state } = getRecorder(this);
 		let total = 0;
 		for (const eventRecord of state.events.values()) {
 			total += eventRecord[field];
@@ -739,7 +603,7 @@ export class HookStats {
 	}
 
 	private collectLiveHookRanks(): HookCallRank[] {
-		const { state } = this._recorder;
+		const { state } = getRecorder(this);
 		const rows: HookCallRank[] = [];
 
 		for (const [event, eventRecord] of state.events.entries()) {
@@ -764,3 +628,88 @@ export class HookStats {
 		return rows;
 	}
 }
+
+const recorderKey = Symbol("hookStatsRecorder");
+
+type WithRecorder = {
+	[recorderKey]: HookStatsRecorder;
+};
+
+function setRecorder(stats: HookStats, recorder: HookStatsRecorder): void {
+	(stats as unknown as WithRecorder)[recorderKey] = recorder;
+}
+
+function getRecorder(stats: HookStats): HookStatsRecorder {
+	return (stats as unknown as WithRecorder)[recorderKey];
+}
+
+/**
+ * Recording operations for Hookified. These stay off the public HookStats surface.
+ */
+export const statsRecorder = {
+	recordRegister(
+		stats: HookStats,
+		event: string,
+		entry: IHook,
+		replaced: boolean,
+	): void {
+		getRecorder(stats).recordRegister(event, entry, replaced);
+	},
+	recordRemove(stats: HookStats, count: number): void {
+		getRecorder(stats).recordRemove(count);
+	},
+	recordRemoveMiss(stats: HookStats): void {
+		getRecorder(stats).recordRemoveMiss();
+	},
+	recordBlocked(stats: HookStats, event: string): void {
+		getRecorder(stats).recordBlocked(event);
+	},
+	beginDispatch(stats: HookStats, event: string): DispatchContext {
+		return getRecorder(stats).beginDispatch(event);
+	},
+	startHandler(
+		stats: HookStats,
+		eventRecord: EventRecord,
+		isOverflow: boolean,
+		hook: IHook,
+	): HandlerRecord | undefined {
+		return getRecorder(stats).startHandler(eventRecord, isOverflow, hook);
+	},
+	recordHandlerSkip(
+		stats: HookStats,
+		eventRecord: EventRecord,
+		isOverflow: boolean,
+		hook: IHook,
+	): void {
+		getRecorder(stats).recordHandlerSkip(eventRecord, isOverflow, hook);
+	},
+	recordHandlerDuration(
+		stats: HookStats,
+		handlerRecord: HandlerRecord | undefined,
+		elapsed: number,
+	): void {
+		getRecorder(stats).recordHandlerDuration(handlerRecord, elapsed);
+	},
+	recordHandlerError(
+		stats: HookStats,
+		eventRecord: EventRecord,
+		handlerRecord: HandlerRecord | undefined,
+		elapsed: number,
+	): void {
+		getRecorder(stats).recordHandlerError(eventRecord, handlerRecord, elapsed);
+	},
+	endDispatch(
+		stats: HookStats,
+		state: StatsState,
+		eventRecord: EventRecord,
+		elapsed: number,
+	): void {
+		getRecorder(stats).endDispatch(state, eventRecord, elapsed);
+	},
+	recordLateError(
+		eventRecord: EventRecord,
+		handlerRecord: HandlerRecord | undefined,
+	): void {
+		recordLateError(eventRecord, handlerRecord);
+	},
+};

@@ -1429,6 +1429,15 @@ describe("HookStats", () => {
 		expect(sub.stats).toEqual({ enabled: true, hits: 0 });
 	});
 
+	test("keeps recording operations off the stats object", () => {
+		const hookified = new Hookified({ enableStats: true });
+		const stats = hookified.stats as unknown as Record<string, unknown>;
+		expect(stats.recordRegister).toBeUndefined();
+		expect(stats.recordRemove).toBeUndefined();
+		expect(stats.beginDispatch).toBeUndefined();
+		expect(stats.recordBlocked).toBeUndefined();
+	});
+
 	test("reads stats through a proxy of HookStats", async () => {
 		const hookified = new Hookified({ enableStats: true });
 		const view = new Proxy(hookified.stats, {});

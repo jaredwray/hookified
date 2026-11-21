@@ -1,5 +1,5 @@
 import { Eventified } from "./eventified.js";
-import { HookStats } from "./hook-stats.js";
+import { HookStats, statsRecorder } from "./hook-stats.js";
 import type {
 	HookCallRank,
 	HookDurationStats,
@@ -249,7 +249,7 @@ export class Hookified extends Eventified {
 
 		const stats = this._stats;
 		if (stats instanceof HookStats && stats.enabled) {
-			stats.recordRegister(hook.event, entry, replaced);
+			statsRecorder.recordRegister(stats, hook.event, entry, replaced);
 		}
 
 		return entry;
@@ -383,7 +383,7 @@ export class Hookified extends Eventified {
 
 				const stats = this._stats;
 				if (stats instanceof HookStats && stats.enabled) {
-					stats.recordRemove(1);
+					statsRecorder.recordRemove(stats, 1);
 				}
 
 				return { event: hook.event, handler: hook.handler };
@@ -392,7 +392,7 @@ export class Hookified extends Eventified {
 
 		const stats = this._stats;
 		if (stats instanceof HookStats && stats.enabled) {
-			stats.recordRemoveMiss();
+			statsRecorder.recordRemoveMiss(stats);
 		}
 
 		return undefined;
@@ -426,17 +426,21 @@ export class Hookified extends Eventified {
 		const stats = this._stats;
 		if (stats instanceof HookStats && stats.enabled) {
 			if (!this.checkDeprecatedHook(event)) {
-				stats.recordBlocked(event);
+				statsRecorder.recordBlocked(stats, event);
 				return;
 			}
 			const eventHandlers = this._hooks.get(event);
 			if (eventHandlers && eventHandlers.length > 0) {
-				const { state, eventRecord, isOverflow } = stats.beginDispatch(event);
+				const { state, eventRecord, isOverflow } = statsRecorder.beginDispatch(
+					stats,
+					event,
+				);
 				eventRecord.calls += 1;
 				let eventElapsed = 0;
 				try {
 					for (const hook of [...eventHandlers]) {
-						const handlerRecord = stats.startHandler(
+						const handlerRecord = statsRecorder.startHandler(
+							stats,
 							eventRecord,
 							isOverflow,
 							hook,
@@ -447,7 +451,12 @@ export class Hookified extends Eventified {
 						} catch (error) {
 							const elapsed = performance.now() - start;
 							eventElapsed += elapsed;
-							stats.recordHandlerError(eventRecord, handlerRecord, elapsed);
+							statsRecorder.recordHandlerError(
+								stats,
+								eventRecord,
+								handlerRecord,
+								elapsed,
+							);
 							const message = `${event}: ${(error as Error).message}`;
 							this.emit("error", new Error(message));
 
@@ -458,10 +467,10 @@ export class Hookified extends Eventified {
 						}
 						const elapsed = performance.now() - start;
 						eventElapsed += elapsed;
-						stats.recordHandlerDuration(handlerRecord, elapsed);
+						statsRecorder.recordHandlerDuration(stats, handlerRecord, elapsed);
 					}
 				} finally {
-					stats.endDispatch(state, eventRecord, eventElapsed);
+					statsRecorder.endDispatch(stats, state, eventRecord, eventElapsed);
 				}
 			}
 			return;
@@ -505,23 +514,32 @@ export class Hookified extends Eventified {
 		const stats = this._stats;
 		if (stats instanceof HookStats && stats.enabled) {
 			if (!this.checkDeprecatedHook(event)) {
-				stats.recordBlocked(event);
+				statsRecorder.recordBlocked(stats, event);
 				return;
 			}
 			const eventHandlers = this._hooks.get(event);
 			if (eventHandlers && eventHandlers.length > 0) {
-				const { state, eventRecord, isOverflow } = stats.beginDispatch(event);
+				const { state, eventRecord, isOverflow } = statsRecorder.beginDispatch(
+					stats,
+					event,
+				);
 				eventRecord.calls += 1;
 				let eventElapsed = 0;
 				try {
 					for (const hook of [...eventHandlers]) {
 						// Skip async functions silently
 						if (hook.handler.constructor.name === "AsyncFunction") {
-							stats.recordHandlerSkip(eventRecord, isOverflow, hook);
+							statsRecorder.recordHandlerSkip(
+								stats,
+								eventRecord,
+								isOverflow,
+								hook,
+							);
 							continue;
 						}
 
-						const handlerRecord = stats.startHandler(
+						const handlerRecord = statsRecorder.startHandler(
+							stats,
 							eventRecord,
 							isOverflow,
 							hook,
@@ -535,16 +553,25 @@ export class Hookified extends Eventified {
 							// Keep this inside the try so a throw here matches stats off.
 							if (result instanceof Promise) {
 								result.catch((error: unknown) => {
-									stats.recordLateError(eventRecord, handlerRecord);
+									statsRecorder.recordLateError(eventRecord, handlerRecord);
 									this.emitLateHookError(event, error);
 								});
 							}
 							eventElapsed += elapsed;
-							stats.recordHandlerDuration(handlerRecord, elapsed);
+							statsRecorder.recordHandlerDuration(
+								stats,
+								handlerRecord,
+								elapsed,
+							);
 						} catch (error) {
 							const elapsed = performance.now() - start;
 							eventElapsed += elapsed;
-							stats.recordHandlerError(eventRecord, handlerRecord, elapsed);
+							statsRecorder.recordHandlerError(
+								stats,
+								eventRecord,
+								handlerRecord,
+								elapsed,
+							);
 							const message = `${event}: ${(error as Error).message}`;
 							this.emit("error", new Error(message));
 
@@ -554,7 +581,7 @@ export class Hookified extends Eventified {
 						}
 					}
 				} finally {
-					stats.endDispatch(state, eventRecord, eventElapsed);
+					statsRecorder.endDispatch(stats, state, eventRecord, eventElapsed);
 				}
 			}
 			return;
@@ -725,7 +752,7 @@ export class Hookified extends Eventified {
 
 				const stats = this._stats;
 				if (stats instanceof HookStats && stats.enabled) {
-					stats.recordRemove(1);
+					statsRecorder.recordRemove(stats, 1);
 				}
 
 				return removed;
@@ -734,7 +761,7 @@ export class Hookified extends Eventified {
 
 		const stats = this._stats;
 		if (stats instanceof HookStats && stats.enabled) {
-			stats.recordRemoveMiss();
+			statsRecorder.recordRemoveMiss(stats);
 		}
 
 		return undefined;
@@ -751,7 +778,7 @@ export class Hookified extends Eventified {
 			for (const eventHandlers of this._hooks.values()) {
 				count += eventHandlers.length;
 			}
-			stats.recordRemove(count);
+			statsRecorder.recordRemove(stats, count);
 		}
 		this._hooks.clear();
 	}
@@ -769,7 +796,7 @@ export class Hookified extends Eventified {
 			this._hooks.delete(event);
 			const stats = this._stats;
 			if (stats instanceof HookStats && stats.enabled) {
-				stats.recordRemove(removed.length);
+				statsRecorder.recordRemove(stats, removed.length);
 			}
 			return removed;
 		}
