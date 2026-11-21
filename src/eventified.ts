@@ -245,14 +245,14 @@ export class Eventified implements IEventEmitter {
 			this._eventListeners.set(event, arr);
 			if (this._maxListeners > 0 && arr.length > this._maxListeners) {
 				console.warn(
-					`MaxListenersExceededWarning: Possible event memory leak detected. ${arr.length} ${event as string} listeners added. Use setMaxListeners() to increase limit.`,
+					`MaxListenersExceededWarning: Possible event memory leak detected. ${arr.length} ${String(event)} listeners added. Use setMaxListeners() to increase limit.`,
 				);
 			}
 		} else {
 			existing.push(listener);
 			if (this._maxListeners > 0 && existing.length > this._maxListeners) {
 				console.warn(
-					`MaxListenersExceededWarning: Possible event memory leak detected. ${existing.length} ${event as string} listeners added. Use setMaxListeners() to increase limit.`,
+					`MaxListenersExceededWarning: Possible event memory leak detected. ${existing.length} ${String(event)} listeners added. Use setMaxListeners() to increase limit.`,
 				);
 			}
 		}

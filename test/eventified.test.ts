@@ -135,6 +135,25 @@ describe("Eventified", () => {
 		t.expect(capturedWarning).toMatch(/MaxListenersExceededWarning/);
 	});
 
+	test("max listeners warning does not throw for a symbol event", (t) => {
+		const emitter = new Eventified();
+		emitter.setMaxListeners(1);
+		const event = Symbol("test-event");
+		const listener = () => {};
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+		emitter.on(event, listener);
+		// The second call replaces one listener with a list of listeners.
+		t.expect(() => emitter.on(event, listener)).not.toThrow();
+		// The third call adds a listener to that list.
+		t.expect(() => emitter.on(event, listener)).not.toThrow();
+
+		t.expect(emitter.listenerCount(event)).toBe(3);
+		t.expect(warnSpy).toHaveBeenCalledTimes(2);
+		t.expect(String(warnSpy.mock.calls[0][0])).toContain("Symbol(test-event)");
+		warnSpy.mockRestore();
+	});
+
 	test("set max listeners should not truncate existing listeners", (t) => {
 		const emitter = new Eventified();
 
